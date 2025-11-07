@@ -1,0 +1,111 @@
+.intro-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+}
+
+.intro-overlay-backdrop {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.85), rgba(59, 130, 246, 0.75));
+    backdrop-filter: blur(12px);
+    animation: introFade 0.4s ease forwards;
+}
+
+.intro-overlay-card {
+    position: relative;
+    width: min(90%, 420px);
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 1.25rem;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 30px 60px -25px rgba(15, 23, 42, 0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    transform: translateY(10px);
+    animation: introSlideUp 0.5s ease forwards;
+}
+
+.intro-overlay-spinner {
+    width: 60px;
+    height: 60px;
+    border-radius: 9999px;
+    border: 5px solid rgba(37, 99, 235, 0.2);
+    border-top-color: rgba(37, 99, 235, 0.95);
+    animation: introSpin 1s linear infinite;
+}
+
+.intro-overlay-content {
+    text-align: center;
+}
+
+.intro-overlay-subtitle {
+    display: inline-block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2563eb;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+}
+
+.intro-overlay-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 0.75rem;
+}
+
+.intro-overlay-user {
+    font-size: 0.95rem;
+    color: #475569;
+    margin: 0;
+}
+
+.intro-overlay-user strong {
+    color: #1e3a8a;
+}
+
+@keyframes introFade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes introSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes introSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 480px) {
+    .intro-overlay-card {
+        padding: 2rem 1.5rem;
+        gap: 1rem;
+    }
+
+    .intro-overlay-title {
+        font-size: 1.35rem;
+    }
+}

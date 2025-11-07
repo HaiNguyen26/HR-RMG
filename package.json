@@ -1,0 +1,29 @@
+{
+  "name": "hr-management-system",
+  "version": "1.0.0",
+  "description": "HR Management System - Full Stack Application",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:safe": "node scripts/fix-ports.js && concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm start",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "fix:ports": "node scripts/fix-ports.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "hr",
+    "management",
+    "nodejs",
+    "react",
+    "postgresql"
+  ],
+  "author": "",
+  "license": "ISC"
+}

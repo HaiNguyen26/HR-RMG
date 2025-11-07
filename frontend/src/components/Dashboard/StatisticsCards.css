@@ -1,0 +1,196 @@
+.statistics-cards-row-2 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+  margin: 0 0.25rem 0.6rem;
+  flex-shrink: 0;
+}
+
+.stat-card-gradient {
+  border-radius: 0.55rem;
+  box-shadow: 0 14px 25px -18px rgba(15, 23, 42, 0.5);
+  padding: 0.7rem 0.85rem;
+  color: white;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card-gradient:hover {
+  box-shadow: 0 18px 30px -20px rgba(15, 118, 110, 0.55);
+  transform: translateY(-3px);
+}
+
+.stat-card-gradient.blue {
+  background: linear-gradient(to bottom right, #2563eb, #3b82f6, #1d4ed8);
+}
+
+.stat-card-gradient.green {
+  background: linear-gradient(to bottom right, #16a34a, #22c55e, #15803d);
+}
+
+.stat-card-gradient.orange {
+  background: linear-gradient(to bottom right, #ea580c, #f97316, #c2410c);
+}
+
+.stat-card-gradient.purple {
+  background: linear-gradient(to bottom right, #9333ea, #a855f7, #7e22ce);
+}
+
+.stat-card-gradient-bg-decoration {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4rem;
+  height: 4rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  margin-right: -2rem;
+  margin-top: -2rem;
+  filter: blur(40px);
+}
+
+.stat-card-gradient-content {
+  position: relative;
+  z-index: 10;
+}
+
+.stat-card-gradient-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.stat-card-gradient-label {
+  font-size: 0.75rem;
+}
+
+.stat-card-gradient.blue .stat-card-gradient-label {
+  color: rgba(219, 234, 254, 1);
+}
+
+.stat-card-gradient.green .stat-card-gradient-label {
+  color: rgba(220, 252, 231, 1);
+}
+
+.stat-card-gradient.orange .stat-card-gradient-label {
+  color: rgba(255, 237, 213, 1);
+}
+
+.stat-card-gradient.purple .stat-card-gradient-label {
+  color: rgba(243, 232, 255, 1);
+}
+
+.stat-card-gradient-icon {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 300ms;
+}
+
+.stat-card-gradient.blue .stat-card-gradient-icon {
+  color: rgba(191, 219, 254, 1);
+}
+
+.stat-card-gradient.green .stat-card-gradient-icon {
+  color: rgba(187, 247, 208, 1);
+}
+
+.stat-card-gradient.orange .stat-card-gradient-icon {
+  color: rgba(254, 215, 170, 1);
+}
+
+.stat-card-gradient.purple .stat-card-gradient-icon {
+  color: rgba(233, 213, 255, 1);
+}
+
+.stat-card-gradient:hover .stat-card-gradient-icon {
+  transform: scale(1.1);
+}
+
+.stat-card-gradient-value {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-bottom: 0.125rem;
+}
+
+.stat-card-gradient-subtext {
+  font-size: 0.75rem;
+}
+
+.stat-card-gradient.blue .stat-card-gradient-subtext {
+  color: rgba(219, 234, 254, 1);
+}
+
+.stat-card-gradient.green .stat-card-gradient-subtext {
+  color: rgba(220, 252, 231, 1);
+}
+
+.stat-card-gradient.orange .stat-card-gradient-subtext {
+  color: rgba(255, 237, 213, 1);
+}
+
+.stat-card-gradient.purple .stat-card-gradient-subtext {
+  color: rgba(243, 232, 255, 1);
+}
+
+.stat-card-gradient.loading {
+  background: linear-gradient(to bottom right, #e5e7eb, #d1d5db, #9ca3af);
+}
+
+.stat-card-skeleton {
+  width: 100%;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0.25rem;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.stat-card-gradient.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.stat-card-skeleton {
+  width: 100%;
+  height: 100%;
+  min-height: 80px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 25%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.1) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .statistics-cards-row-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .statistics-cards-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
