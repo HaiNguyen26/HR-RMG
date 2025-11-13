@@ -31,6 +31,9 @@ const EquipmentAssignment = ({ employee, onComplete, onCancel, currentUser, show
     return departments[code] || code;
   };
 
+  const directManager = employee?.quanLyTrucTiep || employee?.quan_ly_truc_tiep || '';
+  const indirectManager = employee?.quanLyGianTiep || employee?.quan_ly_gian_tiep || '';
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
 
@@ -134,7 +137,9 @@ const EquipmentAssignment = ({ employee, onComplete, onCancel, currentUser, show
           boPhan: employee.boPhan || employee.bo_phan,
           chiNhanh: employee.chiNhanh || employee.chi_nhanh,
           ngayGiaNhap: employee.ngayGiaNhap || employee.ngay_gia_nhap,
-          email: employee.email,
+          quanLyTrucTiep: employee.quanLyTrucTiep || employee.quan_ly_truc_tiep || null,
+          quanLyGianTiep: employee.quanLyGianTiep || employee.quan_ly_gian_tiep || null,
+          email: employee.email || null,
         });
 
         if (!createResponse.data.success) {
@@ -285,7 +290,7 @@ const EquipmentAssignment = ({ employee, onComplete, onCancel, currentUser, show
               <h2 className="employee-info-title">
                 Nhân viên: <span>{employee.hoTen || employee.ho_ten}</span>
               </h2>
-              <p className="employee-info-email">{employee.email}</p>
+              <p className="employee-info-email">{employee.email || '-'}</p>
             </div>
           </div>
           <div className="employee-info-grid">
@@ -312,9 +317,21 @@ const EquipmentAssignment = ({ employee, onComplete, onCancel, currentUser, show
               <p className="employee-info-value">{employee.boPhan || employee.bo_phan}</p>
             </div>
             <div className="employee-info-item">
-              <span className="employee-info-label">Ngày gia nhập</span>
+              <span className="employee-info-label">Ngày nhận việc</span>
               <p className="employee-info-value">{formatDate(employee.ngayGiaNhap || employee.ngay_gia_nhap)}</p>
             </div>
+            {directManager && (
+              <div className="employee-info-item">
+                <span className="employee-info-label">Quản lý trực tiếp</span>
+                <p className="employee-info-value">{directManager}</p>
+              </div>
+            )}
+            {indirectManager && (
+              <div className="employee-info-item">
+                <span className="employee-info-label">Quản lý gián tiếp</span>
+                <p className="employee-info-value">{indirectManager}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

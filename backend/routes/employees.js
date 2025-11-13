@@ -76,6 +76,45 @@ const sanitizeDepartment = (value) => {
     return raw !== '' ? raw : null;
 };
 
+let ensureManagerColumnsPromise = null;
+const ensureManagerColumns = async () => {
+    if (ensureManagerColumnsPromise) {
+        return ensureManagerColumnsPromise;
+    }
+
+    ensureManagerColumnsPromise = (async () => {
+        const checkQuery = `
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'employees'
+              AND column_name IN ('quan_ly_truc_tiep', 'quan_ly_gian_tiep')
+        `;
+
+        const result = await pool.query(checkQuery);
+        const existingColumns = new Set(result.rows.map((row) => row.column_name));
+
+        if (!existingColumns.has('quan_ly_truc_tiep')) {
+            await pool.query(`
+                ALTER TABLE employees
+                    ADD COLUMN quan_ly_truc_tiep VARCHAR(255)
+            `);
+        }
+
+        if (!existingColumns.has('quan_ly_gian_tiep')) {
+            await pool.query(`
+                ALTER TABLE employees
+                    ADD COLUMN quan_ly_gian_tiep VARCHAR(255)
+            `);
+        }
+    })().catch((error) => {
+        ensureManagerColumnsPromise = null;
+        console.error('Error ensuring manager columns exist:', error);
+        throw error;
+    });
+
+    return ensureManagerColumnsPromise;
+};
+
 /**
  * POST /api/employees/bulk - Tạo nhiều nhân viên từ danh sách
  */
@@ -93,6 +132,7 @@ router.post('/bulk', async (req, res) => {
 
         await ensureChiNhanhColumn();
         await ensurePhongBanConstraintDropped();
+        await ensureManagerColumns();
 
         await client.query('BEGIN');
 
@@ -108,7 +148,18 @@ router.post('/bulk', async (req, res) => {
                 console.log('[BulkImport] Incoming employee', index + 1, empData);
             }
             try {
-                const { maNhanVien, hoTen, chucDanh, phongBan, boPhan, ngayGiaNhap, email, chiNhanh } = empData;
+                const {
+                    maNhanVien,
+                    hoTen,
+                    chucDanh,
+                    phongBan,
+                    boPhan,
+                    ngayGiaNhap,
+                    email,
+                    chiNhanh,
+                    quanLyTrucTiep,
+                    quanLyGianTiep
+                } = empData;
 
                 // Validation
                 if (!hoTen || !hoTen.trim() || !phongBan || !phongBan.trim()) {
@@ -128,6 +179,8 @@ router.post('/bulk', async (req, res) => {
                 const finalNgayGiaNhap = ngayGiaNhap && String(ngayGiaNhap).trim() !== ''
                     ? String(ngayGiaNhap).trim()
                     : null;
+                const finalQuanLyTrucTiep = quanLyTrucTiep && quanLyTrucTiep.trim() !== '' ? quanLyTrucTiep.trim() : null;
+                const finalQuanLyGianTiep = quanLyGianTiep && quanLyGianTiep.trim() !== '' ? quanLyGianTiep.trim() : null;
 
                 // Check email uniqueness (case-insensitive)
                 if (finalEmail) {
@@ -194,8 +247,19 @@ router.post('/bulk', async (req, res) => {
                 // Insert employee with PENDING status (chờ cập nhật vật dụng)
                 const insertQuery = `
                     INSERT INTO employees (
-                        ma_nhan_vien, ho_ten, chuc_danh, phong_ban, bo_phan, chi_nhanh, ngay_gia_nhap, email, password, trang_thai
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'PENDING')
+                        ma_nhan_vien, 
+                        ho_ten, 
+                        chuc_danh, 
+                        phong_ban, 
+                        bo_phan, 
+                        chi_nhanh, 
+                        ngay_gia_nhap, 
+                        email, 
+                        password, 
+                        quan_ly_truc_tiep, 
+                        quan_ly_gian_tiep, 
+                        trang_thai
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'PENDING')
                     RETURNING id, ma_nhan_vien, ho_ten, email
                 `;
 
@@ -208,7 +272,9 @@ router.post('/bulk', async (req, res) => {
                     finalChiNhanh,
                     finalNgayGiaNhap,
                     finalEmail,
-                    hashedPassword
+                    hashedPassword,
+                    finalQuanLyTrucTiep,
+                    finalQuanLyGianTiep
                 ]);
 
                 results.success.push(insertResult.rows[0]);
@@ -255,6 +321,7 @@ router.get('/', async (req, res) => {
     try {
         await ensureChiNhanhColumn();
         await ensurePhongBanConstraintDropped();
+        await ensureManagerColumns();
 
         const query = `
             SELECT 
@@ -267,6 +334,8 @@ router.get('/', async (req, res) => {
                 chi_nhanh,
                 ngay_gia_nhap, 
                 email, 
+                quan_ly_truc_tiep,
+                quan_ly_gian_tiep,
                 trang_thai,
                 created_at,
                 updated_at
@@ -298,13 +367,14 @@ router.post('/', async (req, res) => {
     const client = await pool.connect();
 
     try {
-        const { maNhanVien, hoTen, chucDanh, phongBan, boPhan, chiNhanh, ngayGiaNhap, email } = req.body;
+        const { maNhanVien, hoTen, chucDanh, phongBan, boPhan, chiNhanh, ngayGiaNhap, email, quanLyTrucTiep, quanLyGianTiep } = req.body;
 
         await ensureChiNhanhColumn();
         await ensurePhongBanConstraintDropped();
+        await ensureManagerColumns();
 
         // Validate input
-        const required = ['hoTen', 'chucDanh', 'phongBan', 'boPhan', 'ngayGiaNhap', 'email'];
+        const required = ['hoTen', 'chucDanh', 'phongBan', 'boPhan', 'ngayGiaNhap'];
         for (const field of required) {
             if (!req.body[field]) {
                 return res.status(400).json({
@@ -315,12 +385,14 @@ router.post('/', async (req, res) => {
         }
 
         // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email không hợp lệ'
-            });
+        if (email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email không hợp lệ'
+                });
+            }
         }
 
         // Validate phong_ban
@@ -343,7 +415,7 @@ router.post('/', async (req, res) => {
             !emp.trang_thai || emp.trang_thai === 'ACTIVE'
         );
 
-        if (activeEmployees.length > 0) {
+        if (email && activeEmployees.length > 0) {
             await client.query('ROLLBACK');
             console.log(`Email conflict in employees: ${email}`, activeEmployees);
             return res.status(400).json({
@@ -367,7 +439,7 @@ router.post('/', async (req, res) => {
             !user.trang_thai || user.trang_thai === 'ACTIVE'
         );
 
-        if (activeUsers.length > 0) {
+        if (email && activeUsers.length > 0) {
             await client.query('ROLLBACK');
             console.log(`Email conflict in users: ${email}`, activeUsers);
             return res.status(400).json({
@@ -419,13 +491,15 @@ router.post('/', async (req, res) => {
         // Clean up: Delete any employees with the same email that are not ACTIVE
         // This prevents unique constraint violation on email
         // We already checked that no ACTIVE employees have this email above
-        await client.query(`
-            DELETE FROM employees 
-            WHERE LOWER(email) = LOWER($1) 
-            AND email IS NOT NULL 
-            AND email != ''
-            AND (trang_thai != 'ACTIVE' OR trang_thai IS NULL)
-        `, [email]);
+        if (email) {
+            await client.query(`
+                DELETE FROM employees 
+                WHERE LOWER(email) = LOWER($1) 
+                AND email IS NOT NULL 
+                AND email != ''
+                AND (trang_thai != 'ACTIVE' OR trang_thai IS NULL)
+            `, [email]);
+        }
 
         // Insert employee
         const insertQuery = `
@@ -438,9 +512,11 @@ router.post('/', async (req, res) => {
                 chi_nhanh,
                 ngay_gia_nhap, 
                 email, 
-                password
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            RETURNING id, ma_nhan_vien, ho_ten, chuc_danh, phong_ban, bo_phan, chi_nhanh, ngay_gia_nhap, email, trang_thai
+                password,
+                quan_ly_truc_tiep,
+                quan_ly_gian_tiep
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            RETURNING id, ma_nhan_vien, ho_ten, chuc_danh, phong_ban, bo_phan, chi_nhanh, ngay_gia_nhap, email, quan_ly_truc_tiep, quan_ly_gian_tiep, trang_thai
         `;
 
         const insertResult = await client.query(insertQuery, [
@@ -451,8 +527,10 @@ router.post('/', async (req, res) => {
             boPhan || sanitizedPhongBan,
             chiNhanh && chiNhanh.trim() !== '' ? chiNhanh.trim() : null,
             ngayGiaNhap || new Date().toISOString().split('T')[0],
-            email,
-            hashedPassword
+            email || null,
+            hashedPassword,
+            quanLyTrucTiep && quanLyTrucTiep.trim() !== '' ? quanLyTrucTiep.trim() : null,
+            quanLyGianTiep && quanLyGianTiep.trim() !== '' ? quanLyGianTiep.trim() : null
         ]);
 
         await client.query('COMMIT');
@@ -483,10 +561,11 @@ router.put('/:id', async (req, res) => {
 
     try {
         const { id } = req.params;
-        const { hoTen, chucDanh, phongBan, boPhan, chiNhanh, ngayGiaNhap, email, trang_thai } = req.body;
+        const { hoTen, chucDanh, phongBan, boPhan, chiNhanh, ngayGiaNhap, email, quanLyTrucTiep, quanLyGianTiep, trang_thai } = req.body;
 
         await ensureChiNhanhColumn();
         await ensurePhongBanConstraintDropped();
+        await ensureManagerColumns();
 
         // Check employee exists (allow ACTIVE or PENDING)
         const checkEmployeeQuery = 'SELECT id, trang_thai FROM employees WHERE id = $1';
@@ -543,7 +622,7 @@ router.put('/:id', async (req, res) => {
         }
 
         // Validate input cho cập nhật đầy đủ
-        const required = ['hoTen', 'chucDanh', 'phongBan', 'boPhan', 'ngayGiaNhap', 'email'];
+        const required = ['hoTen', 'chucDanh', 'phongBan', 'boPhan', 'ngayGiaNhap'];
         for (const field of required) {
             if (!req.body[field]) {
                 await client.query('ROLLBACK');
@@ -555,13 +634,15 @@ router.put('/:id', async (req, res) => {
         }
 
         // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            await client.query('ROLLBACK');
-            return res.status(400).json({
-                success: false,
-                message: 'Email không hợp lệ'
-            });
+        if (email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email không hợp lệ'
+                });
+            }
         }
 
         // Validate phong_ban
@@ -586,7 +667,7 @@ router.put('/:id', async (req, res) => {
         `;
         const checkEmailEmployeesResult = await client.query(checkEmailEmployeesQuery, [email, id]);
 
-        if (checkEmailEmployeesResult.rows.length > 0) {
+        if (email && checkEmailEmployeesResult.rows.length > 0) {
             await client.query('ROLLBACK');
             return res.status(400).json({
                 success: false,
@@ -605,7 +686,7 @@ router.put('/:id', async (req, res) => {
         `;
         const checkEmailUsersResult = await client.query(checkEmailUsersQuery, [email]);
 
-        if (checkEmailUsersResult.rows.length > 0) {
+        if (email && checkEmailUsersResult.rows.length > 0) {
             await client.query('ROLLBACK');
             return res.status(400).json({
                 success: false,
@@ -646,6 +727,14 @@ router.put('/:id', async (req, res) => {
             updateFields.push(`email = $${paramIndex++}`);
             updateValues.push(email);
         }
+        if (quanLyTrucTiep !== undefined) {
+            updateFields.push(`quan_ly_truc_tiep = $${paramIndex++}`);
+            updateValues.push(quanLyTrucTiep && quanLyTrucTiep.trim() !== '' ? quanLyTrucTiep.trim() : null);
+        }
+        if (quanLyGianTiep !== undefined) {
+            updateFields.push(`quan_ly_gian_tiep = $${paramIndex++}`);
+            updateValues.push(quanLyGianTiep && quanLyGianTiep.trim() !== '' ? quanLyGianTiep.trim() : null);
+        }
         if (trang_thai) {
             updateFields.push(`trang_thai = $${paramIndex++}`);
             updateValues.push(trang_thai);
@@ -658,7 +747,7 @@ router.put('/:id', async (req, res) => {
             UPDATE employees 
             SET ${updateFields.join(', ')}
             WHERE id = $${paramIndex}
-            RETURNING id, ma_nhan_vien, ho_ten, chuc_danh, phong_ban, bo_phan, chi_nhanh, ngay_gia_nhap, email, trang_thai
+            RETURNING id, ma_nhan_vien, ho_ten, chuc_danh, phong_ban, bo_phan, chi_nhanh, ngay_gia_nhap, email, quan_ly_truc_tiep, quan_ly_gian_tiep, trang_thai
         `;
 
         const updateResult = await client.query(updateQuery, updateValues);

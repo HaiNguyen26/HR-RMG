@@ -9,6 +9,8 @@ const authRoutes = require('./routes/auth');
 const requestsRoutes = require('./routes/requests');
 const notificationsRoutes = require('./routes/notifications');
 const leaveRequestsRoutes = require('./routes/leaveRequests');
+const overtimeRequestsRoutes = require('./routes/overtimeRequests');
+const attendanceRequestsRoutes = require('./routes/attendanceRequests');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +28,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/requests', requestsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/leave-requests', leaveRequestsRoutes);
+app.use('/api/overtime-requests', overtimeRequestsRoutes);
+app.use('/api/attendance-adjustments', attendanceRequestsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -44,7 +48,9 @@ app.get('/', (req, res) => {
             auth: '/api/auth',
             requests: '/api/requests',
             notifications: '/api/notifications',
-            leaveRequests: '/api/leave-requests'
+        leaveRequests: '/api/leave-requests',
+        overtimeRequests: '/api/overtime-requests',
+        attendanceAdjustments: '/api/attendance-adjustments'
         }
     });
 });

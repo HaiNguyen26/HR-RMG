@@ -22,6 +22,22 @@ const Dashboard = ({ onAddEmployee, employees, onRefreshEmployees, currentUser, 
   const fileInputRef = useRef(null);
   const [branchFilter, setBranchFilter] = useState('');
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
+  const branchSelectRef = useRef(null);
+
+  useEffect(() => {
+    if (!branchDropdownOpen) {
+      return undefined;
+    }
+    const handleClickOutside = (event) => {
+      if (branchSelectRef.current && !branchSelectRef.current.contains(event.target)) {
+        setBranchDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [branchDropdownOpen]);
 
   useEffect(() => {
     fetchStatistics();
@@ -169,6 +185,75 @@ const Dashboard = ({ onAddEmployee, employees, onRefreshEmployees, currentUser, 
     }
   };
 
+  const renderSummaryCards = () => (
+    <>
+      {/* Card 1: Đơn nghỉ phép chờ duyệt */}
+      <div className="summary-card">
+        <div className="summary-card-content">
+          <div>
+            <p className="summary-card-label">Đơn nghỉ phép</p>
+            <p className="summary-card-value blue">{statistics.donNghiPhep || 0}</p>
+          </div>
+          <div className="summary-card-icon blue">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+              </path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 2: Đơn nghỉ việc chờ duyệt */}
+      <div className="summary-card">
+        <div className="summary-card-content">
+          <div>
+            <p className="summary-card-label">Đơn nghỉ việc</p>
+            <p className="summary-card-value orange">{statistics.donNghiViec || 0}</p>
+          </div>
+          <div className="summary-card-icon orange">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M12 4v16m8-8H4"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 3: Quy trình Offboarding */}
+      <div className="summary-card">
+        <div className="summary-card-content">
+          <div>
+            <p className="summary-card-label">Offboarding</p>
+            <p className="summary-card-value green">{statistics.offboarding || 0}</p>
+          </div>
+          <div className="summary-card-icon green">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+              </path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 4: Ngày nghỉ phép còn lại */}
+      <div className="summary-card">
+        <div className="summary-card-content">
+          <div>
+            <p className="summary-card-label">Nghỉ phép còn lại</p>
+            <p className="summary-card-value purple">{statistics.nghiPhepConLai || 0}</p>
+          </div>
+          <div className="summary-card-icon purple">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <div className="dashboard-view">
@@ -178,71 +263,9 @@ const Dashboard = ({ onAddEmployee, employees, onRefreshEmployees, currentUser, 
       </div>
 
       {/* Summary Cards Row 1 */}
-      <div className="summary-cards-row">
-        {/* Card 1: Đơn nghỉ phép chờ duyệt */}
-        <div className="summary-card">
-          <div className="summary-card-content">
-            <div>
-              <p className="summary-card-label">Đơn nghỉ phép</p>
-              <p className="summary-card-value blue">{statistics.donNghiPhep || 0}</p>
-            </div>
-            <div className="summary-card-icon blue">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                </path>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Đơn nghỉ việc chờ duyệt */}
-        <div className="summary-card">
-          <div className="summary-card-content">
-            <div>
-              <p className="summary-card-label">Đơn nghỉ việc</p>
-              <p className="summary-card-value orange">{statistics.donNghiViec || 0}</p>
-            </div>
-            <div className="summary-card-icon orange">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                  d="M12 4v16m8-8H4"></path>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Quy trình Offboarding */}
-        <div className="summary-card">
-          <div className="summary-card-content">
-            <div>
-              <p className="summary-card-label">Offboarding</p>
-              <p className="summary-card-value green">{statistics.offboarding || 0}</p>
-            </div>
-            <div className="summary-card-icon green">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                  d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
-                </path>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: Ngày nghỉ phép còn lại */}
-        <div className="summary-card">
-          <div className="summary-card-content">
-            <div>
-              <p className="summary-card-label">Nghỉ phép còn lại</p>
-              <p className="summary-card-value purple">{statistics.nghiPhepConLai || 0}</p>
-            </div>
-            <div className="summary-card-icon purple">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-          </div>
+      <div className="summary-cards-wrapper">
+        <div className="summary-cards-row">
+          {renderSummaryCards()}
         </div>
       </div>
 
@@ -267,7 +290,7 @@ const Dashboard = ({ onAddEmployee, employees, onRefreshEmployees, currentUser, 
                 <span className="employee-table-count">
                   Tổng: <strong>{statistics.tongNhanVien || employees.length}</strong> nhân viên
                 </span>
-                <div className={`branch-select ${branchDropdownOpen ? 'open' : ''}`}>
+                <div ref={branchSelectRef} className={`branch-select ${branchDropdownOpen ? 'open' : ''}`}>
                   <button
                     type="button"
                     className="branch-select-trigger"

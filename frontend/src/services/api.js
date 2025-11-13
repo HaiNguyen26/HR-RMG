@@ -12,6 +12,7 @@ const api = axios.create({
 // Employees API
 export const employeesAPI = {
   getAll: () => api.get('/employees'),
+  getById: (id) => api.get(`/employees/${id}`),
   create: (data) => api.post('/employees', data),
   update: (id, data) => api.put(`/employees/${id}`, data),
   delete: (id) => api.delete(`/employees/${id}`),
@@ -48,7 +49,30 @@ export const requestsAPI = {
 // Leave Requests API
 export const leaveRequestsAPI = {
   create: (data) => api.post('/leave-requests', data),
-  getManagers: () => api.get('/leave-requests/managers'),
+  getManagers: (params) => api.get('/leave-requests/managers', { params }),
+  getAll: (params) => api.get('/leave-requests', { params }),
+  decide: (id, data) => api.post(`/leave-requests/${id}/decision`, data),
+  escalate: (id, data) => api.post(`/leave-requests/${id}/escalate`, data),
+  processOverdue: () => api.post('/leave-requests/overdue/process'),
+  remove: (id, data) => api.delete(`/leave-requests/${id}`, { data }),
+};
+
+export const overtimeRequestsAPI = {
+  create: (data) => api.post('/overtime-requests', data),
+  getAll: (params) => api.get('/overtime-requests', { params }),
+  decide: (id, data) => api.post(`/overtime-requests/${id}/decision`, data),
+  escalate: (id, data) => api.post(`/overtime-requests/${id}/escalate`, data),
+  processOverdue: () => api.post('/overtime-requests/overdue/process'),
+  remove: (id, data) => api.delete(`/overtime-requests/${id}`, { data }),
+};
+
+export const attendanceAdjustmentsAPI = {
+  create: (data) => api.post('/attendance-adjustments', data),
+  getAll: (params) => api.get('/attendance-adjustments', { params }),
+  decide: (id, data) => api.post(`/attendance-adjustments/${id}/decision`, data),
+  escalate: (id, data) => api.post(`/attendance-adjustments/${id}/escalate`, data),
+  processOverdue: () => api.post('/attendance-adjustments/overdue/process'),
+  remove: (id, data) => api.delete(`/attendance-adjustments/${id}`, { data }),
 };
 
 // Notifications API

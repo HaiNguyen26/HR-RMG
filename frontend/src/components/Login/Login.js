@@ -26,7 +26,11 @@ const Login = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      const response = await authAPI.login(formData);
+      const payload = {
+        ...formData,
+        username: formData.username.trim(),
+      };
+      const response = await authAPI.login(payload);
 
       if (response.data.success) {
         // Lưu thông tin user vào localStorage
@@ -85,7 +89,7 @@ const Login = ({ onLoginSuccess }) => {
                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
                   </path>
                 </svg>
-                Email / Username
+                Họ và tên
               </label>
               <input
                 type="text"
@@ -95,8 +99,8 @@ const Login = ({ onLoginSuccess }) => {
                 onChange={handleChange}
                 required
                 className="login-input"
-                placeholder="Nhập email hoặc username của bạn"
-                autoComplete="username"
+                placeholder="Nhập họ và tên của bạn (ví dụ: Nguyễn Văn A)"
+                autoComplete="name"
               />
             </div>
 

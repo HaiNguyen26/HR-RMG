@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { employeesAPI, requestsAPI, equipmentAPI } from '../../services/api';
 import './EmployeeTable.css';
 
@@ -14,12 +15,13 @@ const EmployeeTable = ({ employees, onRefresh, currentUser, showToast, showConfi
   });
   const [editForm, setEditForm] = useState({
     hoTen: '',
-    email: '',
     chiNhanh: '',
     chucDanh: '',
     phongBan: '',
     boPhan: '',
     ngayGiaNhap: '',
+    quanLyTrucTiep: '',
+    quanLyGianTiep: ''
   });
   const [formError, setFormError] = useState('');
 
@@ -131,12 +133,13 @@ const EmployeeTable = ({ employees, onRefresh, currentUser, showToast, showConfi
     setDetailModal({ isOpen: false, mode: 'view', employee: null, equipment: [], loading: false });
     setEditForm({
       hoTen: '',
-      email: '',
       chiNhanh: '',
       chucDanh: '',
       phongBan: '',
       boPhan: '',
       ngayGiaNhap: '',
+      quanLyTrucTiep: '',
+      quanLyGianTiep: ''
     });
     setFormError('');
   };
@@ -146,12 +149,13 @@ const EmployeeTable = ({ employees, onRefresh, currentUser, showToast, showConfi
     const emp = detailModal.employee;
     setEditForm({
       hoTen: emp.ho_ten || '',
-      email: emp.email || '',
       chiNhanh: emp.chi_nhanh || emp.chiNhanh || '',
       chucDanh: emp.chuc_danh || '',
       phongBan: emp.phong_ban || '',
       boPhan: emp.bo_phan || '',
       ngayGiaNhap: normalizeDateForInput(emp.ngay_gia_nhap),
+      quanLyTrucTiep: emp.quan_ly_truc_tiep || emp.quanLyTrucTiep || '',
+      quanLyGianTiep: emp.quan_ly_gian_tiep || emp.quanLyGianTiep || ''
     });
     setFormError('');
     setDetailModal((prev) => ({ ...prev, mode: 'edit' }));
@@ -181,7 +185,7 @@ const EmployeeTable = ({ employees, onRefresh, currentUser, showToast, showConfi
     event.preventDefault();
     if (!detailModal.employee || !canManage) return;
 
-    if (!editForm.hoTen || !editForm.email || !editForm.chucDanh || !editForm.phongBan || !editForm.boPhan || !editForm.ngayGiaNhap) {
+    if (!editForm.hoTen || !editForm.chucDanh || !editForm.phongBan || !editForm.boPhan || !editForm.ngayGiaNhap) {
       setFormError('Vui lòng điền đầy đủ các trường bắt buộc.');
       return;
     }
@@ -192,12 +196,13 @@ const EmployeeTable = ({ employees, onRefresh, currentUser, showToast, showConfi
     try {
       const payload = {
         hoTen: editForm.hoTen.trim(),
-        email: editForm.email.trim(),
         chucDanh: editForm.chucDanh.trim(),
         phongBan: editForm.phongBan,
         boPhan: editForm.boPhan.trim(),
         chiNhanh: editForm.chiNhanh?.trim() || null,
         ngayGiaNhap: editForm.ngayGiaNhap,
+        quanLyTrucTiep: editForm.quanLyTrucTiep?.trim() || null,
+        quanLyGianTiep: editForm.quanLyGianTiep?.trim() || null,
       };
 
       const response = await employeesAPI.update(detailModal.employee.id, payload);
@@ -355,241 +360,271 @@ const EmployeeTable = ({ employees, onRefresh, currentUser, showToast, showConfi
         </div>
       )}
 
-      <table className="employee-table">
-        <thead className="employee-table-thead">
-          <tr>
-            <th>Mã Nhân Viên</th>
-            <th>Họ Và Tên</th>
-            <th>Email cá nhân</th>
-            <th>Chi Nhánh</th>
-            <th>Phòng Ban</th>
-            <th>Bộ Phận</th>
-            <th>Chức Danh</th>
-            <th>Ngày Nhận Việc</th>
-          </tr>
-        </thead>
-        <tbody className="employee-table-tbody">
-          {!filteredEmployees || filteredEmployees.length === 0 ? (
+      <div className="table-wrapper">
+        <table className="employee-table">
+          <thead className="employee-table-thead">
             <tr>
-              <td colSpan={8} className="employee-table-empty">
-                <div className="empty-state-content">
-                  <div className="empty-state-icon">
-                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                      </path>
-                    </svg>
-                  </div>
-                  <p className="empty-state-title">Không có nhân viên nào khớp bộ lọc</p>
-                  <p className="empty-state-description">Điều chỉnh bộ lọc hoặc thử lại sau</p>
-                </div>
-              </td>
+              <th>Mã Nhân Viên</th>
+              <th>Họ Và Tên</th>
+              <th>Chi Nhánh</th>
+              <th>Phòng Ban</th>
+              <th>Bộ Phận</th>
+              <th>Chức Danh</th>
+              <th>Ngày Nhận Việc</th>
+              <th>Quản Lý Trực Tiếp</th>
+              <th>Quản Lý Gián Tiếp</th>
             </tr>
-          ) : (
-            filteredEmployees.map((employee) => {
-              const isPendingEquipment =
-                (employee.trang_thai || employee.trangThai || employee.status) === 'PENDING';
-              return (
-                <tr key={employee.id} onClick={() => handleRowClick(employee)}>
-                  <td>{employee.ma_nhan_vien || '-'}</td>
-                  <td>
-                    <span>{employee.ho_ten}</span>
-                    {isPendingEquipment && (
-                      <span className="employee-warning-text">Cần cập nhật vật dụng</span>
+          </thead>
+          <tbody className="employee-table-tbody">
+            {!filteredEmployees || filteredEmployees.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="employee-table-empty">
+                  <div className="empty-state-content">
+                    <div className="empty-state-icon">
+                      <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                        </path>
+                      </svg>
+                    </div>
+                    <p className="empty-state-title">Không có nhân viên nào khớp bộ lọc</p>
+                    <p className="empty-state-description">Điều chỉnh bộ lọc hoặc thử lại sau</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredEmployees.map((employee) => {
+                const isPendingEquipment =
+                  (employee.trang_thai || employee.trangThai || employee.status) === 'PENDING';
+                return (
+                  <tr key={employee.id} onClick={() => handleRowClick(employee)}>
+                    <td>{employee.ma_nhan_vien || '-'}</td>
+                    <td>
+                      <span>{employee.ho_ten}</span>
+                      {isPendingEquipment && (
+                        <span className="employee-warning-text">Cần cập nhật vật dụng</span>
+                      )}
+                    </td>
+                    <td>{employee.chi_nhanh || employee.chiNhanh || '-'}</td>
+                    <td>{getDepartmentLabel(employee.phong_ban)}</td>
+                    <td>{employee.bo_phan || '-'}</td>
+                    <td>{employee.chuc_danh}</td>
+                    <td>{formatDateShort(employee.ngay_gia_nhap)}</td>
+                    <td>{employee.quan_ly_truc_tiep || employee.quanLyTrucTiep || '-'}</td>
+                    <td>{employee.quan_ly_gian_tiep || employee.quanLyGianTiep || '-'}</td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {detailModal.isOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div className="detail-modal-overlay" onClick={closeModal}>
+            <div className="detail-modal-container" onClick={(e) => e.stopPropagation()}>
+              <div className="detail-modal-header">
+                <h2 className="detail-modal-title">
+                  {detailModal.mode === 'view' ? 'Thông tin nhân viên' : 'Chỉnh sửa thông tin nhân viên'}
+                </h2>
+                <button className="detail-modal-close" onClick={closeModal}>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="detail-modal-body">
+                {detailModal.mode === 'edit' ? (
+                  <form onSubmit={handleEditSubmit} className="detail-form">
+                    <div className="form-group">
+                      <label htmlFor="hoTen">Họ và tên *</label>
+                      <input
+                        type="text"
+                        id="hoTen"
+                        name="hoTen"
+                        value={editForm.hoTen}
+                        onChange={handleEditChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="chiNhanh">Chi nhánh</label>
+                      <input
+                        type="text"
+                        id="chiNhanh"
+                        name="chiNhanh"
+                        value={editForm.chiNhanh}
+                        onChange={handleEditChange}
+                        placeholder="VD: Hà Nội, Hồ Chí Minh..."
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="chucDanh">Chức danh *</label>
+                      <input
+                        type="text"
+                        id="chucDanh"
+                        name="chucDanh"
+                        value={editForm.chucDanh}
+                        onChange={handleEditChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="phongBan">Phòng ban *</label>
+                      <select
+                        id="phongBan"
+                        name="phongBan"
+                        value={editForm.phongBan}
+                        onChange={handleEditChange}
+                        required
+                      >
+                        <option value="">Chọn phòng ban</option>
+                        <option value="IT">Phòng IT</option>
+                        <option value="HR">Hành chính nhân sự</option>
+                        <option value="ACCOUNTING">Kế toán</option>
+                        <option value="OTHER">Phòng ban khác</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="boPhan">Bộ phận *</label>
+                      <input
+                        type="text"
+                        id="boPhan"
+                        name="boPhan"
+                        value={editForm.boPhan}
+                        onChange={handleEditChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="ngayGiaNhap">Ngày nhận việc *</label>
+                      <input
+                        type="date"
+                        id="ngayGiaNhap"
+                        name="ngayGiaNhap"
+                        value={editForm.ngayGiaNhap}
+                        onChange={handleEditChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="quanLyTrucTiep">Quản lý trực tiếp</label>
+                      <input
+                        type="text"
+                        id="quanLyTrucTiep"
+                        name="quanLyTrucTiep"
+                        value={editForm.quanLyTrucTiep}
+                        onChange={handleEditChange}
+                        placeholder="Ví dụ: Nguyễn Văn A"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="quanLyGianTiep">Quản lý gián tiếp</label>
+                      <input
+                        type="text"
+                        id="quanLyGianTiep"
+                        name="quanLyGianTiep"
+                        value={editForm.quanLyGianTiep}
+                        onChange={handleEditChange}
+                        placeholder="Ví dụ: Trần Thị B"
+                      />
+                    </div>
+                    {formError && <p className="form-error">{formError}</p>}
+                    {canManage && (
+                      <div className="detail-modal-actions">
+                        <button type="submit" className="action-btn save-btn" disabled={loading}>
+                          {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                        </button>
+                        <button type="button" onClick={handleCancelEdit} className="action-btn cancel-btn">
+                          Hủy
+                        </button>
+                      </div>
                     )}
-                  </td>
-                  <td>{employee.email}</td>
-                  <td>{employee.chi_nhanh || employee.chiNhanh || '-'}</td>
-                  <td>{getDepartmentLabel(employee.phong_ban)}</td>
-                  <td>{employee.bo_phan || '-'}</td>
-                  <td>{employee.chuc_danh}</td>
-                  <td>{formatDateShort(employee.ngay_gia_nhap)}</td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+                  </form>
+                ) : (
+                  <>
+                    <div className="detail-info-card">
+                      <div className="detail-info-header">
+                        <div className="detail-info-header-left">
+                          <h3>{detailModal.employee.ho_ten}</h3>
+                          <p>{detailModal.employee.chuc_danh || 'Chức danh chưa cập nhật'}</p>
+                          <div className="detail-info-contact">
+                            <span>Mã NV:</span>
+                            <strong>{detailModal.employee.ma_nhan_vien || detailModal.employee.maNhanVien || '-'}</strong>
+                          </div>
+                        </div>
+                        {canManage && (
+                          <div className="detail-info-actions">
+                            <button type="button" onClick={startEditing} className="action-btn edit-btn">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              Chỉnh sửa
+                            </button>
+                            <button type="button" onClick={handleUpdateEquipmentClick} className="action-btn update-equipment-btn">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              Cập nhật vật dụng
+                            </button>
+                            <button type="button" onClick={handleDelete} className="action-btn delete-btn" disabled={loading}>
+                              {loading ? 'Đang xóa...' : 'Xóa nhân viên'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="detail-info-grid">
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Mã nhân viên</span>
+                          <p>{detailModal.employee.ma_nhan_vien || '-'}</p>
+                        </div>
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Chi nhánh</span>
+                          <p>{detailModal.employee.chi_nhanh || detailModal.employee.chiNhanh || '-'}</p>
+                        </div>
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Chức danh</span>
+                          <p>{detailModal.employee.chuc_danh || '-'}</p>
+                        </div>
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Phòng ban</span>
+                          <p>{getDepartmentLabel(detailModal.employee.phong_ban)}</p>
+                        </div>
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Bộ phận</span>
+                          <p>{detailModal.employee.bo_phan || '-'}</p>
+                        </div>
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Ngày nhận việc</span>
+                          <p>{formatDateShort(detailModal.employee.ngay_gia_nhap)}</p>
+                        </div>
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Quản lý trực tiếp</span>
+                          <p>{detailModal.employee.quan_ly_truc_tiep || detailModal.employee.quanLyTrucTiep || '-'}</p>
+                        </div>
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Quản lý gián tiếp</span>
+                          <p>{detailModal.employee.quan_ly_gian_tiep || detailModal.employee.quanLyGianTiep || '-'}</p>
+                        </div>
+                      </div>
+                    </div>
 
-      {detailModal.isOpen && (
-        <div className="detail-modal-overlay" onClick={closeModal}>
-          <div className="detail-modal-container" onClick={(e) => e.stopPropagation()}>
-            <div className="detail-modal-header">
-              <h2 className="detail-modal-title">
-                {detailModal.mode === 'view' ? 'Thông tin nhân viên' : 'Chỉnh sửa thông tin nhân viên'}
-              </h2>
-              <button className="detail-modal-close" onClick={closeModal}>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                    <div className="detail-equipment-section">
+                      <h3>Vật dụng đã cấp</h3>
+                      {renderEquipmentList()}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="detail-modal-body">
-              {detailModal.mode === 'edit' ? (
-                <form onSubmit={handleEditSubmit} className="detail-form">
-                  <div className="form-group">
-                    <label htmlFor="hoTen">Họ và tên *</label>
-                    <input
-                      type="text"
-                      id="hoTen"
-                      name="hoTen"
-                      value={editForm.hoTen}
-                      onChange={handleEditChange}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="email">Email cá nhân *</label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={editForm.email}
-                      onChange={handleEditChange}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="chiNhanh">Chi nhánh</label>
-                    <input
-                      type="text"
-                      id="chiNhanh"
-                      name="chiNhanh"
-                      value={editForm.chiNhanh}
-                      onChange={handleEditChange}
-                      placeholder="VD: Hà Nội, Hồ Chí Minh..."
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="chucDanh">Chức danh *</label>
-                    <input
-                      type="text"
-                      id="chucDanh"
-                      name="chucDanh"
-                      value={editForm.chucDanh}
-                      onChange={handleEditChange}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="phongBan">Phòng ban *</label>
-                    <select
-                      id="phongBan"
-                      name="phongBan"
-                      value={editForm.phongBan}
-                      onChange={handleEditChange}
-                      required
-                    >
-                      <option value="">Chọn phòng ban</option>
-                      <option value="IT">Phòng IT</option>
-                      <option value="HR">Hành chính nhân sự</option>
-                      <option value="ACCOUNTING">Kế toán</option>
-                      <option value="OTHER">Phòng ban khác</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="boPhan">Bộ phận *</label>
-                    <input
-                      type="text"
-                      id="boPhan"
-                      name="boPhan"
-                      value={editForm.boPhan}
-                      onChange={handleEditChange}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="ngayGiaNhap">Ngày nhận việc *</label>
-                    <input
-                      type="date"
-                      id="ngayGiaNhap"
-                      name="ngayGiaNhap"
-                      value={editForm.ngayGiaNhap}
-                      onChange={handleEditChange}
-                      required
-                    />
-                  </div>
-                  {formError && <p className="form-error">{formError}</p>}
-                  {canManage && (
-                    <div className="detail-modal-actions">
-                      <button type="submit" className="action-btn save-btn" disabled={loading}>
-                        {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
-                      </button>
-                      <button type="button" onClick={handleCancelEdit} className="action-btn cancel-btn">
-                        Hủy
-                      </button>
-                    </div>
-                  )}
-                </form>
-              ) : (
-                <>
-                  <div className="detail-info-card">
-                    <div className="detail-info-header">
-                      <div>
-                        <h3>{detailModal.employee.ho_ten}</h3>
-                        <p>{detailModal.employee.chuc_danh || 'Chức danh chưa cập nhật'}</p>
-                      </div>
-                      <div className="detail-info-contact">
-                        <span>{detailModal.employee.email || '-'}</span>
-                      </div>
-                    </div>
-                    <div className="detail-info-grid">
-                      <div className="detail-info-item">
-                        <span className="detail-info-label">Mã nhân viên</span>
-                        <p>{detailModal.employee.ma_nhan_vien || '-'}</p>
-                      </div>
-                      <div className="detail-info-item">
-                        <span className="detail-info-label">Chi nhánh</span>
-                        <p>{detailModal.employee.chi_nhanh || detailModal.employee.chiNhanh || '-'}</p>
-                      </div>
-                      <div className="detail-info-item">
-                        <span className="detail-info-label">Phòng ban</span>
-                        <p>{getDepartmentLabel(detailModal.employee.phong_ban)}</p>
-                      </div>
-                      <div className="detail-info-item">
-                        <span className="detail-info-label">Bộ phận</span>
-                        <p>{detailModal.employee.bo_phan || '-'}</p>
-                      </div>
-                      <div className="detail-info-item">
-                        <span className="detail-info-label">Ngày nhận việc</span>
-                        <p>{formatDateShort(detailModal.employee.ngay_gia_nhap)}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {canManage && (
-                    <div className="detail-modal-actions">
-                      <button type="button" onClick={startEditing} className="action-btn edit-btn">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Chỉnh sửa
-                      </button>
-                      <button type="button" onClick={handleUpdateEquipmentClick} className="action-btn update-equipment-btn">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        Cập nhật vật dụng
-                      </button>
-                      <button type="button" onClick={handleDelete} className="action-btn delete-btn" disabled={loading}>
-                        {loading ? 'Đang xóa...' : 'Xóa nhân viên'}
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="detail-equipment-section">
-                    <h3>Vật dụng đã cấp</h3>
-                    {renderEquipmentList()}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

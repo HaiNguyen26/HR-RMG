@@ -1,5 +1,38 @@
 import * as XLSX from 'xlsx';
 
+const formatDateToIso = (dateObj) => {
+  if (!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) {
+    return '';
+  }
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateString = (value) => {
+  if (!value || typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  // Accept dd/mm/yyyy or dd-mm-yyyy
+  const parts = trimmed.split(/[\/\-]/);
+  if (parts.length !== 3) return null;
+
+  const day = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  const year = parseInt(parts[2], 10);
+
+  if (
+    Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year) ||
+    day < 1 || day > 31 || month < 1 || month > 12 || year < 1000
+  ) {
+    return null;
+  }
+
+  return new Date(year, month - 1, day);
+};
+
 /**
  * Export employees to Excel template
  */
@@ -8,7 +41,17 @@ export const exportEmployeeTemplate = () => {
   const wb = XLSX.utils.book_new();
 
   // Define headers
-  const headers = ['Mã Nhân Viên', 'Họ Và Tên', 'Email cá nhân', 'Chi Nhánh', 'Phòng Ban', 'Bộ Phận', 'Chức Danh', 'Ngày Nhận Việc'];
+  const headers = [
+    'Mã Nhân Viên',
+    'Họ Và Tên',
+    'Chi Nhánh',
+    'Phòng Ban',
+    'Bộ Phận',
+    'Chức Danh',
+    'Ngày Nhận Việc',
+    'Quản Lý Trực Tiếp',
+    'Quản Lý Gián Tiếp',
+  ];
 
   // Create worksheet with headers
   const ws = XLSX.utils.aoa_to_sheet([headers]);
@@ -17,12 +60,13 @@ export const exportEmployeeTemplate = () => {
   ws['!cols'] = [
     { wch: 14 }, // Mã Nhân Viên
     { wch: 26 }, // Họ Và Tên
-    { wch: 28 }, // Email cá nhân
     { wch: 20 }, // Chi Nhánh
     { wch: 20 }, // Phòng Ban
     { wch: 22 }, // Bộ Phận
     { wch: 20 }, // Chức Danh
     { wch: 18 }, // Ngày Nhận Việc
+    { wch: 24 }, // Quản Lý Trực Tiếp
+    { wch: 24 }, // Quản Lý Gián Tiếp
   ];
 
   // Add worksheet to workbook
@@ -43,18 +87,29 @@ export const exportEmployeesToExcel = (employees) => {
   const wb = XLSX.utils.book_new();
 
   // Define headers
-  const headers = ['Mã Nhân Viên', 'Họ Và Tên', 'Email cá nhân', 'Chi Nhánh', 'Phòng Ban', 'Bộ Phận', 'Chức Danh', 'Ngày Nhận Việc'];
+  const headers = [
+    'Mã Nhân Viên',
+    'Họ Và Tên',
+    'Chi Nhánh',
+    'Phòng Ban',
+    'Bộ Phận',
+    'Chức Danh',
+    'Ngày Nhận Việc',
+    'Quản Lý Trực Tiếp',
+    'Quản Lý Gián Tiếp',
+  ];
 
   // Convert employees to rows
   const rows = employees.map(emp => [
     emp.ma_nhan_vien || '',
     emp.ho_ten || '',
-    emp.email || '',
     emp.chi_nhanh || emp.chiNhanh || '',
     emp.phong_ban || '',
     emp.bo_phan || '',
     emp.chuc_danh || '',
-    emp.ngay_gia_nhap ? new Date(emp.ngay_gia_nhap).toLocaleDateString('vi-VN') : ''
+    emp.ngay_gia_nhap ? new Date(emp.ngay_gia_nhap).toLocaleDateString('vi-VN') : '',
+    emp.quan_ly_truc_tiep || emp.quanLyTrucTiep || '',
+    emp.quan_ly_gian_tiep || emp.quanLyGianTiep || '',
   ]);
 
   // Combine headers and rows
@@ -67,12 +122,13 @@ export const exportEmployeesToExcel = (employees) => {
   ws['!cols'] = [
     { wch: 14 }, // Mã Nhân Viên
     { wch: 26 }, // Họ Và Tên
-    { wch: 28 }, // Email cá nhân
     { wch: 20 }, // Chi Nhánh
     { wch: 20 }, // Phòng Ban
     { wch: 22 }, // Bộ Phận
     { wch: 20 }, // Chức Danh
     { wch: 18 }, // Ngày Nhận Việc
+    { wch: 24 }, // Quản Lý Trực Tiếp
+    { wch: 24 }, // Quản Lý Gián Tiếp
   ];
 
   // Add worksheet to workbook
@@ -124,7 +180,17 @@ export const parseExcelFile = (file) => {
 
         console.log('Headers found in Excel:', headers);
 
-        const defaultOrder = ['maNhanVien', 'hoTen', 'email', 'chiNhanh', 'phongBan', 'boPhan', 'chucDanh', 'ngayGiaNhap'];
+        const defaultOrder = [
+          'maNhanVien',
+          'hoTen',
+          'chiNhanh',
+          'phongBan',
+          'boPhan',
+          'chucDanh',
+          'ngayGiaNhap',
+          'quanLyTrucTiep',
+          'quanLyGianTiep'
+        ];
         const codePattern = /^[A-Za-z]{2,}\d+$/;
 
         // Map header names to field names (case-insensitive and flexible)
@@ -144,21 +210,26 @@ export const parseExcelFile = (file) => {
           'chinhanh': 'chiNhanh',
           'địa điểm': 'chiNhanh',
           'dia diem': 'chiNhanh',
-          'email cá nhân': 'email',
-          'email ca nhan': 'email',
           'phòng ban': 'phongBan',
           'phongban': 'phongBan',
           'phòng': 'phongBan',
           'bộ phận': 'boPhan',
           'bo phan': 'boPhan',
           'bophan': 'boPhan',
-          'email': 'email',
           'ngày gia nhập': 'ngayGiaNhap',
           'ngaygianhap': 'ngayGiaNhap',
           'ngày vào làm': 'ngayGiaNhap',
           'ngayvaolam': 'ngayGiaNhap',
           'ngày nhận việc': 'ngayGiaNhap',
           'ngay nhan viec': 'ngayGiaNhap',
+          'quản lý trực tiếp': 'quanLyTrucTiep',
+          'quan ly truc tiep': 'quanLyTrucTiep',
+          'quanlytructiep': 'quanLyTrucTiep',
+          'qly truc tiep': 'quanLyTrucTiep',
+          'quản lý gián tiếp': 'quanLyGianTiep',
+          'quan ly gian tiep': 'quanLyGianTiep',
+          'quanlygiantep': 'quanLyGianTiep',
+          'qly gian tiep': 'quanLyGianTiep',
         };
 
         const fieldIndexes = {};
@@ -246,36 +317,26 @@ export const parseExcelFile = (file) => {
             const value = row[index];
 
             if (fieldName === 'ngayGiaNhap') {
+              let formattedDate = '';
+
               if (value) {
-                let date;
+                let dateObj = null;
+
                 if (value instanceof Date) {
-                  date = value;
+                  dateObj = value;
                 } else if (typeof value === 'number') {
                   const excelEpoch = new Date(1899, 11, 30);
-                  date = new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
+                  dateObj = new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
                 } else if (typeof value === 'string') {
-                  const dateStr = value.trim();
-                  const parts = dateStr.split(/[\/\-]/);
-                  if (parts.length === 3) {
-                    const day = parseInt(parts[0], 10);
-                    const month = parseInt(parts[1], 10) - 1;
-                    const year = parseInt(parts[2], 10);
-                    date = new Date(year, month, day);
-                  } else {
-                    date = new Date(value);
-                  }
-                } else {
-                  date = new Date(value);
+                  dateObj = parseDateString(value) || new Date(value);
                 }
 
-                if (!Number.isNaN(date.getTime())) {
-                  employee[fieldName] = date.toISOString().split('T')[0];
-                } else {
-                  employee[fieldName] = '';
+                if (dateObj instanceof Date && !Number.isNaN(dateObj.getTime())) {
+                  formattedDate = formatDateToIso(dateObj);
                 }
-              } else {
-                employee[fieldName] = '';
               }
+
+              employee[fieldName] = formattedDate;
             } else {
               employee[fieldName] = value ? String(value).trim() : '';
             }

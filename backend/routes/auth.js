@@ -6,16 +6,16 @@ const pool = require('../config/database');
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const { username, password, email } = req.body;
-    
-    // Support both username and email for login
-    const loginIdentifier = username || email;
+    const { username, password, email, fullName } = req.body;
+
+    // Support username, email, or full name for login
+    const loginIdentifier = (fullName || username || email || '').trim();
 
     // Validate input
     if (!loginIdentifier || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Vui lòng nhập đầy đủ username/email và password'
+        message: 'Vui lòng nhập đầy đủ thông tin đăng nhập và mật khẩu'
       });
     }
 
@@ -25,7 +25,7 @@ router.post('/login', async (req, res) => {
       FROM users
       WHERE (username = $1 OR email = $1) AND trang_thai = 'ACTIVE'
     `;
-    
+
     const userResult = await pool.query(userQuery, [loginIdentifier]);
 
     let authenticatedUser = null;
@@ -35,7 +35,7 @@ router.post('/login', async (req, res) => {
       // Found in users table
       const user = userResult.rows[0];
       const isPasswordValid = await bcrypt.compare(password, user.password);
-      
+
       if (isPasswordValid) {
         authenticatedUser = {
           id: user.id,
@@ -48,29 +48,34 @@ router.post('/login', async (req, res) => {
     } else {
       // Not found in users table, try employees table
       const employeeQuery = `
-        SELECT id, ma_nhan_vien, ho_ten, email, password, trang_thai, phong_ban, chuc_danh, chi_nhanh
+        SELECT id, ma_nhan_vien, ho_ten, email, password, trang_thai, phong_ban, chuc_danh, chi_nhanh, quan_ly_truc_tiep, quan_ly_gian_tiep
         FROM employees
-        WHERE email = $1 AND trang_thai IN ('ACTIVE', 'PENDING')
+        WHERE (
+          email = $1 OR
+          LOWER(TRIM(ho_ten)) = LOWER(TRIM($1))
+        ) AND trang_thai IN ('ACTIVE', 'PENDING')
       `;
-      
+
       const employeeResult = await pool.query(employeeQuery, [loginIdentifier]);
 
       if (employeeResult.rows.length > 0) {
         const employee = employeeResult.rows[0];
         const isPasswordValid = await bcrypt.compare(password, employee.password);
-        
+
         if (isPasswordValid) {
           isEmployee = true;
           authenticatedUser = {
             id: employee.id,
-            username: employee.email, // Use email as username for employees
+            username: employee.ho_ten,
             role: 'EMPLOYEE',
             hoTen: employee.ho_ten,
             email: employee.email,
             maNhanVien: employee.ma_nhan_vien,
             phongBan: employee.phong_ban,
             chucDanh: employee.chuc_danh,
-            chiNhanh: employee.chi_nhanh
+            chiNhanh: employee.chi_nhanh,
+            quanLyTrucTiep: employee.quan_ly_truc_tiep,
+            quanLyGianTiep: employee.quan_ly_gian_tiep
           };
         }
       }
@@ -80,7 +85,7 @@ router.post('/login', async (req, res) => {
     if (!authenticatedUser) {
       return res.status(401).json({
         success: false,
-        message: 'Email/Username hoặc password không đúng'
+        message: 'Thông tin đăng nhập hoặc mật khẩu không đúng'
       });
     }
 

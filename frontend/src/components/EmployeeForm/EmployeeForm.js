@@ -10,7 +10,8 @@ const EmployeeForm = ({ onSuccess, onCancel }) => {
     boPhan: '',
     chiNhanh: '',
     ngayGiaNhap: '',
-    email: '',
+    quanLyTrucTiep: '',
+    quanLyGianTiep: '',
   });
 
   const [error, setError] = useState('');
@@ -29,7 +30,7 @@ const EmployeeForm = ({ onSuccess, onCancel }) => {
     setError('');
 
     // Validate form
-    if (!formData.hoTen || !formData.chucDanh || !formData.phongBan || !formData.boPhan || !formData.ngayGiaNhap || !formData.email) {
+    if (!formData.hoTen || !formData.chucDanh || !formData.phongBan || !formData.boPhan || !formData.ngayGiaNhap) {
       setError('Vui lòng điền đầy đủ thông tin');
       return;
     }
@@ -136,6 +137,7 @@ const EmployeeForm = ({ onSuccess, onCancel }) => {
                 />
               </div>
 
+
               {/* Phòng ban */}
               <div className="form-group">
                 <label htmlFor="phongBan" className="form-label">
@@ -174,10 +176,10 @@ const EmployeeForm = ({ onSuccess, onCancel }) => {
                 />
               </div>
 
-              {/* Ngày gia nhập */}
+              {/* Ngày nhận việc */}
               <div className="form-group">
                 <label htmlFor="ngayGiaNhap" className="form-label">
-                  Ngày gia nhập *
+                  Ngày nhận việc *
                 </label>
                 <input
                   type="date"
@@ -190,20 +192,35 @@ const EmployeeForm = ({ onSuccess, onCancel }) => {
                 />
               </div>
 
-              {/* Email */}
+              {/* Quản lý trực tiếp */}
               <div className="form-group">
-                <label htmlFor="email" className="form-label">
-                  Email *
+                <label htmlFor="quanLyTrucTiep" className="form-label">
+                  Quản lý trực tiếp
                 </label>
                 <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
+                  type="text"
+                  id="quanLyTrucTiep"
+                  name="quanLyTrucTiep"
+                  value={formData.quanLyTrucTiep}
                   onChange={handleChange}
-                  required
                   className="form-input"
-                  placeholder="example@company.com"
+                  placeholder="Ví dụ: Nguyễn Văn A"
+                />
+              </div>
+
+              {/* Quản lý gián tiếp */}
+              <div className="form-group">
+                <label htmlFor="quanLyGianTiep" className="form-label">
+                  Quản lý gián tiếp
+                </label>
+                <input
+                  type="text"
+                  id="quanLyGianTiep"
+                  name="quanLyGianTiep"
+                  value={formData.quanLyGianTiep}
+                  onChange={handleChange}
+                  className="form-input"
+                  placeholder="Ví dụ: Trần Thị B"
                 />
               </div>
             </div>

@@ -6,6 +6,9 @@ import EmployeeForm from './components/EmployeeForm/EmployeeForm';
 import EquipmentAssignment from './components/EquipmentAssignment/EquipmentAssignment';
 import RequestsManagement from './components/RequestsManagement/RequestsManagement';
 import LeaveRequest from './components/LeaveRequest/LeaveRequest';
+import LeaveApprovals from './components/LeaveApprovals/LeaveApprovals';
+import OvertimeRequest from './components/OvertimeRequest/OvertimeRequest';
+import AttendanceRequest from './components/AttendanceRequest/AttendanceRequest';
 import Notifications from './components/Notifications/Notifications';
 import Login from './components/Login/Login';
 import ToastContainer from './components/Common/ToastContainer';
@@ -210,7 +213,28 @@ function App() {
             <LeaveRequest
               currentUser={currentUser}
               showToast={showToast}
+            />
+          );
+        case 'leave-approvals':
+          return (
+            <LeaveApprovals
+              currentUser={currentUser}
+              showToast={showToast}
               showConfirm={showConfirm}
+            />
+          );
+        case 'overtime-request':
+          return (
+            <OvertimeRequest
+              currentUser={currentUser}
+              showToast={showToast}
+            />
+          );
+        case 'attendance-request':
+          return (
+            <AttendanceRequest
+              currentUser={currentUser}
+              showToast={showToast}
             />
           );
         case 'dashboard':
@@ -254,6 +278,14 @@ function App() {
             showConfirm={showConfirm}
           />
         );
+      case 'leave-approvals':
+        return (
+          <LeaveApprovals
+            currentUser={currentUser}
+            showToast={showToast}
+            showConfirm={showConfirm}
+          />
+        );
       case 'dashboard':
       default:
         return (
@@ -270,6 +302,25 @@ function App() {
     }
   };
 
+  const VIEW_TITLES = {
+    dashboard: 'Tổng quan hệ thống',
+    form: 'Thêm nhân viên',
+    equipment: 'Bàn giao thiết bị',
+    requests: 'Quản lý yêu cầu',
+    'leave-approvals': 'Duyệt yêu cầu',
+    'leave-request': 'Gửi yêu cầu nghỉ',
+    'overtime-request': 'Đề xuất tăng ca',
+    'attendance-request': 'Bổ sung chấm công',
+  };
+
+  const currentTitle = VIEW_TITLES[currentView] || 'Bảng điều khiển';
+  const userInitials = (currentUser?.hoTen || currentUser?.username || 'U')
+    .split(' ')
+    .map((part) => part.charAt(0))
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <div className={`app ${showNotifications ? 'notifications-open' : ''}`}>
       {showIntroOverlay && <IntroOverlay user={introUser || currentUser} />}
@@ -279,13 +330,46 @@ function App() {
         onAddEmployee={handleAddEmployee}
         currentUser={currentUser}
         onLogout={handleLogout}
-        onShowNotifications={() => {
-          setShowNotifications(true);
-          fetchUnreadNotificationCount();
-        }}
-        unreadNotificationCount={unreadNotificationCount}
       />
       <main className="main-content">
+        <header className="app-header">
+          <div className="app-header__info">
+            <h1>{currentTitle}</h1>
+            <p>Xin chào, {currentUser?.hoTen || currentUser?.username || 'người dùng'}!</p>
+          </div>
+          <div className="app-header__actions">
+            <button
+              type="button"
+              className={`app-header__notifications-btn ${unreadNotificationCount > 0 ? 'has-unread' : ''}`}
+              onClick={() => {
+                setShowNotifications(true);
+                fetchUnreadNotificationCount();
+              }}
+              title="Thông báo"
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                ></path>
+              </svg>
+              {unreadNotificationCount > 0 && (
+                <span className="app-header__notifications-badge">
+                  {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                </span>
+              )}
+            </button>
+            <div className="app-header__user">
+              <div className="app-header__avatar">{userInitials}</div>
+              <div className="app-header__user-details">
+                <span className="app-header__user-name">{currentUser?.hoTen || currentUser?.username}</span>
+                <span className="app-header__user-role">{currentUser?.role || 'Người dùng'}</span>
+              </div>
+            </div>
+          </div>
+        </header>
         {loading && currentView === 'dashboard' ? (
           <div className="loading-container">
             <div className="loading-spinner"></div>

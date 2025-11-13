@@ -1,15 +1,112 @@
 import React, { useState, useEffect } from 'react';
-import { requestsAPI, equipmentAPI } from '../../services/api';
+import { requestsAPI, equipmentAPI, employeesAPI } from '../../services/api';
 import './EmployeeDashboard.css';
 
 const EmployeeDashboard = ({ currentUser, onNavigate }) => {
     const [equipment, setEquipment] = useState([]);
     const [loadingEquipment, setLoadingEquipment] = useState(true);
+    const [employeeProfile, setEmployeeProfile] = useState(null);
+    const [loadingProfile, setLoadingProfile] = useState(false);
 
     useEffect(() => {
         if (currentUser?.id) {
             fetchEquipment();
         }
+    }, [currentUser]);
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchProfile = async () => {
+            if (!currentUser) {
+                if (isMounted) {
+                    setEmployeeProfile(null);
+                }
+                return;
+            }
+
+            setLoadingProfile(true);
+            let profile = null;
+
+            const trySetProfile = (candidate) => {
+                if (!candidate) return;
+                profile = candidate;
+            };
+
+            const candidateIds = [
+                currentUser.employeeId,
+                currentUser.employee_id,
+                currentUser.employee?.id,
+                currentUser.id
+            ].filter(Boolean);
+
+            try {
+                for (const id of candidateIds) {
+                    if (!id) continue;
+                    try {
+                        const response = await employeesAPI.getById(id);
+                        if (response.data?.data) {
+                            trySetProfile(response.data.data);
+                            if (profile) break;
+                        }
+                    } catch (error) {
+                        if (process.env.NODE_ENV === 'development') {
+                            console.debug('employeesAPI.getById failed', id, error);
+                        }
+                    }
+                }
+
+                if (!profile) {
+                    const allResponse = await employeesAPI.getAll();
+                    const list = allResponse.data?.data || [];
+                    const matches = list.find((item) => {
+                        const normalized = {
+                            id: item.id,
+                            employeeId: item.employeeId || item.employee_id,
+                            userId: item.userId || item.user_id,
+                            maNhanVien: item.maNhanVien || item.ma_nhan_vien,
+                        };
+                        const targetIds = new Set(
+                            [
+                                currentUser.id,
+                                currentUser.employeeId,
+                                currentUser.employee_id,
+                                currentUser.userId,
+                                currentUser.user_id,
+                                currentUser.employee?.id,
+                            ].filter(Boolean)
+                        );
+                        const targetCodes = new Set(
+                            [
+                                currentUser.maNhanVien,
+                                currentUser.ma_nhan_vien
+                            ].filter(Boolean)
+                        );
+                        return (
+                            targetIds.has(normalized.id) ||
+                            targetIds.has(normalized.employeeId) ||
+                            targetIds.has(normalized.userId) ||
+                            targetCodes.has(normalized.maNhanVien)
+                        );
+                    });
+                    if (matches) {
+                        trySetProfile(matches);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching employee profile:', error);
+            } finally {
+                if (isMounted) {
+                    setEmployeeProfile(profile);
+                    setLoadingProfile(false);
+                }
+            }
+        };
+
+        fetchProfile();
+
+        return () => {
+            isMounted = false;
+        };
     }, [currentUser]);
 
     const fetchEquipment = async () => {
@@ -117,6 +214,167 @@ const EmployeeDashboard = ({ currentUser, onNavigate }) => {
         }
     };
 
+    const pickUserValue = (...keys) => {
+        const sources = [employeeProfile, currentUser];
+        for (const source of sources) {
+            if (!source) continue;
+            for (const key of keys) {
+                const value = source?.[key];
+                if (value !== undefined && value !== null) {
+                    if (typeof value === 'string') {
+                        if (value.trim().length) {
+                            return value;
+                        }
+                    } else {
+                        return value;
+                    }
+                }
+            }
+        }
+        return '';
+    };
+
+    const displayValue = (value) => {
+        if (value === undefined || value === null) return '-';
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            return trimmed.length ? trimmed : '-';
+        }
+        if (typeof value === 'number') {
+            return String(value);
+        }
+        return value;
+    };
+
+    const departmentDisplay = displayValue(getDepartmentLabel(pickUserValue('phongBan', 'phong_ban')));
+    const employeeDataSources = [employeeProfile, currentUser];
+
+    const fieldDefinitions = {
+        basic: [
+            { label: 'Mã nhân viên', keys: ['maNhanVien', 'ma_nhan_vien'] },
+            { label: 'Họ và tên', keys: ['hoTen', 'ho_ten'] },
+            { label: 'Chức danh', keys: ['chucDanh', 'chuc_danh'] },
+            { label: 'Chi nhánh', keys: ['chiNhanh', 'chi_nhanh'] },
+            { label: 'Phòng ban', customValue: departmentDisplay, keys: ['phongBan', 'phong_ban'] },
+            { label: 'Cấp bậc', keys: ['capBac', 'cap_bac'] }
+        ],
+        contact: [
+            { label: 'Email', keys: ['email'] },
+            { label: 'Số điện thoại', keys: ['soDienThoai', 'so_dien_thoai'] },
+            { label: 'Địa chỉ', keys: ['diaChi', 'dia_chi'] }
+        ],
+        organization: [
+            { label: 'Ngày nhận việc', formatter: formatDate, keys: ['ngayGiaNhap', 'ngay_gia_nhap'] },
+            { label: 'Loại hợp đồng', keys: ['loaiHopDong', 'loai_hop_dong'] },
+            { label: 'Trạng thái', keys: ['trangThai', 'trang_thai'] },
+            { label: 'Ngày hết hạn hợp đồng', formatter: formatDate, keys: ['hetHanHopDong', 'het_han_hop_dong'] }
+        ],
+        management: [
+            { label: 'Quản lý trực tiếp', keys: ['quanLyTrucTiep', 'quan_ly_truc_tiep'] },
+            { label: 'Quản lý gián tiếp', keys: ['quanLyGianTiep', 'quan_ly_gian_tiep'] },
+            { label: 'Ngày sinh', formatter: formatDate, keys: ['ngaySinh', 'ngay_sinh'] },
+            { label: 'Giới tính', keys: ['gioiTinh', 'gioi_tinh'] },
+            { label: 'Tình trạng hôn nhân', keys: ['honNhan', 'hon_nhan'] }
+        ]
+    };
+
+    const resolveFieldValue = (definition) => {
+        if (definition.customValue !== undefined) {
+            return definition.customValue;
+        }
+        for (const source of employeeDataSources) {
+            if (!source) continue;
+            for (const key of definition.keys) {
+                const value = source?.[key];
+                if (value !== undefined && value !== null && String(value).trim() !== '') {
+                    return definition.formatter ? definition.formatter(value) : value;
+                }
+            }
+        }
+        return '';
+    };
+
+    const definedSections = [
+        { title: 'Thông tin cơ bản', key: 'basic' },
+        { title: 'Liên hệ', key: 'contact' },
+        { title: 'Công việc & Tổ chức', key: 'organization' },
+        { title: 'Quản lý & Cá nhân', key: 'management' }
+    ];
+
+    const infoSections = definedSections
+        .map((section) => {
+            const fields = fieldDefinitions[section.key]
+                .map((definition) => {
+                    const rawValue = resolveFieldValue(definition);
+                    const value = displayValue(rawValue);
+                    return value === '-' ? null : { label: definition.label, value };
+                })
+                .filter(Boolean);
+            return fields.length > 0 ? { ...section, fields } : null;
+        })
+        .filter(Boolean);
+
+    const avatarName = pickUserValue('hoTen', 'ho_ten', 'username') || 'NV';
+    const avatarInitials = avatarName
+        .split(' ')
+        .filter(Boolean)
+        .map((word) => word[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase() || 'NV';
+
+    const statusText = displayValue(pickUserValue('trangThai', 'trang_thai'));
+
+    const quickActions = [
+        {
+            key: 'leave-request',
+            title: 'Xin nghỉ phép',
+            description: 'Gửi đơn nghỉ phép và theo dõi trạng thái phê duyệt.',
+            icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.8"
+                        d="M8 7V3m8 4V3m-9 8h10m-12 8h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                </svg>
+            )
+        },
+        {
+            key: 'leave-request-resign',
+            navigateTo: 'resignation-request',
+            title: 'Xin nghỉ việc',
+            description: 'Thông báo nghỉ việc và cập nhật quy trình bàn giao.',
+            icon: (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.8"
+                        d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                </svg>
+            )
+        }
+    ];
+
+    const handleQuickAction = (actionKey, navigateOverride) => {
+        if (!onNavigate) return;
+        switch (navigateOverride || actionKey) {
+            case 'leave-request':
+                onNavigate('leave-request');
+                break;
+            case 'leave-request-resign':
+            case 'resignation-request':
+                onNavigate('resignation-request');
+                break;
+            default:
+                onNavigate(actionKey);
+                break;
+        }
+    };
+
     return (
         <div className="employee-dashboard">
             <div className="employee-dashboard-header">
@@ -131,190 +389,81 @@ const EmployeeDashboard = ({ currentUser, onNavigate }) => {
             </div>
 
             <div className="employee-dashboard-content">
-                {/* Layout 2 cột: Thông tin cá nhân bên trái, Actions và Stats bên phải */}
-                <div className="employee-dashboard-main-grid">
-                    {/* Cột trái: Thông tin cá nhân và Vật dụng đã cấp */}
-                    <div className="employee-info-section">
-                        <div className="employee-info-card dark">
-                            <div className="employee-info-header">
-                                <svg className="employee-info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
-                                    </path>
-                                </svg>
-                                <h2 className="employee-info-title">Thông tin cá nhân</h2>
-                            </div>
-                            <div className="employee-info-grid">
-                                <div className="employee-info-item">
-                                    <span className="employee-info-label">Mã nhân viên</span>
-                                    <p className="employee-info-value">{currentUser?.maNhanVien || '-'}</p>
+                <div className="employee-info-layout">
+                    <div className="employee-info-card">
+                        <header className="employee-info-card-header">
+                            <div className="employee-info-card-title-group">
+                                <div className="employee-info-card-avatar">
+                                    <span>{avatarInitials}</span>
                                 </div>
-                                <div className="employee-info-item">
-                                    <span className="employee-info-label">Họ và tên</span>
-                                    <p className="employee-info-value">{currentUser?.hoTen || '-'}</p>
-                                </div>
-                                <div className="employee-info-item">
-                                    <span className="employee-info-label">Email</span>
-                                    <p className="employee-info-value">{currentUser?.email || '-'}</p>
-                                </div>
-                                <div className="employee-info-item">
-                                    <span className="employee-info-label">Chức danh</span>
-                                    <p className="employee-info-value">{currentUser?.chucDanh || '-'}</p>
-                                </div>
-                                <div className="employee-info-item">
-                                    <span className="employee-info-label">Chi nhánh</span>
-                                    <p className="employee-info-value">{currentUser?.chiNhanh || '-'}</p>
-                                </div>
-                                <div className="employee-info-item">
-                                    <span className="employee-info-label">Phòng ban</span>
-                                    <p className="employee-info-value">
-                                        {currentUser?.phongBan === 'IT' ? 'Phòng IT' :
-                                            currentUser?.phongBan === 'HR' ? 'Hành chính nhân sự' :
-                                                currentUser?.phongBan === 'ACCOUNTING' ? 'Kế toán' :
-                                                    currentUser?.phongBan === 'OTHER' ? 'Phòng ban khác' :
-                                                        currentUser?.phongBan || '-'}
-                                    </p>
+                                <div className="employee-info-card-text">
+                                    <h2 className="employee-info-title">Thông tin nhân viên</h2>
+                                    <p className="employee-info-subtitle">Chi tiết hồ sơ • cập nhật mới nhất</p>
                                 </div>
                             </div>
-                        </div>
+                            <div className="employee-info-card-meta">
+                                <span className="employee-info-meta-badge">ID: {displayValue(pickUserValue('maNhanVien', 'ma_nhan_vien'))}</span>
+                                <span className={`employee-info-meta-badge status ${statusText === '-' ? 'status-neutral' : 'status-active'}`}>
+                                    {statusText}
+                                </span>
+                            </div>
+                        </header>
 
-                        {/* Bảng vật dụng đã cấp */}
-                        <div className="employee-equipment-card">
-                            <div className="employee-equipment-header">
-                                <svg className="employee-equipment-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4">
-                                    </path>
-                                </svg>
-                                <h2 className="employee-equipment-title">Vật dụng đã cấp</h2>
-                            </div>
-                            {loadingEquipment ? (
-                                <div className="employee-equipment-loading">
-                                    <svg className="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span>Đang tải...</span>
-                                </div>
-                            ) : equipment.length > 0 ? (
-                                <div className="employee-equipment-table-container">
-                                    <table className="employee-equipment-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Vật dụng</th>
-                                                <th>Số lượng</th>
-                                                <th>Phòng ban</th>
-                                                <th>Ngày cấp</th>
-                                                <th>Người cấp</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {equipment.map((item, index) => (
-                                                <tr key={index}>
-                                                    <td>{item.name}</td>
-                                                    <td>{item.quantity}</td>
-                                                    <td>{getDepartmentLabel(item.department)}</td>
-                                                    <td>{formatDate(item.providedAt)}</td>
-                                                    <td>{item.providedBy || '-'}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                        <div className="employee-info-card-body">
+                            {loadingProfile ? (
+                                <div className="employee-info-loading">
+                                    <div className="employee-info-spinner" />
+                                    <p>Đang tải dữ liệu nhân viên...</p>
                                 </div>
                             ) : (
-                                <div className="employee-equipment-empty">
-                                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4">
-                                        </path>
-                                    </svg>
-                                    <p>Chưa có vật dụng nào được cấp</p>
-                                </div>
+                                infoSections.map((section, index) => (
+                                    <section className="employee-info-segment" key={section.title}>
+                                        <div className="employee-info-segment-title">
+                                            <h3>{section.title}</h3>
+                                        </div>
+                                        <div className="employee-info-fields">
+                                            {section.fields.map((field) => (
+                                                <div
+                                                    key={field.label}
+                                                    className="employee-info-field"
+                                                    tabIndex={0}
+                                                    data-empty={field.value === '-' ? 'true' : 'false'}
+                                                >
+                                                    <span className="employee-info-label">{field.label}</span>
+                                                    <p className="employee-info-value">{field.value}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {index !== infoSections.length - 1 && <div className="employee-info-divider" />}
+                                    </section>
+                                ))
                             )}
                         </div>
                     </div>
 
-                    {/* Cột phải: Quick Actions và Stats */}
-                    <div className="employee-actions-stats-section">
-                        {/* Quick Actions */}
-                        <div className="employee-quick-actions">
-                            <h2 className="employee-section-title">Thao tác nhanh</h2>
-                            <div className="employee-actions-grid">
-                                <div
-                                    className="employee-action-card"
-                                    onClick={() => onNavigate && onNavigate('leave-request')}
+                    <section className="employee-quick-actions">
+                        <header className="employee-quick-actions-header">
+                            <h2>Thao tác nhanh</h2>
+                            <p>Truy cập nhanh các thao tác thường dùng của bạn.</p>
+                        </header>
+                        <div className="employee-quick-actions-grid">
+                            {quickActions.map((action) => (
+                                <button
+                                    key={action.key}
+                                    type="button"
+                                    className="quick-action-card"
+                                    onClick={() => handleQuickAction(action.key, action.navigateTo)}
                                 >
-                                    <div className="employee-action-icon leave">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                            </path>
-                                        </svg>
+                                    <div className="quick-action-icon">{action.icon}</div>
+                                    <div className="quick-action-content">
+                                        <span className="quick-action-title">{action.title}</span>
+                                        <span className="quick-action-description">{action.description}</span>
                                     </div>
-                                    <h3 className="employee-action-title">Xin nghỉ phép</h3>
-                                </div>
-                                <div
-                                    className="employee-action-card"
-                                    onClick={() => onNavigate && onNavigate('leave-request')}
-                                >
-                                    <div className="employee-action-icon resign">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-                                            </path>
-                                        </svg>
-                                    </div>
-                                    <h3 className="employee-action-title">Xin nghỉ việc</h3>
-                                </div>
-                            </div>
+                                </button>
+                            ))}
                         </div>
+                    </section>
 
-                        {/* Thống kê cá nhân */}
-                        <div className="employee-stats">
-                            <h2 className="employee-section-title">Thống kê của tôi</h2>
-                            <div className="employee-stats-grid">
-                                <div className="employee-stat-card">
-                                    <div className="employee-stat-icon">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                            </path>
-                                        </svg>
-                                    </div>
-                                    <div className="employee-stat-content">
-                                        <p className="employee-stat-label">Đơn đã gửi</p>
-                                        <p className="employee-stat-value">0</p>
-                                    </div>
-                                </div>
-                                <div className="employee-stat-card">
-                                    <div className="employee-stat-icon">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
-                                            </path>
-                                        </svg>
-                                    </div>
-                                    <div className="employee-stat-content">
-                                        <p className="employee-stat-label">Đã duyệt</p>
-                                        <p className="employee-stat-value">0</p>
-                                    </div>
-                                </div>
-                                <div className="employee-stat-card">
-                                    <div className="employee-stat-icon">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
-                                            </path>
-                                        </svg>
-                                    </div>
-                                    <div className="employee-stat-content">
-                                        <p className="employee-stat-label">Chờ duyệt</p>
-                                        <p className="employee-stat-value">0</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

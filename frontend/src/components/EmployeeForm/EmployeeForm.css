@@ -133,6 +133,43 @@
   outline: none;
 }
 
+.form-group select.form-input {
+  appearance: none;
+  padding-right: 2.75rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 8l4 4 4-4' stroke='%232563eb' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.15rem center;
+  background-size: 0.95rem;
+  box-shadow: 0 12px 20px -16px rgba(37, 99, 235, 0.4);
+  transition: border-color 0.22s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.form-group select.form-input:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px -18px rgba(37, 99, 235, 0.45);
+}
+
+.form-group select.form-input:focus {
+  border-color: #2563eb;
+}
+
+.form-group select.form-input::-ms-expand {
+  display: none;
+}
+
+.form-group select.form-input option {
+  padding: 0.6rem;
+  font-weight: 500;
+  color: #1f2937;
+  background-color: #fff;
+}
+
+.form-group select.form-input option:hover,
+.form-group select.form-input option:checked {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(96, 165, 250, 0.35));
+}
+
 .form-input:hover {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
