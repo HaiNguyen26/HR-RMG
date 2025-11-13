@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { requestsAPI } from '../../services/api';
 import './RequestsManagement.css';
 
@@ -7,7 +7,6 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
   const [allRequests, setAllRequests] = useState([]); // Store all requests for stats calculation
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all', 'pending', 'approved', 'in_progress', 'completed'
-  const [selectedRequest, setSelectedRequest] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [updatingItems, setUpdatingItems] = useState({}); // Track which items are being updated
 
@@ -28,18 +27,56 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
     targetDepartment = currentUser?.role; // IT, ACCOUNTING chỉ xem của mình
   }
 
-  useEffect(() => {
-    fetchAllRequests();
-  }, [targetDepartment]);
-
-  useEffect(() => {
-    if (allRequests.length > 0 || filter === 'all') {
-      applyFilter();
+  const applyFilter = useCallback((requestsToFilter = null) => {
+    const dataToFilter = requestsToFilter || allRequests;
+    if (!dataToFilter || dataToFilter.length === 0) {
+      setRequests([]);
+      return;
     }
-  }, [filter, allRequests]);
 
-  // Fetch all requests (without filter) for stats calculation
-  const fetchAllRequests = async () => {
+    const groupedByEmployee = dataToFilter.reduce((acc, request) => {
+      const employeeId = request.employee_id || 'unknown';
+      if (!acc[employeeId]) {
+        acc[employeeId] = [];
+      }
+      acc[employeeId].push(request);
+      return acc;
+    }, {});
+
+    const filteredEmployeeGroups = Object.entries(groupedByEmployee).filter(([, employeeRequests]) => {
+      if (filter === 'completed') {
+        return employeeRequests.some(r => isRequestFullyCompleted(r));
+      }
+      if (filter === 'all') {
+        return employeeRequests.some(r => !isRequestFullyCompleted(r));
+      }
+      const statusMap = {
+        pending: 'PENDING',
+        approved: 'APPROVED',
+        in_progress: 'IN_PROGRESS',
+      };
+      return employeeRequests.some(r => r.status === statusMap[filter]);
+    });
+
+    const filteredData = filteredEmployeeGroups.flatMap(([, employeeRequests]) => {
+      if (filter === 'completed') {
+        return employeeRequests.filter(r => isRequestFullyCompleted(r));
+      }
+      if (filter === 'all') {
+        return employeeRequests;
+      }
+      const statusMap = {
+        pending: 'PENDING',
+        approved: 'APPROVED',
+        in_progress: 'IN_PROGRESS',
+      };
+      return employeeRequests.filter(r => r.status === statusMap[filter]);
+    });
+
+    setRequests(filteredData);
+  }, [allRequests, filter]);
+
+  const fetchAllRequests = useCallback(async () => {
     try {
       setLoading(true);
       const params = {};
@@ -48,10 +85,10 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
         params.targetDepartment = targetDepartment;
       }
       // Don't apply status filter here - fetch all for stats
-      const response = await requestsAPI.getAll(params);
-      if (response.data.success) {
-        setAllRequests(response.data.data);
-        applyFilter(response.data.data);
+      const res = await requestsAPI.getAll(params);
+      if (res.data.success) {
+        setAllRequests(res.data.data);
+        applyFilter(res.data.data);
       }
     } catch (error) {
       console.error('Error fetching requests:', error);
@@ -61,85 +98,32 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [applyFilter, showToast, targetDepartment]);
+
+  useEffect(() => {
+    fetchAllRequests();
+  }, [fetchAllRequests]);
+
+  useEffect(() => {
+    if (allRequests.length > 0 || filter === 'all') {
+      applyFilter();
+    }
+  }, [allRequests, filter, applyFilter]);
 
   // Check if a request is fully completed (all items are COMPLETED)
   const isRequestFullyCompleted = (request) => {
     if (request.status !== 'COMPLETED') return false;
     if (!request.items_detail || !Array.isArray(request.items_detail)) return false;
     if (request.items_detail.length === 0) return false;
-    return request.items_detail.every(item => 
+    return request.items_detail.every(item =>
       item.status === 'COMPLETED' && item.quantity_provided >= item.quantity
     );
-  };
-
-  // Apply filter to allRequests
-  // Group by employee first, then filter out employee cards where ALL requests are completed
-  const applyFilter = (requestsToFilter = null) => {
-    const dataToFilter = requestsToFilter || allRequests;
-    if (!dataToFilter || dataToFilter.length === 0) {
-      setRequests([]);
-      return;
-    }
-    
-    // Group by employee first
-    const groupedByEmployee = dataToFilter.reduce((acc, request) => {
-      const employeeId = request.employee_id || 'unknown';
-      if (!acc[employeeId]) {
-        acc[employeeId] = [];
-      }
-      acc[employeeId].push(request);
-      return acc;
-    }, {});
-    
-    // Filter: Keep employee groups that have at least one non-fully-completed request
-    // Or if filter is 'completed', show only employees with fully completed requests
-    const filteredEmployeeGroups = Object.entries(groupedByEmployee).filter(([employeeId, requests]) => {
-      if (filter === 'completed') {
-        // For completed filter, show employees that have at least one fully completed request
-        return requests.some(r => isRequestFullyCompleted(r));
-      } else if (filter === 'all') {
-        // For 'all' filter, show employee if they have at least one request that is not fully completed
-        return requests.some(r => !isRequestFullyCompleted(r));
-      } else {
-        // For other filters, show if they have requests matching the filter
-        const statusMap = {
-          'pending': 'PENDING',
-          'approved': 'APPROVED',
-          'in_progress': 'IN_PROGRESS',
-        };
-        return requests.some(r => r.status === statusMap[filter]);
-      }
-    });
-    
-    // Flatten back to requests array
-    // For completed filter, only show fully completed requests
-    // For other filters, show all requests for employees that match the filter
-    const filteredData = filteredEmployeeGroups.flatMap(([employeeId, requests]) => {
-      if (filter === 'completed') {
-        // Only show fully completed requests
-        return requests.filter(r => isRequestFullyCompleted(r));
-      } else if (filter === 'all') {
-        // Show all requests for employees that have at least one non-completed request
-        return requests;
-      } else {
-        // Filter by status
-        const statusMap = {
-          'pending': 'PENDING',
-          'approved': 'APPROVED',
-          'in_progress': 'IN_PROGRESS',
-        };
-        return requests.filter(r => r.status === statusMap[filter]);
-      }
-    });
-    
-    setRequests(filteredData);
   };
 
   const handleStatusChange = async (requestId, newStatus, notes = '') => {
     try {
       setUpdatingStatus(true);
-      const response = await requestsAPI.update(requestId, {
+      await requestsAPI.update(requestId, {
         status: newStatus,
         assignedTo: currentUser?.id || null,
         notes: notes,
@@ -148,7 +132,6 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
       if (showToast) {
         showToast('Đã cập nhật trạng thái yêu cầu', 'success');
       }
-      setSelectedRequest(null);
     } catch (error) {
       console.error('Error updating request:', error);
       const errorMessage = error.response?.data?.message || 'Lỗi khi cập nhật yêu cầu';
@@ -441,12 +424,12 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
       <div className="requests-header">
         <div>
           <h1 className="requests-title">
-            {targetDepartment 
+            {targetDepartment
               ? `Quản lý yêu cầu - ${getDepartmentLabel(targetDepartment)}`
               : 'Quản lý yêu cầu - Tất cả phòng ban'}
           </h1>
           <p className="requests-subtitle">
-            {targetDepartment 
+            {targetDepartment
               ? 'Xem và xử lý các yêu cầu từ HR'
               : 'Xem và theo dõi tất cả các yêu cầu từ HR đến các phòng ban'}
           </p>
@@ -568,20 +551,20 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
                               <div className="department-item-quantity">
                                 Yêu cầu: {item.quantity} | Đã cung cấp: {item.quantity_provided || 0}
                               </div>
-                              
+
                               {/* Actions for department */}
-                              {(request.status === 'APPROVED' || request.status === 'IN_PROGRESS') && 
-                               targetDepartment && 
-                               request.target_department === targetDepartment && (
-                                <button
-                                  className="btn-update-item-small"
-                                  onClick={() => handleItemQuantityUpdate(request.id, item.id, item.quantity_provided, item.quantity)}
-                                  disabled={updatingItems[item.id]}
-                                >
-                                  {updatingItems[item.id] ? 'Đang cập nhật...' : 'Cập nhật'}
-                                </button>
-                              )}
-                              
+                              {(request.status === 'APPROVED' || request.status === 'IN_PROGRESS') &&
+                                targetDepartment &&
+                                request.target_department === targetDepartment && (
+                                  <button
+                                    className="btn-update-item-small"
+                                    onClick={() => handleItemQuantityUpdate(request.id, item.id, item.quantity_provided, item.quantity)}
+                                    disabled={updatingItems[item.id]}
+                                  >
+                                    {updatingItems[item.id] ? 'Đang cập nhật...' : 'Cập nhật'}
+                                  </button>
+                                )}
+
                               {/* Tracking info for HR */}
                               {(!targetDepartment || request.target_department !== targetDepartment) && (
                                 <div className="item-tracking-info-small">
@@ -597,7 +580,7 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
                                   )}
                                 </div>
                               )}
-                              
+
                               {item.quantity_provided > 0 && (
                                 <div className="item-progress-small">
                                   <div className="item-progress-bar-small">
