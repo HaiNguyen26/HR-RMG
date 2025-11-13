@@ -253,16 +253,6 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
     return labels[dept] || dept;
   };
 
-  const getRequestTypeLabel = (type) => {
-    const labels = {
-      IT_EQUIPMENT: 'Thiết bị IT',
-      OFFICE_SUPPLIES: 'Vật dụng văn phòng',
-      ACCOUNTING: 'Yêu cầu kế toán',
-      OTHER: 'Khác',
-    };
-    return labels[type] || type;
-  };
-
   const getActionButtons = (request) => {
     if (request.status === 'PENDING') {
       return (
@@ -405,7 +395,6 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
   // Group requests by employee
   // For completed filter: only show fully completed requests
   // For other filters: show all requests for employees that match the filter
-  const employeeIdsInFiltered = new Set(requests.map(r => r.employee_id));
   const groupedByEmployee = requests.reduce((acc, request) => {
     const employeeId = request.employee_id || 'unknown';
     if (!acc[employeeId]) {
