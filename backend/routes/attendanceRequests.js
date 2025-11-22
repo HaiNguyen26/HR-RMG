@@ -4,15 +4,24 @@ const pool = require('../config/database');
 
 const normalizeManagerReference = (value) => {
     if (!value) return null;
-    let cleaned = value;
+    // Convert to string and trim
+    let cleaned = String(value).trim();
+    if (!cleaned) return null;
+    
+    // Remove content in parentheses
     cleaned = cleaned.replace(/\(.*?\)/g, ' ');
+    
+    // Split by common separators and take first part
     const splitTokens = [' - ', '|', '/', ','];
     for (const token of splitTokens) {
         if (cleaned.includes(token)) {
             cleaned = cleaned.split(token)[0];
         }
     }
+    
+    // Normalize whitespace
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
     return cleaned || null;
 };
 
@@ -22,34 +31,140 @@ const findManagerByReference = async (reference) => {
         return null;
     }
 
-    const strictMatchQuery = `
-        SELECT id, ho_ten, email, chuc_danh
+    // Get all active employees from HR database for accurate matching
+    const allEmployeesQuery = `
+        SELECT id, ho_ten, email, chuc_danh, quan_ly_truc_tiep, quan_ly_gian_tiep
         FROM employees
         WHERE (trang_thai = 'ACTIVE' OR trang_thai = 'PENDING' OR trang_thai IS NULL)
-          AND (
-              LOWER(TRIM(ho_ten)) = LOWER(TRIM($1))
-           OR LOWER(TRIM(email)) = LOWER(TRIM($1))
-          )
         ORDER BY id DESC
-        LIMIT 1
     `;
+    
+    const allEmployeesResult = await pool.query(allEmployeesQuery);
+    const allEmployees = allEmployeesResult.rows;
 
-    const strictResult = await pool.query(strictMatchQuery, [normalized]);
-    if (strictResult.rows.length > 0) {
-        return strictResult.rows[0];
+    if (allEmployees.length === 0) {
+        return null;
     }
 
-    const partialMatchQuery = `
-        SELECT id, ho_ten, email, chuc_danh
-        FROM employees
-        WHERE (trang_thai = 'ACTIVE' OR trang_thai = 'PENDING' OR trang_thai IS NULL)
-          AND LOWER(ho_ten) LIKE LOWER($1)
-        ORDER BY id DESC
-        LIMIT 1
-    `;
+    // Normalize the reference for comparison
+    const refLower = normalized.toLowerCase().trim();
 
-    const partialResult = await pool.query(partialMatchQuery, [`%${normalized}%`]);
-    return partialResult.rows[0] || null;
+    // Try to find exact match first (by name or email)
+    for (const emp of allEmployees) {
+        const empName = (emp.ho_ten || '').toLowerCase().trim();
+        const empEmail = (emp.email || '').toLowerCase().trim();
+        
+        // Exact name match
+        if (empName === refLower) {
+            return emp;
+        }
+        
+        // Exact email match
+        if (empEmail && empEmail === refLower) {
+            return emp;
+        }
+    }
+
+    // Try partial match - check if reference is contained in name or vice versa
+    for (const emp of allEmployees) {
+        const empName = (emp.ho_ten || '').toLowerCase().trim();
+        
+        // Reference contains employee name (with word boundaries)
+        if (empName && refLower.includes(empName)) {
+            return emp;
+        }
+        
+        // Employee name contains reference (with word boundaries)
+        if (empName && empName.includes(refLower)) {
+            return emp;
+        }
+    }
+
+    // Try word-by-word matching for Vietnamese names
+    const refWords = refLower.split(/\s+/).filter(w => w.length > 0);
+    
+    if (refWords.length > 0) {
+        // Try to find employee where all words of reference match
+        for (const emp of allEmployees) {
+            const empName = (emp.ho_ten || '').toLowerCase().trim();
+            if (!empName) continue;
+            
+            const empWords = empName.split(/\s+/).filter(w => w.length > 0);
+            
+            // Check if all reference words are in employee name
+            const allWordsMatch = refWords.every(refWord => 
+                empWords.some(empWord => empWord.includes(refWord) || refWord.includes(empWord))
+            );
+            
+            if (allWordsMatch && empWords.length > 0) {
+                return emp;
+            }
+        }
+
+        // Try matching by first and last word (common in Vietnamese names)
+        if (refWords.length >= 2) {
+            const firstWord = refWords[0];
+            const lastWord = refWords[refWords.length - 1];
+            
+            for (const emp of allEmployees) {
+                const empName = (emp.ho_ten || '').toLowerCase().trim();
+                if (!empName) continue;
+                
+                const empWords = empName.split(/\s+/).filter(w => w.length > 0);
+                
+                // Check if first and last words match
+                const firstMatches = empWords.length > 0 && (
+                    empWords[0].includes(firstWord) || firstWord.includes(empWords[0])
+                );
+                const lastMatches = empWords.length > 0 && (
+                    empWords[empWords.length - 1].includes(lastWord) || lastWord.includes(empWords[empWords.length - 1])
+                );
+                
+                if (firstMatches && lastMatches) {
+                    return emp;
+                }
+            }
+        }
+
+        // Try matching by last word only (usually the given name)
+        const lastWord = refWords[refWords.length - 1];
+        let exactMatch = null;
+        let partialMatch = null;
+        
+        for (const emp of allEmployees) {
+            const empName = (emp.ho_ten || '').toLowerCase().trim();
+            if (!empName) continue;
+            
+            const empWords = empName.split(/\s+/).filter(w => w.length > 0);
+            if (empWords.length === 0) continue;
+            
+            const empLastWord = empWords[empWords.length - 1];
+            
+            // Check if last word matches exactly
+            if (empLastWord === lastWord) {
+                exactMatch = emp;
+                break; // Exact match found, prefer this
+            }
+            
+            // Check for partial match
+            if (!exactMatch && (empLastWord.includes(lastWord) || lastWord.includes(empLastWord))) {
+                if (!partialMatch) {
+                    partialMatch = emp;
+                }
+            }
+        }
+        
+        // Return exact match first, then partial match
+        if (exactMatch) {
+            return exactMatch;
+        }
+        
+        if (partialMatch) {
+            return partialMatch;
+        }
+    }
+
+    return null;
 };
 
 let ensureAttendanceAdjustmentsTablePromise = null;
@@ -202,41 +317,25 @@ const getUserIdsByEmails = async (emails = []) => {
     return result.rows.map((row) => row.id);
 };
 
-const notifyUsers = async (userIds, title, message) => {
-    if (!Array.isArray(userIds) || userIds.length === 0) return;
-
-    const insertValues = userIds
-        .map((_, idx) => `($${idx + 1}, NULL, 'SYSTEM', $${userIds.length + 1}, $${userIds.length + 2})`);
-    const params = [...userIds, title, message];
-
-    await pool.query(
-        `INSERT INTO notifications (user_id, employee_id, type, title, message)
-         VALUES ${insertValues.join(', ')}`,
-        params
-    );
+// Helper to get user IDs from employee IDs
+const getUserIdFromEmployeeId = async (employeeIds) => {
+    if (!Array.isArray(employeeIds) || employeeIds.length === 0) return [];
+    try {
+        const result = await pool.query(
+            `SELECT DISTINCT u.id 
+             FROM users u
+             INNER JOIN employees e ON u.email = e.email OR u.ho_ten = e.ho_ten
+             WHERE e.id = ANY($1::int[])`,
+            [employeeIds]
+        );
+        return result.rows.map(row => row.id);
+    } catch (error) {
+        console.error('[getUserIdFromEmployeeId] Error:', error);
+        return [];
+    }
 };
 
-const notifyEmployees = async (employeeIds, title, message) => {
-    if (!Array.isArray(employeeIds) || employeeIds.length === 0) return;
-
-    const insertValues = employeeIds
-        .map((_, idx) => `(NULL, $${idx + 1}, 'SYSTEM', $${employeeIds.length + 1}, $${employeeIds.length + 2})`);
-    const params = [...employeeIds, title, message];
-
-    await pool.query(
-        `INSERT INTO notifications (user_id, employee_id, type, title, message)
-         VALUES ${insertValues.join(', ')}`,
-        params
-    );
-};
-
-const notifyHrAdmins = async (title, message) => {
-    const result = await pool.query(
-        `SELECT id FROM users WHERE role = 'HR' AND trang_thai = 'ACTIVE'`
-    );
-    const userIds = result.rows.map((row) => row.id);
-    await notifyUsers(userIds, title, message);
-};
+// Notification system removed
 
 const fetchAdjustmentById = async (id) => {
     const query = `
@@ -457,22 +556,24 @@ router.post('/', async (req, res) => {
 
         const employee = employeeResult.rows[0];
 
+        // Kiểm tra nếu nhân viên không có thông tin quản lý trực tiếp
+        if (!employee.quan_ly_truc_tiep || employee.quan_ly_truc_tiep.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: `Nhân viên chưa có thông tin quản lý trực tiếp. Vui lòng cập nhật thông tin quản lý trực tiếp cho nhân viên "${employee.ho_ten || 'N/A'}" trong module Quản lý nhân viên.`
+            });
+        }
+
         const teamLead = await findManagerByReference(employee.quan_ly_truc_tiep);
         if (!teamLead) {
+            console.error(`[AttendanceRequest] Không tìm thấy quản lý trực tiếp. Nhân viên: ${employee.ho_ten}, quan_ly_truc_tiep: "${employee.quan_ly_truc_tiep}"`);
             return res.status(404).json({
                 success: false,
-                message: 'Không tìm thấy quản lý trực tiếp trong hệ thống. Vui lòng cập nhật thông tin quản lý cho nhân viên.'
+                message: `Không tìm thấy quản lý trực tiếp "${employee.quan_ly_truc_tiep}" trong hệ thống. Vui lòng kiểm tra lại tên quản lý trực tiếp của nhân viên "${employee.ho_ten || 'N/A'}" trong module Quản lý nhân viên. Tên phải khớp chính xác với tên trong hệ thống.`
             });
         }
 
-        const branchManager = await findManagerByReference(employee.quan_ly_gian_tiep);
-        if (!branchManager) {
-            return res.status(404).json({
-                success: false,
-                message: 'Không tìm thấy quản lý gián tiếp trong hệ thống. Vui lòng cập nhật thông tin quản lý gián tiếp cho nhân viên.'
-            });
-        }
-
+        // Không cần quản lý gián tiếp nữa - quy trình mới: Nhân viên -> Quản lý trực tiếp -> HR
         const dueAt = computeDueDate();
         const insertQuery = `
             INSERT INTO attendance_adjustments (
@@ -494,7 +595,7 @@ router.post('/', async (req, res) => {
         const insertValues = [
             employeeId,
             teamLead.id,
-            branchManager.id,
+            null, // Không cần quản lý gián tiếp
             adjustmentDate,
             normalizedCheckType,
             normalizedCheckType === 'CHECK_OUT' ? null : (checkInTime || null),
@@ -509,17 +610,7 @@ router.post('/', async (req, res) => {
         const insertedRow = insertResult.rows[0];
         const adjustment = mapAdjustmentRow(await fetchAdjustmentById(insertedRow.id));
 
-        await notifyEmployees(
-            [teamLead.id],
-            'Đơn bổ sung chấm công mới',
-            `Nhân viên ${employee.ho_ten || employee.email || employee.id} đã gửi đơn bổ sung chấm công.`
-        );
-
-        await notifyEmployees(
-            [branchManager.id],
-            'Thông báo đơn bổ sung chấm công',
-            `Nhân viên ${employee.ho_ten || employee.email || employee.id} đã gửi đơn bổ sung chấm công. Bạn được thông báo với vai trò quản lý gián tiếp.`
-        );
+        // Notification system removed
 
         res.status(201).json({
             success: true,
@@ -535,16 +626,17 @@ router.post('/', async (req, res) => {
     }
 });
 
-// DELETE /api/attendance-adjustments/:id - Nhân viên xóa đơn bổ sung khi chưa duyệt
+// DELETE /api/attendance-adjustments/:id - Nhân viên xóa đơn bổ sung khi chưa duyệt, HR xóa đơn đã từ chối
 router.delete('/:id', async (req, res) => {
     try {
         await ensureAttendanceAdjustmentsTable();
 
         const { id } = req.params;
-        const { employeeId } = req.body;
+        const { employeeId, role } = req.body;
 
         const requestId = Number(id);
-        const employeeIdNumber = Number(employeeId);
+        const employeeIdNumber = employeeId ? Number(employeeId) : null;
+        const isHR = role === 'HR';
 
         if (!Number.isInteger(requestId) || requestId <= 0) {
             return res.status(400).json({
@@ -553,21 +645,62 @@ router.delete('/:id', async (req, res) => {
             });
         }
 
-        if (!Number.isInteger(employeeIdNumber) || employeeIdNumber <= 0) {
-            return res.status(400).json({
+        // Get the request first to check status and employee_id
+        const requestResult = await pool.query(
+            `SELECT id, employee_id, status FROM attendance_adjustments WHERE id = $1`,
+            [requestId]
+        );
+
+        if (requestResult.rows.length === 0) {
+            return res.status(404).json({
                 success: false,
-                message: 'Thiếu thông tin nhân viên'
+                message: 'Không tìm thấy đơn'
             });
         }
 
-        const deleteResult = await pool.query(
-            `DELETE FROM attendance_adjustments
-             WHERE id = $1
-               AND employee_id = $2
-               AND status = $3
-             RETURNING *`,
-            [requestId, employeeIdNumber, STATUSES.PENDING_TEAM_LEAD]
-        );
+        const request = requestResult.rows[0];
+
+        let deleteQuery;
+        let deleteParams;
+
+        if (isHR) {
+            // HR can delete rejected requests
+            if (request.status !== STATUSES.REJECTED) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'HR chỉ có thể xóa các đơn đã từ chối'
+                });
+            }
+            deleteQuery = `DELETE FROM attendance_adjustments WHERE id = $1 AND status = $2 RETURNING *`;
+            deleteParams = [requestId, STATUSES.REJECTED];
+        } else {
+            // Employee can only delete their own pending requests
+            if (!Number.isInteger(employeeIdNumber) || employeeIdNumber <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Thiếu thông tin nhân viên'
+                });
+            }
+
+            if (request.employee_id !== employeeIdNumber) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Bạn chỉ có thể xóa đơn của chính mình'
+                });
+            }
+
+            if (request.status !== STATUSES.PENDING_TEAM_LEAD) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Chỉ có thể xóa đơn đang chờ duyệt'
+                });
+            }
+
+            deleteQuery = `DELETE FROM attendance_adjustments WHERE id = $1 AND employee_id = $2 AND status = $3 RETURNING *`;
+            deleteParams = [requestId, employeeIdNumber, STATUSES.PENDING_TEAM_LEAD];
+        }
+
+        const deleteResult = await pool.query(deleteQuery, deleteParams);
 
         if (deleteResult.rowCount === 0) {
             return res.status(400).json({
@@ -578,7 +711,7 @@ router.delete('/:id', async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Đã xóa đơn bổ sung chấm công trước khi duyệt'
+            message: isHR ? 'Đã xóa đơn bổ sung chấm công đã từ chối' : 'Đã xóa đơn bổ sung chấm công trước khi duyệt'
         });
     } catch (error) {
         console.error('Error deleting attendance adjustment:', error);
@@ -634,10 +767,7 @@ router.post('/overdue/process', async (_req, res) => {
             ids
         );
 
-        await notifyHrAdmins(
-            'Đơn bổ sung chấm công quá hạn',
-            `Có ${overdueAdjustments.length} đơn bổ sung chấm công đã chờ duyệt hơn 24 giờ. Vui lòng kiểm tra và xử lý.`
-        );
+        // Notification system removed
 
         res.json({
             success: true,
@@ -718,11 +848,7 @@ router.post('/:id/escalate', async (req, res) => {
 
         const updatedRequest = mapAdjustmentRow(await fetchAdjustmentById(id));
 
-        await notifyEmployees(
-            [adjustment.branch_manager_id].filter(Boolean),
-            'Đơn bổ sung chấm công cần duyệt',
-            `Đơn bổ sung chấm công của nhân viên ${adjustment.employee_name || adjustment.employee_email || adjustment.employee_id} đã được HR chuyển cho quản lý gián tiếp.`
-        );
+        // Notification system removed
 
         res.json({
             success: true,
@@ -823,11 +949,7 @@ router.post('/:id/decision', async (req, res) => {
 
                 updatedRequest = mapAdjustmentRow(await fetchAdjustmentById(id));
 
-                await notifyEmployees(
-                    [adjustment.branch_manager_id].filter(Boolean),
-                    'Đơn bổ sung chấm công cần duyệt',
-                    `Quản lý ${adjustment.team_lead_name || adjustment.team_lead_email || adjustment.team_lead_id} đã duyệt đơn bổ sung chấm công. Quản lý gián tiếp vui lòng xem xét.`
-                );
+                // Notification system removed
             } else {
                 await pool.query(
                     `UPDATE attendance_adjustments
@@ -847,10 +969,7 @@ router.post('/:id/decision', async (req, res) => {
 
                 updatedRequest = mapAdjustmentRow(await fetchAdjustmentById(id));
 
-                await notifyHrAdmins(
-                    'Đơn bổ sung chấm công bị từ chối',
-                    `Quản lý ${adjustment.team_lead_name || adjustment.team_lead_email || adjustment.team_lead_id} đã từ chối đơn bổ sung chấm công của ${adjustment.employee_name || adjustment.employee_email || adjustment.employee_id}.`
-                );
+                // Notification system removed
             }
         } else if (actorType === ACTORS.BRANCH) {
             if (adjustment.branch_manager_id !== actorIdNumber) {
@@ -886,16 +1005,7 @@ router.post('/:id/decision', async (req, res) => {
 
                 updatedRequest = mapAdjustmentRow(await fetchAdjustmentById(id));
 
-                await notifyHrAdmins(
-                    'Đơn bổ sung chấm công đã được duyệt',
-                    `Quản lý gián tiếp ${adjustment.branch_manager_name || adjustment.branch_manager_email || adjustment.branch_manager_id} đã duyệt đơn bổ sung chấm công của ${adjustment.employee_name || adjustment.employee_email || adjustment.employee_id}.`
-                );
-
-                await notifyEmployees(
-                    [adjustment.team_lead_id].filter(Boolean),
-                    'Đơn bổ sung chấm công hoàn tất',
-                    `Đơn bổ sung chấm công của ${adjustment.employee_name || adjustment.employee_email || adjustment.employee_id} đã được quản lý gián tiếp phê duyệt.`
-                );
+                // Notification system removed
             } else {
                 await pool.query(
                     `UPDATE attendance_adjustments
@@ -915,16 +1025,7 @@ router.post('/:id/decision', async (req, res) => {
 
                 updatedRequest = mapAdjustmentRow(await fetchAdjustmentById(id));
 
-                await notifyHrAdmins(
-                    'Đơn bổ sung chấm công bị từ chối',
-                    `Quản lý gián tiếp ${adjustment.branch_manager_name || adjustment.branch_manager_email || adjustment.branch_manager_id} đã từ chối đơn bổ sung chấm công của ${adjustment.employee_name || adjustment.employee_email || adjustment.employee_id}.`
-                );
-
-                await notifyEmployees(
-                    [adjustment.team_lead_id].filter(Boolean),
-                    'Đơn bổ sung chấm công bị từ chối',
-                    `Đơn bổ sung chấm công của ${adjustment.employee_name || adjustment.employee_email || adjustment.employee_id} đã bị quản lý gián tiếp từ chối.`
-                );
+                // Notification system removed
             }
         }
 

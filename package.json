@@ -8,14 +8,21 @@
     "dev:safe": "node scripts/fix-ports.js && concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
+    "dev:dual": "concurrently \"npm run dev:backend\" \"npm run dev:frontend:hr\" \"npm run dev:frontend:employee\"",
+    "dev:dual:safe": "node scripts/fix-ports.js && concurrently \"npm run dev:backend\" \"npm run dev:frontend:hr\" \"npm run dev:frontend:employee\"",
+    "dev:frontend:hr": "cd frontend && cross-env NODE_OPTIONS=--max-old-space-size=4096 PORT=3001 npm run dev",
+    "dev:frontend:employee": "cd frontend && cross-env NODE_OPTIONS=--max-old-space-size=4096 PORT=3002 npm run dev",
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "start:backend": "cd backend && npm start",
     "start:frontend": "cd frontend && npm start",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "fix:ports": "node scripts/fix-ports.js"
+    "fix:ports": "node scripts/fix-ports.js",
+    "kill:node": "node scripts/kill-node.js",
+    "reset:requests-candidates": "node backend/scripts/reset-requests-and-candidates.js"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "cross-env": "^10.1.0"
   },
   "keywords": [
     "hr",

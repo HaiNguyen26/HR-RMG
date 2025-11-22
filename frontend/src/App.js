@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar/Sidebar';
 import Dashboard from './components/Dashboard/Dashboard';
 import EmployeeDashboard from './components/EmployeeDashboard/EmployeeDashboard';
@@ -7,14 +7,21 @@ import EquipmentAssignment from './components/EquipmentAssignment/EquipmentAssig
 import RequestsManagement from './components/RequestsManagement/RequestsManagement';
 import LeaveRequest from './components/LeaveRequest/LeaveRequest';
 import LeaveApprovals from './components/LeaveApprovals/LeaveApprovals';
+import InterviewApprovals from './components/InterviewApprovals/InterviewApprovals';
 import OvertimeRequest from './components/OvertimeRequest/OvertimeRequest';
 import AttendanceRequest from './components/AttendanceRequest/AttendanceRequest';
-import Notifications from './components/Notifications/Notifications';
+import RequestHistory from './components/RequestHistory/RequestHistory';
+import CandidateForm from './components/CandidateForm/CandidateForm';
+import CandidateManagement from './components/CandidateManagement/CandidateManagement';
+import TravelExpense from './components/TravelExpense/TravelExpense';
+import TravelExpenseManagement from './components/TravelExpense/TravelExpenseManagement';
+import TravelExpenseApproval from './components/TravelExpenseApproval/TravelExpenseApproval';
 import Login from './components/Login/Login';
 import ToastContainer from './components/Common/ToastContainer';
 import ConfirmModal from './components/Common/ConfirmModal';
 import IntroOverlay from './components/Common/IntroOverlay';
-import { employeesAPI, notificationsAPI } from './services/api';
+import FloatingNotificationBell from './components/Common/FloatingNotificationBell';
+import { employeesAPI } from './services/api';
 import './App.css';
 
 function App() {
@@ -22,18 +29,16 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [currentView, setCurrentView] = useState('dashboard');
   const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false, only show loading when actually fetching
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [toasts, setToasts] = useState([]);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false });
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [showIntroOverlay, setShowIntroOverlay] = useState(false);
   const [introUser, setIntroUser] = useState(null);
 
   // Toast management
   const showToast = (message, type = 'info', duration = 3000) => {
-    const id = Date.now();
+    const id = Date.now() + Math.random();
     setToasts((prev) => [...prev, { id, message, type, duration }]);
   };
 
@@ -59,6 +64,24 @@ function App() {
     });
   };
 
+  // Define fetchEmployees first, before useEffects that use it
+  const fetchEmployees = useCallback(async () => {
+    try {
+      // Only set loading if we don't have employees yet
+      if (employees.length === 0) {
+        setLoading(true);
+      }
+      const response = await employeesAPI.getAll();
+      if (response.data.success) {
+        setEmployees(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [employees.length]);
+
   // Kiểm tra authentication khi component mount
   useEffect(() => {
     const savedAuth = localStorage.getItem('isAuthenticated');
@@ -66,7 +89,8 @@ function App() {
 
     if (savedAuth === 'true' && savedUser) {
       try {
-        setCurrentUser(JSON.parse(savedUser));
+        const userData = JSON.parse(savedUser);
+        setCurrentUser(userData);
         setIsAuthenticated(true);
       } catch (error) {
         console.error('Error parsing user data:', error);
@@ -76,17 +100,16 @@ function App() {
     }
   }, []);
 
+  // Fetch employees when authenticated and view is dashboard
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchEmployees();
-      fetchUnreadNotificationCount();
-      // Poll for new notifications every 30 seconds
-      const interval = setInterval(() => {
-        fetchUnreadNotificationCount();
-      }, 30000);
-      return () => clearInterval(interval);
+    if (isAuthenticated && currentView === 'dashboard' && currentUser?.role !== 'EMPLOYEE') {
+      // Only fetch if we don't have employees yet
+      if (employees.length === 0) {
+        fetchEmployees();
+      }
     }
-  }, [isAuthenticated, currentUser]);
+  }, [isAuthenticated, currentView, currentUser?.role, employees.length, fetchEmployees]);
+
 
   useEffect(() => {
     let timer;
@@ -103,38 +126,12 @@ function App() {
     };
   }, [showIntroOverlay]);
 
-  const fetchEmployees = async () => {
-    try {
-      setLoading(true);
-      const response = await employeesAPI.getAll();
-      if (response.data.success) {
-        setEmployees(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching employees:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchUnreadNotificationCount = async () => {
-    if (!currentUser?.id) return;
-    try {
-      const response = await notificationsAPI.getUnreadCount(currentUser.id);
-      if (response.data.success) {
-        setUnreadNotificationCount(response.data.count);
-      }
-    } catch (error) {
-      console.error('Error fetching unread notification count:', error);
-    }
-  };
-
   const handleNavigate = (view) => {
     setCurrentView(view);
     if (view === 'dashboard') {
       setSelectedEmployee(null);
-      // Chỉ fetch employees nếu không phải EMPLOYEE
-      if (currentUser?.role !== 'EMPLOYEE') {
+      // Chỉ fetch employees nếu không phải EMPLOYEE và chưa có employees
+      if (currentUser?.role !== 'EMPLOYEE' && employees.length === 0) {
         fetchEmployees();
       }
     }
@@ -158,19 +155,20 @@ function App() {
     // Không fetchEmployees ở đây vì nhân viên chưa được tạo
   };
 
-  const handleLoginSuccess = (userData) => {
+  const handleLoginSuccess = async (userData) => {
     setCurrentUser(userData);
     setIsAuthenticated(true);
-    fetchEmployees(); // Fetch employees after login
     setIntroUser(userData);
     setShowIntroOverlay(true);
+
+    // Fetch employees after login (don't wait)
+    fetchEmployees();
   };
 
   const handleEquipmentComplete = () => {
     setCurrentView('dashboard');
     setSelectedEmployee(null);
     fetchEmployees(); // Refresh employee list (sẽ trigger useEffect trong EmployeeTable để fetch lại equipment)
-    fetchUnreadNotificationCount(); // Refresh notification count
   };
 
   const handleCancel = () => {
@@ -223,6 +221,13 @@ function App() {
               showConfirm={showConfirm}
             />
           );
+        case 'interview-approvals':
+          return (
+            <InterviewApprovals
+              currentUser={currentUser}
+              showConfirm={showConfirm}
+            />
+          );
         case 'overtime-request':
           return (
             <OvertimeRequest
@@ -235,6 +240,28 @@ function App() {
             <AttendanceRequest
               currentUser={currentUser}
               showToast={showToast}
+            />
+          );
+        case 'request-history':
+          return (
+            <RequestHistory
+              currentUser={currentUser}
+            />
+          );
+        case 'travel-expense':
+          return (
+            <TravelExpense
+              currentUser={currentUser}
+              showToast={showToast}
+              showConfirm={showConfirm}
+            />
+          );
+        case 'travel-expense-approval':
+          return (
+            <TravelExpenseApproval
+              currentUser={currentUser}
+              showToast={showToast}
+              showConfirm={showConfirm}
             />
           );
         case 'dashboard':
@@ -250,13 +277,6 @@ function App() {
 
     // Admin/HR view - giao diện quản trị
     switch (currentView) {
-      case 'form':
-        return (
-          <EmployeeForm
-            onSuccess={handleEmployeeFormSuccess}
-            onCancel={handleCancel}
-          />
-        );
       case 'equipment':
         if (!selectedEmployee) {
           return <div>Không tìm thấy thông tin nhân viên</div>;
@@ -267,20 +287,42 @@ function App() {
             onComplete={handleEquipmentComplete}
             onCancel={handleCancel}
             currentUser={currentUser}
-            showToast={showToast}
           />
         );
       case 'requests':
         return (
           <RequestsManagement
             currentUser={currentUser}
-            showToast={showToast}
             showConfirm={showConfirm}
           />
         );
       case 'leave-approvals':
         return (
           <LeaveApprovals
+            currentUser={currentUser}
+            showToast={showToast}
+            showConfirm={showConfirm}
+          />
+        );
+      case 'interview-approvals':
+        return (
+          <InterviewApprovals
+            currentUser={currentUser}
+            showConfirm={showConfirm}
+          />
+        );
+      case 'candidate-management':
+        return (
+          <CandidateManagement
+            currentUser={currentUser}
+            showToast={showToast}
+            showConfirm={showConfirm}
+            onNavigate={handleNavigate}
+          />
+        );
+      case 'travel-expense-management':
+        return (
+          <TravelExpenseManagement
             currentUser={currentUser}
             showToast={showToast}
             showConfirm={showConfirm}
@@ -294,7 +336,6 @@ function App() {
             employees={employees}
             onRefreshEmployees={fetchEmployees}
             currentUser={currentUser}
-            showToast={showToast}
             showConfirm={showConfirm}
             onUpdateEquipment={handleUpdateEquipment}
           />
@@ -302,27 +343,8 @@ function App() {
     }
   };
 
-  const VIEW_TITLES = {
-    dashboard: 'Tổng quan hệ thống',
-    form: 'Thêm nhân viên',
-    equipment: 'Bàn giao thiết bị',
-    requests: 'Quản lý yêu cầu',
-    'leave-approvals': 'Duyệt yêu cầu',
-    'leave-request': 'Gửi yêu cầu nghỉ',
-    'overtime-request': 'Đề xuất tăng ca',
-    'attendance-request': 'Bổ sung chấm công',
-  };
-
-  const currentTitle = VIEW_TITLES[currentView] || 'Bảng điều khiển';
-  const userInitials = (currentUser?.hoTen || currentUser?.username || 'U')
-    .split(' ')
-    .map((part) => part.charAt(0))
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
   return (
-    <div className={`app ${showNotifications ? 'notifications-open' : ''}`}>
+    <div className="app">
       {showIntroOverlay && <IntroOverlay user={introUser || currentUser} />}
       <Sidebar
         currentView={currentView}
@@ -331,46 +353,11 @@ function App() {
         currentUser={currentUser}
         onLogout={handleLogout}
       />
-      <main className="main-content">
-        <header className="app-header">
-          <div className="app-header__info">
-            <h1>{currentTitle}</h1>
-            <p>Xin chào, {currentUser?.hoTen || currentUser?.username || 'người dùng'}!</p>
-          </div>
-          <div className="app-header__actions">
-            <button
-              type="button"
-              className={`app-header__notifications-btn ${unreadNotificationCount > 0 ? 'has-unread' : ''}`}
-              onClick={() => {
-                setShowNotifications(true);
-                fetchUnreadNotificationCount();
-              }}
-              title="Thông báo"
-            >
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                ></path>
-              </svg>
-              {unreadNotificationCount > 0 && (
-                <span className="app-header__notifications-badge">
-                  {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
-                </span>
-              )}
-            </button>
-            <div className="app-header__user">
-              <div className="app-header__avatar">{userInitials}</div>
-              <div className="app-header__user-details">
-                <span className="app-header__user-name">{currentUser?.hoTen || currentUser?.username}</span>
-                <span className="app-header__user-role">{currentUser?.role || 'Người dùng'}</span>
-              </div>
-            </div>
-          </div>
-        </header>
-        {loading && currentView === 'dashboard' ? (
+      <main
+        className={`main-content ${currentUser?.role === 'EMPLOYEE' ? 'main-content--employee' : ''}`}
+        style={{ position: 'relative' }}
+      >
+        {loading && currentView === 'dashboard' && !employees.length ? (
           <div className="loading-container">
             <div className="loading-spinner"></div>
             <p>Đang tải dữ liệu...</p>
@@ -397,16 +384,14 @@ function App() {
         notesInput={confirmModal.notesInput}
       />
 
-      {/* Notifications Modal */}
-      {showNotifications && (
-        <Notifications
+      {/* Floating Notification Bell for HR */}
+      {currentUser?.role === 'HR' && (
+        <FloatingNotificationBell
           currentUser={currentUser}
-          onClose={() => {
-            setShowNotifications(false);
-            fetchUnreadNotificationCount();
-          }}
+          showToast={showToast}
         />
       )}
+
     </div>
   );
 }

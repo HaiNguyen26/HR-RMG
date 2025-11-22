@@ -1,151 +1,132 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
-import { leaveRequestsAPI } from '../../services/api';
+import { leaveRequestsAPI, employeesAPI } from '../../services/api';
 import { formatDateToISO, parseISODateString, today } from '../../utils/dateUtils';
 import { DATE_PICKER_LOCALE } from '../../utils/datepickerLocale';
 import './LeaveRequest.css';
 
-const REQUEST_TABS = [
-  {
-    key: 'leave',
-    label: 'Xin nghỉ phép',
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-      />
-    ),
-    description:
-      'Điền đầy đủ thông tin để gửi đơn xin nghỉ phép. Đơn sẽ đi qua quản lý trực tiếp duyệt trước khi quản lý gián tiếp nhận thông tin.'
-  },
-  {
-    key: 'resign',
-    label: 'Xin nghỉ việc',
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-      />
-    ),
-    description:
-      'Trình bày kế hoạch nghỉ việc và lý do chi tiết. Quản lý trực tiếp sẽ duyệt trước khi quản lý gián tiếp tiếp nhận.'
-  }
-];
-
-const initialFormsState = {
-  leave: {
+const LeaveRequest = ({ currentUser, showToast }) => {
+  const [requestType, setRequestType] = useState('leave'); // 'leave' or 'resign'
+  const [formData, setFormData] = useState({
     startDate: '',
     endDate: '',
     reason: '',
     notes: ''
-  },
-  resign: {
-    startDate: '',
-    reason: '',
-    notes: ''
-  }
-};
-
-const LeaveRequest = ({ currentUser, showToast }) => {
-  const [requestType, setRequestType] = useState('leave');
-  const [forms, setForms] = useState(initialFormsState);
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [myRequests, setMyRequests] = useState([]);
-  const [loadingRequests, setLoadingRequests] = useState(false);
-  const [deletingRequestId, setDeletingRequestId] = useState(null);
+  const [employeeProfile, setEmployeeProfile] = useState(null);
 
-  const activeForm = useMemo(() => forms[requestType], [forms, requestType]);
-  const directManagerName = useMemo(
-    () => (currentUser?.quanLyTrucTiep || '').trim(),
-    [currentUser]
-  );
-  const indirectManagerName = useMemo(
-    () => (currentUser?.quanLyGianTiep || '').trim(),
-    [currentUser]
-  );
-  const hasManagerInfo = Boolean(directManagerName) && Boolean(indirectManagerName);
-
-  const fetchMyRequests = async () => {
-    if (!currentUser?.id) return;
-    setLoadingRequests(true);
-    try {
-      const response = await leaveRequestsAPI.getAll({
-        mode: 'employee',
-        employeeId: currentUser.id
-      });
-      if (response.data.success) {
-        setMyRequests(response.data.data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching leave requests:', err);
-      if (showToast) {
-        showToast('Không thể tải lịch sử đơn xin nghỉ.', 'error');
-      }
-    } finally {
-      setLoadingRequests(false);
-    }
-  };
-
+  // Fetch employee profile to get manager info
   useEffect(() => {
-    if (currentUser?.id) {
-      fetchMyRequests();
-    }
-  }, [currentUser]);
+    const fetchEmployeeProfile = async () => {
+      if (!currentUser) return;
 
-  const resetFormForType = (typeKey) => {
-    setForms((prev) => ({
-      ...prev,
-      [typeKey]: { ...initialFormsState[typeKey] }
-    }));
-    setError('');
-  };
+      try {
+        // Try to get employee profile by user ID
+        const candidateIds = [
+          currentUser.employeeId,
+          currentUser.employee_id,
+          currentUser.employee?.id,
+          currentUser.id
+        ]
+          .filter(Boolean)
+          .map(id => {
+            if (typeof id === 'number') return id;
+            const str = String(id).trim();
+            const numericMatch = str.match(/^\d+/);
+            if (numericMatch) {
+              return parseInt(numericMatch[0], 10);
+            }
+            return null;
+          })
+          .filter(id => id !== null && !isNaN(id) && id > 0);
 
-  const handleFieldChange = (field, value) => {
-    setForms((prev) => ({
-      ...prev,
-      [requestType]: {
-        ...prev[requestType],
-        [field]: value
-      }
-    }));
-    setError('');
-  };
+        let profile = null;
 
-  const handleDatePickerChange = (field) => (dateValue) => {
-    setForms((prev) => {
-      const nextForm = { ...prev[requestType] };
-
-      if (!dateValue) {
-        nextForm[field] = '';
-        if (requestType === 'leave' && field === 'startDate') {
-          nextForm.endDate = '';
-        }
-      } else {
-        nextForm[field] = formatDateToISO(dateValue);
-
-        if (
-          requestType === 'leave' &&
-          field === 'startDate' &&
-          nextForm.endDate
-        ) {
-          const currentEndDate = parseISODateString(nextForm.endDate);
-          if (currentEndDate && currentEndDate < dateValue) {
-            nextForm.endDate = '';
+        for (const id of candidateIds) {
+          try {
+            const response = await employeesAPI.getById(id);
+            if (response.data?.data) {
+              profile = response.data.data;
+              break;
+            }
+          } catch (err) {
+            if (err.response?.status !== 404) {
+              console.warn('[LeaveRequest] Error fetching employee:', err);
+            }
           }
         }
-      }
 
-      return {
-        ...prev,
-        [requestType]: nextForm
-      };
-    });
+        // If not found by ID, try fetching all and matching
+        if (!profile) {
+          try {
+            const allResponse = await employeesAPI.getAll();
+            const employees = allResponse.data?.data || [];
+            profile = employees.find((emp) => {
+              const targetIds = new Set([
+                currentUser.id,
+                currentUser.employeeId,
+                currentUser.employee_id,
+              ].filter(Boolean));
+              return targetIds.has(emp.id) || targetIds.has(emp.employeeId) || targetIds.has(emp.employee_id);
+            }) || null;
+          } catch (err) {
+            console.error('[LeaveRequest] Error fetching all employees:', err);
+          }
+        }
+
+        setEmployeeProfile(profile);
+      } catch (error) {
+        console.error('[LeaveRequest] Error fetching employee profile:', error);
+      }
+    };
+
+    fetchEmployeeProfile();
+  }, [currentUser]);
+
+
+  // Helper to get value from multiple sources
+  const getValue = (...keys) => {
+    const sources = [employeeProfile, currentUser];
+    for (const source of sources) {
+      if (!source) continue;
+      for (const key of keys) {
+        const value = source?.[key];
+        if (value !== undefined && value !== null && value !== '') {
+          return value;
+        }
+      }
+    }
+    return null;
+  };
+
+  const directManagerName = getValue('quanLyTrucTiep', 'quan_ly_truc_tiep') || 'Chưa cập nhật';
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
     setError('');
+  };
+
+  const handleDateChange = (field) => (date) => {
+    if (!date) {
+      handleInputChange(field, '');
+      if (field === 'startDate' && requestType === 'leave') {
+        handleInputChange('endDate', '');
+      }
+    } else {
+      handleInputChange(field, formatDateToISO(date));
+      // If start date changes and is after end date, clear end date
+      if (field === 'startDate' && requestType === 'leave' && formData.endDate) {
+        const endDate = parseISODateString(formData.endDate);
+        if (endDate && endDate < date) {
+          handleInputChange('endDate', '');
+        }
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -157,49 +138,39 @@ const LeaveRequest = ({ currentUser, showToast }) => {
       return;
     }
 
+    // Validation
+    if (!formData.startDate || !formData.reason) {
+      setError('Vui lòng điền đầy đủ thông tin bắt buộc.');
+      return;
+    }
+
+    if (requestType === 'leave' && !formData.endDate) {
+      setError('Vui lòng chọn ngày kết thúc nghỉ phép.');
+      return;
+    }
+
+    if (requestType === 'leave' && new Date(formData.startDate) > new Date(formData.endDate)) {
+      setError('Ngày kết thúc phải sau ngày bắt đầu.');
+      return;
+    }
+
+    if (!directManagerName || directManagerName === 'Chưa cập nhật') {
+      setError('Không tìm thấy thông tin quản lý trực tiếp. Vui lòng liên hệ HR để cập nhật.');
+      return;
+    }
+
+    // Quản lý gián tiếp sẽ được hệ thống tự động tìm dựa vào thông tin nhân viên
+    // Không cần validate ở frontend nữa
+
     setLoading(true);
     try {
-      if (requestType === 'leave') {
-        if (!activeForm.startDate || !activeForm.endDate || !activeForm.reason) {
-          setError('Vui lòng điền đầy đủ thông tin bắt buộc.');
-          setLoading(false);
-          return;
-        }
-
-        if (new Date(activeForm.startDate) > new Date(activeForm.endDate)) {
-          setError('Ngày kết thúc phải sau ngày bắt đầu.');
-          setLoading(false);
-          return;
-        }
-      }
-
-      if (requestType === 'resign') {
-        if (!activeForm.startDate || !activeForm.reason) {
-          setError('Vui lòng điền đầy đủ thông tin bắt buộc.');
-          setLoading(false);
-          return;
-        }
-      }
-
-      if (!directManagerName) {
-        setError('Không tìm thấy thông tin quản lý trực tiếp. Vui lòng liên hệ HR để cập nhật.');
-        setLoading(false);
-        return;
-      }
-
-      if (!indirectManagerName) {
-        setError('Không tìm thấy thông tin quản lý gián tiếp. Vui lòng liên hệ HR để cập nhật.');
-        setLoading(false);
-        return;
-      }
-
       const payload = {
         employeeId: currentUser.id,
         requestType: requestType === 'leave' ? 'LEAVE' : 'RESIGN',
-        startDate: activeForm.startDate,
-        endDate: requestType === 'leave' ? activeForm.endDate : null,
-        reason: activeForm.reason,
-        notes: activeForm.notes
+        startDate: formData.startDate,
+        endDate: requestType === 'leave' ? formData.endDate : null,
+        reason: formData.reason,
+        notes: formData.notes || ''
       };
 
       const response = await leaveRequestsAPI.create(payload);
@@ -208,23 +179,23 @@ const LeaveRequest = ({ currentUser, showToast }) => {
         if (showToast) {
           showToast(
             requestType === 'leave'
-              ? 'Đơn xin nghỉ phép đã được gửi đến quản lý duyệt.'
-              : 'Đơn xin nghỉ việc đã được gửi đến quản lý duyệt.',
+              ? 'Đơn xin nghỉ phép đã được gửi thành công!'
+              : 'Đơn xin nghỉ việc đã được gửi thành công!',
             'success'
           );
         }
-
-        resetFormForType(requestType);
-        await fetchMyRequests();
+        // Reset form
+        setFormData({
+          startDate: '',
+          endDate: '',
+          reason: '',
+          notes: ''
+        });
       } else {
-        const message = response.data.message || 'Không thể gửi đơn. Vui lòng thử lại.';
-        setError(message);
-        if (showToast) {
-          showToast(message, 'error');
-        }
+        throw new Error(response.data.message || 'Không thể gửi đơn. Vui lòng thử lại.');
       }
-    } catch (err) {
-      const message = err.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
       setError(message);
       if (showToast) {
         showToast(message, 'error');
@@ -234,415 +205,220 @@ const LeaveRequest = ({ currentUser, showToast }) => {
     }
   };
 
-  const handleDeleteRequest = async (requestId) => {
-    if (!currentUser?.id) {
-      setError('Không xác định được thông tin nhân viên. Vui lòng đăng nhập lại.');
-      return;
-    }
-
-    const confirmDelete = window.confirm('Bạn có chắc muốn xóa đơn xin nghỉ này?');
-    if (!confirmDelete) return;
-
-    try {
-      setDeletingRequestId(requestId);
-      await leaveRequestsAPI.remove(requestId, { employeeId: currentUser.id });
-      setMyRequests((prev) => prev.filter((req) => req.id !== requestId));
-      if (showToast) {
-        showToast('Đã xóa đơn xin nghỉ.', 'success');
-      }
-    } catch (err) {
-      const message = err.response?.data?.message || 'Không thể xóa đơn. Vui lòng thử lại.';
-      setError(message);
-      if (showToast) {
-        showToast(message, 'error');
-      }
-    } finally {
-      setDeletingRequestId(null);
-    }
-  };
-
-  const renderSharedApproverSelects = () => (
-    <div className="leave-form-grid">
-      <div className="leave-form-group">
-        <label className="leave-form-label">Quản lý duyệt đơn *</label>
-        <input
-          className="leave-form-input"
-          type="text"
-          value={directManagerName || 'Chưa cập nhật'}
-          disabled
-        />
-        <p className="leave-form-hint">
-          Thông tin quản lý trực tiếp được lấy từ hồ sơ nhân sự. Vui lòng liên hệ HR nếu cần cập nhật.
-        </p>
-      </div>
-      <div className="leave-form-group">
-        <label className="leave-form-label">Quản lý gián tiếp nhận thông báo *</label>
-        <input
-          className="leave-form-input"
-          type="text"
-          value={indirectManagerName || 'Chưa cập nhật'}
-          disabled
-        />
-        <p className="leave-form-hint">
-          Quản lý gián tiếp sẽ luôn nhận được thông báo khi bạn gửi đơn.
-        </p>
-      </div>
-    </div>
-  );
-
-  const renderLeaveOrResignForm = () => {
-    const startDateValue = parseISODateString(activeForm.startDate);
-    const endDateValue = parseISODateString(activeForm.endDate);
-
-    return (
-      <>
-        <div className="leave-form-grid">
-          <div className="leave-form-group">
-            <label htmlFor="startDate" className="leave-form-label">
-              {requestType === 'leave' ? 'Ngày bắt đầu nghỉ *' : 'Ngày nghỉ việc *'}
-            </label>
-            <DatePicker
-              id="startDate"
-              selected={startDateValue}
-              onChange={handleDatePickerChange('startDate')}
-              minDate={today()}
-              dateFormat="dd/MM/yyyy"
-              locale={DATE_PICKER_LOCALE}
-              placeholderText="dd/mm/yyyy"
-              className="leave-form-input leave-form-input--datepicker"
-              calendarClassName="date-picker-calendar"
-              popperClassName="date-picker-popper"
-              wrapperClassName="date-picker-wrapper"
-              selectsStart
-              startDate={startDateValue}
-              endDate={requestType === 'leave' ? endDateValue : undefined}
-              required
-              autoComplete="off"
-            />
-          </div>
-
-          {requestType === 'leave' && (
-            <div className="leave-form-group">
-              <label htmlFor="endDate" className="leave-form-label">
-                Ngày kết thúc nghỉ *
-              </label>
-              <DatePicker
-                id="endDate"
-                selected={endDateValue}
-                onChange={handleDatePickerChange('endDate')}
-                minDate={startDateValue || today()}
-                dateFormat="dd/MM/yyyy"
-                locale={DATE_PICKER_LOCALE}
-                placeholderText="dd/mm/yyyy"
-                className="leave-form-input leave-form-input--datepicker"
-                calendarClassName="date-picker-calendar"
-                popperClassName="date-picker-popper"
-                wrapperClassName="date-picker-wrapper"
-                selectsEnd
-                startDate={startDateValue}
-                endDate={endDateValue}
-                required
-                disabled={!startDateValue}
-                autoComplete="off"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="leave-form-group">
-          <label htmlFor="reason" className="leave-form-label">
-            Lý do * {requestType === 'leave' ? '(Xin nghỉ phép)' : '(Xin nghỉ việc)'}
-          </label>
-          <textarea
-            id="reason"
-            value={activeForm.reason}
-            onChange={(event) => handleFieldChange('reason', event.target.value)}
-            className="leave-form-textarea"
-            rows="3"
-            placeholder={
-              requestType === 'leave'
-                ? 'Vui lòng nhập lý do xin nghỉ phép...'
-                : 'Vui lòng nhập lý do xin nghỉ việc...'
-            }
-            required
-          />
-        </div>
-
-        <div className="leave-form-group">
-          <label htmlFor="notes" className="leave-form-label">
-            Ghi chú thêm (tùy chọn)
-          </label>
-          <textarea
-            id="notes"
-            value={activeForm.notes}
-            onChange={(event) => handleFieldChange('notes', event.target.value)}
-            className="leave-form-textarea"
-            rows="2"
-            placeholder="Thêm ghi chú nếu cần..."
-          />
-        </div>
-      </>
-    );
-  };
-
-  const primaryButtonDisabled = loading || !hasManagerInfo;
-
-  const statusConfig = {
-    PENDING_TEAM_LEAD: { label: 'Chờ quản lý duyệt', className: 'status-pending-team' },
-    PENDING_BRANCH: { label: 'Chờ quản lý gián tiếp duyệt', className: 'status-pending-branch' },
-    APPROVED: { label: 'Đã duyệt', className: 'status-approved' },
-    REJECTED: { label: 'Đã từ chối', className: 'status-rejected' },
-    CANCELLED: { label: 'Đã hủy', className: 'status-cancelled' },
-  };
-
-  const requestTypeLabels = {
-    LEAVE: 'Xin nghỉ phép',
-    RESIGN: 'Xin nghỉ việc'
-  };
-
-  const formatDateDisplay = (value, withTime = false) => {
-    if (!value) return '-';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '-';
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      ...(withTime
-        ? {
-          hour: '2-digit',
-          minute: '2-digit'
-        }
-        : {})
-    });
-  };
-
-  const renderTimelineStep = (title, action, actionAt, comment) => {
-    let description = 'Đang chờ xử lý';
-    if (action === 'APPROVED') {
-      description = 'Đã phê duyệt';
-    } else if (action === 'REJECTED') {
-      description = 'Đã từ chối';
-    } else if (action === 'ESCALATED') {
-      description = 'Đã được đẩy lên cấp kế tiếp';
-    }
-
-    return (
-      <div className="leave-history-timeline-step">
-        <div className="leave-history-step-header">
-          <span className="leave-history-step-title">{title}</span>
-          <span className={`leave-history-step-status leave-history-step-${(action || 'PENDING').toLowerCase()}`}>
-            {description}
-          </span>
-        </div>
-        <div className="leave-history-step-meta">
-          <span>{actionAt ? formatDateDisplay(actionAt, true) : 'Chưa có thời gian xử lý'}</span>
-          {comment && <span className="leave-history-step-comment">"{comment}"</span>}
-        </div>
-      </div>
-    );
-  };
+  const startDateValue = parseISODateString(formData.startDate);
+  const endDateValue = parseISODateString(formData.endDate);
 
   return (
-    <div className="leave-request">
+    <div className="leave-request-container">
+      {/* Header with Title */}
       <div className="leave-request-header">
-        <h1 className="leave-request-title">
-          {REQUEST_TABS.find((tab) => tab.key === requestType)?.label || 'Gửi đơn nội bộ'}
-        </h1>
-        <p className="leave-request-subtitle">
-          {REQUEST_TABS.find((tab) => tab.key === requestType)?.description ||
-            'Điền thông tin chi tiết để gửi đơn nội bộ.'}
-        </p>
-      </div>
-
-      <div className="leave-request-tabs">
-        {REQUEST_TABS.map((tab) => (
+        <div className="leave-request-header-content">
           <button
-            key={tab.key}
-            type="button"
-            className={`leave-tab ${requestType === tab.key ? 'active' : ''}`}
+            className="leave-request-back-button"
             onClick={() => {
-              setRequestType(tab.key);
-              setError('');
+              // Navigate back if needed - currently just placeholder
             }}
+            style={{ display: 'none' }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {tab.icon}
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
-            <span>{tab.label}</span>
           </button>
-        ))}
+          <div className="leave-request-icon-wrapper">
+            <svg className="leave-request-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 className="leave-request-title">
+              {requestType === 'leave' ? 'Đơn xin nghỉ phép' : 'Đơn xin nghỉ việc'}
+            </h1>
+            <p className="leave-request-subtitle">
+              Điền đầy đủ thông tin để gửi đơn đến quản lý duyệt.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="leave-request-form-container">
-        <form onSubmit={handleSubmit} className="leave-request-form">
-          {error && (
-            <div className="leave-request-error">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>{error}</span>
+      {/* Main Content - 2 Columns */}
+      <div className="leave-request-content">
+        {/* Left Column - Form */}
+        <div className="leave-request-form-wrapper">
+          <form onSubmit={handleSubmit} className="leave-request-form">
+            {/* Error Message */}
+            {error && (
+              <div className="leave-request-error">
+                <svg className="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Request Type Tabs */}
+            <div className="leave-request-type-tabs">
+              <button
+                type="button"
+                className={`leave-type-tab ${requestType === 'leave' ? 'active' : ''}`}
+                onClick={() => {
+                  setRequestType('leave');
+                  setError('');
+                }}
+              >
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span>Xin nghỉ phép</span>
+              </button>
+              <button
+                type="button"
+                className={`leave-type-tab ${requestType === 'resign' ? 'active' : ''}`}
+                onClick={() => {
+                  setRequestType('resign');
+                  setError('');
+                  // Clear end date for resign
+                  handleInputChange('endDate', '');
+                }}
+              >
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                <span>Xin nghỉ việc</span>
+              </button>
             </div>
-          )}
 
-          {renderSharedApproverSelects()}
-          {renderLeaveOrResignForm()}
+            {/* Form Fields */}
+            <div className="leave-form-fields">
+              {/* Date Fields */}
+              <div className="leave-form-row">
+                <div className="leave-form-group">
+                  <label className="leave-form-label">
+                    {requestType === 'leave' ? 'Ngày bắt đầu nghỉ *' : 'Ngày nghỉ việc *'}
+                  </label>
+                  <div className="leave-date-picker-wrapper">
+                    <DatePicker
+                      selected={startDateValue}
+                      onChange={handleDateChange('startDate')}
+                      minDate={today()}
+                      dateFormat="dd/MM/yyyy"
+                      locale={DATE_PICKER_LOCALE}
+                      placeholderText="dd/mm/yyyy"
+                      className="leave-form-datepicker"
+                      required
+                      autoComplete="off"
+                    />
+                    <svg className="leave-date-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                  </div>
+                </div>
 
-          <div className="leave-form-actions">
+                {requestType === 'leave' && (
+                  <div className="leave-form-group">
+                    <label className="leave-form-label">Ngày kết thúc nghỉ *</label>
+                    <div className="leave-date-picker-wrapper">
+                      <DatePicker
+                        selected={endDateValue}
+                        onChange={handleDateChange('endDate')}
+                        minDate={startDateValue || today()}
+                        dateFormat="dd/MM/yyyy"
+                        locale={DATE_PICKER_LOCALE}
+                        placeholderText="dd/mm/yyyy"
+                        className="leave-form-datepicker"
+                        required
+                        disabled={!startDateValue}
+                        autoComplete="off"
+                      />
+                      <svg className="leave-date-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Manager Field */}
+              <div className="leave-form-group">
+                <label className="leave-form-label">Quản lý duyệt đơn *</label>
+                <input
+                  type="text"
+                  className="leave-form-input leave-form-input-readonly"
+                  value={directManagerName}
+                  readOnly
+                  disabled
+                />
+                <p className="leave-form-hint">
+                  Thông tin quản lý trực tiếp từ hồ sơ nhân sự. Nếu quá 24h không duyệt, HR sẽ đẩy đơn lên giám đốc.
+                </p>
+              </div>
+
+              {/* Reason Field */}
+              <div className="leave-form-group">
+                <label className="leave-form-label">
+                  Lý do {requestType === 'leave' ? 'xin nghỉ phép' : 'xin nghỉ việc'} *
+                </label>
+                <textarea
+                  className="leave-form-textarea"
+                  rows="3"
+                  value={formData.reason}
+                  onChange={(e) => handleInputChange('reason', e.target.value)}
+                  placeholder={
+                    requestType === 'leave'
+                      ? 'Vui lòng nhập lý do xin nghỉ phép...'
+                      : 'Vui lòng nhập lý do xin nghỉ việc...'
+                  }
+                  required
+                />
+              </div>
+
+              {/* Notes Field */}
+              <div className="leave-form-group">
+                <label className="leave-form-label">Ghi chú thêm (tùy chọn)</label>
+                <textarea
+                  className="leave-form-textarea"
+                  rows="2"
+                  value={formData.notes}
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
+                  placeholder="Thêm ghi chú nếu cần..."
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
             <button
               type="submit"
-              className="leave-submit-btn"
-              disabled={primaryButtonDisabled}
+              className="leave-submit-button"
+              disabled={loading}
             >
               {loading ? (
                 <>
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Đang gửi...
+                  <div className="leave-button-spinner"></div>
+                  <span>Đang gửi...</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="leave-submit-icon">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                   </svg>
-                  Gửi đơn
+                  <span>Gửi đơn</span>
                 </>
               )}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
 
-        <div className="leave-request-sidebar">
-          <div className="leave-history-section">
-            <div className="leave-history-header">
-              <h2>Đơn đã gửi</h2>
-              {loadingRequests && <span className="leave-history-loading">Đang tải...</span>}
-            </div>
-            {!loadingRequests && myRequests.length === 0 && (
-              <p className="leave-history-empty">Bạn chưa có đơn xin nghỉ nào.</p>
-            )}
-            {!loadingRequests && myRequests.length > 0 && (
-              <div className="leave-history-list">
-                {myRequests.map((request) => {
-                  const statusInfo = statusConfig[request.status] || { label: request.status, className: 'status-default' };
-                  const typeLabel = requestTypeLabels[request.request_type] || request.request_type;
-                  const canDeleteRequest = request.status === 'PENDING_TEAM_LEAD';
-                  return (
-                    <div key={request.id} className={`leave-history-card ${statusInfo.className}`}>
-                      <div className="leave-history-card-header">
-                        <div>
-                          <h3>{typeLabel}</h3>
-                          <p>
-                            {formatDateDisplay(request.start_date)}{' '}
-                            {request.request_type === 'LEAVE' && request.end_date
-                              ? `→ ${formatDateDisplay(request.end_date)}`
-                              : ''}
-                          </p>
-                        </div>
-                        <div className="leave-history-header-right">
-                          <div className="leave-history-status-group">
-                            {request.isOverdue && request.status === 'PENDING_TEAM_LEAD' && (
-                              <span className="leave-history-overdue">Quá hạn 24h</span>
-                            )}
-                            <span className={`leave-history-status ${statusInfo.className}`}>
-                              {statusInfo.label}
-                            </span>
-                          </div>
-                          {canDeleteRequest && (
-                            <button
-                              type="button"
-                              className="leave-history-action-btn"
-                              onClick={() => handleDeleteRequest(request.id)}
-                              disabled={deletingRequestId === request.id}
-                            >
-                              {deletingRequestId === request.id ? 'Đang xóa...' : 'Hủy đơn'}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <div className="leave-history-details">
-                        <div className="leave-history-detail-block">
-                          <span className="leave-history-detail-label">Lý do</span>
-                          <p className="leave-history-detail-value">{request.reason}</p>
-                        </div>
-                        {request.notes && (
-                          <div className="leave-history-detail-block">
-                            <span className="leave-history-detail-label">Ghi chú</span>
-                            <p className="leave-history-detail-value">{request.notes}</p>
-                          </div>
-                        )}
-                        <div className="leave-history-detail-block">
-                          <span className="leave-history-detail-label">Gửi lúc</span>
-                          <p className="leave-history-detail-value">{formatDateDisplay(request.created_at, true)}</p>
-                        </div>
-                        <div className="leave-history-detail-block">
-                          <span className="leave-history-detail-label">Cập nhật</span>
-                          <p className="leave-history-detail-value">{formatDateDisplay(request.updated_at, true)}</p>
-                        </div>
-                      </div>
-                      <div className="leave-history-timeline">
-                        {renderTimelineStep(
-                          'Quản lý trực tiếp',
-                          request.team_lead_action,
-                          request.team_lead_action_at,
-                          request.team_lead_comment
-                        )}
-                        {renderTimelineStep(
-                          'Quản lý gián tiếp',
-                          request.branch_action,
-                          request.branch_action_at,
-                          request.branch_comment
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="leave-request-info">
-            <div className="info-box">
-              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+        {/* Right Column - Leave Policy & Process Panel */}
+        <div className="leave-request-panel">
+          <div className="leave-policy-card">
+            <div className="leave-policy-header">
+              <svg className="leave-policy-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
               </svg>
-              <div>
-                <h3 className="info-box-title">Quy trình duyệt</h3>
-                <p className="info-box-text">
-                  Tất cả đơn sẽ được gửi đến quản lý trực tiếp để duyệt đầu tiên. Sau khi quản lý trực tiếp xác nhận,
-                  quản lý gián tiếp sẽ nhận thông tin để theo dõi. Danh sách quản lý được đồng bộ từ dữ liệu nhân sự.
-                </p>
-                <div className="info-box-divider" />
-                <p className="info-box-text">
-                  Hãy đảm bảo lý do xin nghỉ chi tiết để quản lý trực tiếp và quản lý gián tiếp có đủ thông tin phê duyệt.
-                </p>
+              <h2 className="leave-policy-title">Quy trình & Nội quy xin nghỉ</h2>
+            </div>
+            <div className="leave-policy-content">
+              <div className="leave-policy-placeholder">
+                <p>Nội dung quy trình và nội quy xin nghỉ sẽ được cập nhật tại đây.</p>
               </div>
             </div>
           </div>
@@ -653,4 +429,3 @@ const LeaveRequest = ({ currentUser, showToast }) => {
 };
 
 export default LeaveRequest;
-

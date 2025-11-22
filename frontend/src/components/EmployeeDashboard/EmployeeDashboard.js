@@ -1,469 +1,314 @@
 import React, { useState, useEffect } from 'react';
-import { requestsAPI, equipmentAPI, employeesAPI } from '../../services/api';
+import { employeesAPI, equipmentAPI } from '../../services/api';
 import './EmployeeDashboard.css';
 
 const EmployeeDashboard = ({ currentUser, onNavigate }) => {
-    const [equipment, setEquipment] = useState([]);
-    const [loadingEquipment, setLoadingEquipment] = useState(true);
     const [employeeProfile, setEmployeeProfile] = useState(null);
-    const [loadingProfile, setLoadingProfile] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [equipment, setEquipment] = useState([]);
+    const [loadingEquipment, setLoadingEquipment] = useState(false);
 
     useEffect(() => {
-        if (currentUser?.id) {
-            fetchEquipment();
-        }
-    }, [currentUser]);
-
-    useEffect(() => {
-        let isMounted = true;
-        const fetchProfile = async () => {
+        const fetchEmployeeProfile = async () => {
             if (!currentUser) {
-                if (isMounted) {
-                    setEmployeeProfile(null);
-                }
+                setLoading(false);
                 return;
             }
 
-            setLoadingProfile(true);
-            let profile = null;
-
-            const trySetProfile = (candidate) => {
-                if (!candidate) return;
-                profile = candidate;
-            };
-
-            const candidateIds = [
-                currentUser.employeeId,
-                currentUser.employee_id,
-                currentUser.employee?.id,
-                currentUser.id
-            ].filter(Boolean);
-
+            setLoading(true);
             try {
+                // Try multiple ID sources to find employee profile
+                const candidateIds = [
+                    currentUser.employeeId,
+                    currentUser.employee_id,
+                    currentUser.employee?.id,
+                    currentUser.id
+                ]
+                    .filter(Boolean)
+                    .map(id => {
+                        if (typeof id === 'number') return id;
+                        const str = String(id).trim();
+                        const numericMatch = str.match(/^\d+/);
+                        if (numericMatch) {
+                            return parseInt(numericMatch[0], 10);
+                        }
+                        return null;
+                    })
+                    .filter(id => id !== null && !isNaN(id) && id > 0);
+
+                let profile = null;
+
+                // Try fetching by ID
                 for (const id of candidateIds) {
-                    if (!id) continue;
                     try {
                         const response = await employeesAPI.getById(id);
                         if (response.data?.data) {
-                            trySetProfile(response.data.data);
-                            if (profile) break;
+                            profile = response.data.data;
+                            break;
                         }
                     } catch (error) {
-                        if (process.env.NODE_ENV === 'development') {
-                            console.debug('employeesAPI.getById failed', id, error);
+                        // Continue to next ID if 404
+                        if (error.response?.status !== 404) {
+                            console.warn('[EmployeeDashboard] Error fetching employee:', error);
                         }
                     }
                 }
 
+                // If not found by ID, try fetching all and matching
                 if (!profile) {
-                    const allResponse = await employeesAPI.getAll();
-                    const list = allResponse.data?.data || [];
-                    const matches = list.find((item) => {
-                        const normalized = {
-                            id: item.id,
-                            employeeId: item.employeeId || item.employee_id,
-                            userId: item.userId || item.user_id,
-                            maNhanVien: item.maNhanVien || item.ma_nhan_vien,
-                        };
-                        const targetIds = new Set(
-                            [
+                    try {
+                        const allResponse = await employeesAPI.getAll();
+                        const employees = allResponse.data?.data || [];
+
+                        profile = employees.find((emp) => {
+                            const targetIds = new Set([
                                 currentUser.id,
                                 currentUser.employeeId,
                                 currentUser.employee_id,
                                 currentUser.userId,
                                 currentUser.user_id,
                                 currentUser.employee?.id,
-                            ].filter(Boolean)
-                        );
-                        const targetCodes = new Set(
-                            [
+                            ].filter(Boolean));
+
+                            const targetCodes = new Set([
                                 currentUser.maNhanVien,
                                 currentUser.ma_nhan_vien
-                            ].filter(Boolean)
-                        );
-                        return (
-                            targetIds.has(normalized.id) ||
-                            targetIds.has(normalized.employeeId) ||
-                            targetIds.has(normalized.userId) ||
-                            targetCodes.has(normalized.maNhanVien)
-                        );
-                    });
-                    if (matches) {
-                        trySetProfile(matches);
+                            ].filter(Boolean));
+
+                            return (
+                                targetIds.has(emp.id) ||
+                                targetIds.has(emp.employeeId) ||
+                                targetIds.has(emp.employee_id) ||
+                                targetIds.has(emp.userId) ||
+                                targetIds.has(emp.user_id) ||
+                                targetCodes.has(emp.maNhanVien) ||
+                                targetCodes.has(emp.ma_nhan_vien)
+                            );
+                        }) || null;
+                    } catch (error) {
+                        console.error('[EmployeeDashboard] Error fetching all employees:', error);
                     }
                 }
+
+                setEmployeeProfile(profile);
             } catch (error) {
-                console.error('Error fetching employee profile:', error);
+                console.error('[EmployeeDashboard] Error fetching employee profile:', error);
             } finally {
-                if (isMounted) {
-                    setEmployeeProfile(profile);
-                    setLoadingProfile(false);
-                }
+                setLoading(false);
             }
         };
 
-        fetchProfile();
-
-        return () => {
-            isMounted = false;
-        };
+        fetchEmployeeProfile();
     }, [currentUser]);
 
-    const fetchEquipment = async () => {
-        try {
+    // Fetch equipment when employee profile is loaded
+    useEffect(() => {
+        const fetchEquipment = async () => {
+            if (!employeeProfile?.id) {
+                setEquipment([]);
+                return;
+            }
+
             setLoadingEquipment(true);
-            const equipmentList = [];
-
-            // 1. Lấy equipment từ requests (completed items)
             try {
-                const requestsResponse = await requestsAPI.getAll({ employeeId: currentUser.id });
-                if (requestsResponse.data.success) {
-                    const requests = requestsResponse.data.data || [];
-                    requests.forEach(request => {
-                        if (request.items_detail && Array.isArray(request.items_detail)) {
-                            request.items_detail.forEach(item => {
-                                if (item.status === 'COMPLETED' && item.quantity_provided > 0) {
-                                    equipmentList.push({
-                                        name: item.item_name,
-                                        quantity: item.quantity_provided,
-                                        department: request.target_department,
-                                        providedAt: item.provided_at,
-                                        providedBy: item.provided_by_name || 'HR'
-                                    });
-                                }
-                            });
-                        }
-                    });
+                const response = await equipmentAPI.getByEmployeeId(employeeProfile.id);
+                if (response.data?.success) {
+                    setEquipment(response.data.data || []);
+                } else {
+                    setEquipment([]);
                 }
-            } catch (requestsError) {
-                console.error('Error fetching requests:', requestsError);
-            }
-
-            // 2. Lấy equipment trực tiếp từ bảng equipment_assignments
-            try {
-                const equipmentResponse = await equipmentAPI.getByEmployeeId(currentUser.id);
-                if (equipmentResponse.data.success) {
-                    const directEquipment = equipmentResponse.data.data || [];
-                    directEquipment.forEach(eq => {
-                        equipmentList.push({
-                            name: eq.ten_vat_dung,
-                            quantity: eq.so_luong,
-                            department: eq.phong_ban,
-                            providedAt: eq.ngay_phan_cong || eq.created_at,
-                            providedBy: 'HR'
-                        });
-                    });
+            } catch (error) {
+                if (error.response?.status !== 404) {
+                    console.error('[EmployeeDashboard] Error fetching equipment:', error);
                 }
-            } catch (equipmentError) {
-                console.error('Error fetching direct equipment:', equipmentError);
+                setEquipment([]);
+            } finally {
+                setLoadingEquipment(false);
             }
+        };
 
-            // Sắp xếp theo ngày cấp (mới nhất trước)
-            equipmentList.sort((a, b) => {
-                const dateA = new Date(a.providedAt || 0);
-                const dateB = new Date(b.providedAt || 0);
-                return dateB - dateA;
-            });
+        fetchEquipment();
+    }, [employeeProfile]);
 
-            setEquipment(equipmentList);
-        } catch (error) {
-            console.error('Error fetching equipment:', error);
-        } finally {
-            setLoadingEquipment(false);
+    // Helper to get value from multiple sources
+    const getValue = (...keys) => {
+        const sources = [employeeProfile, currentUser];
+        for (const source of sources) {
+            if (!source) continue;
+            for (const key of keys) {
+                const value = source?.[key];
+                if (value !== undefined && value !== null && value !== '') {
+                    return value;
+                }
+            }
         }
+        return null;
     };
 
+    const employeeName = getValue('hoTen', 'ho_ten') || currentUser?.username || 'Nhân viên';
+    const chucDanh = getValue('chucDanh', 'chuc_danh');
+    const phongBan = getValue('phongBan', 'phong_ban');
+    const maNhanVien = getValue('maNhanVien', 'ma_nhan_vien');
+
+    // Format department label
+    const getDepartmentLabel = (dept) => {
+        if (!dept) return null;
+        const deptMap = {
+            'IT': 'Phòng IT',
+            'HR': 'Hành chính nhân sự',
+            'ACCOUNTING': 'Kế toán',
+            'MUAHANG': 'Mua hàng',
+            'HANHCHINH': 'Hành chính',
+            'DVDT': 'DVĐT',
+            'QA': 'QA',
+        };
+        return deptMap[dept] || dept;
+    };
+
+    const departmentLabel = getDepartmentLabel(phongBan);
+
+    // Format date helper
     const formatDate = (dateString) => {
         if (!dateString) return '-';
-
         try {
-            // Nếu dateString đã có format đầy đủ (có time), dùng trực tiếp
-            // Nếu chỉ có date (YYYY-MM-DD), thêm time để tránh timezone issues
             let date;
             if (dateString.includes('T') || dateString.includes(' ')) {
-                // Đã có time hoặc datetime format
                 date = new Date(dateString);
             } else {
-                // Chỉ có date, thêm time để tránh timezone issues
                 date = new Date(dateString + 'T00:00:00');
             }
-
-            // Kiểm tra date hợp lệ
-            if (isNaN(date.getTime())) {
-                return '-';
-            }
-
+            if (isNaN(date.getTime())) return '-';
             return date.toLocaleDateString('vi-VN', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric'
             });
         } catch (error) {
-            console.error('Error formatting date:', error, dateString);
             return '-';
         }
     };
 
-    const getDepartmentLabel = (dept) => {
-        switch (dept) {
-            case 'IT': return 'Phòng IT';
-            case 'HR': return 'Hành chính nhân sự';
-            case 'ACCOUNTING': return 'Kế toán';
-            case 'OTHER': return 'Phòng ban khác';
-            default: return dept;
-        }
-    };
+    // Prepare info cards data
+    const infoCards = [
+        { label: 'MÃ NHÂN VIÊN', value: maNhanVien || '-' },
+        { label: 'CHỨC DANH', value: chucDanh || '-' },
+        { label: 'PHÒNG BAN', value: departmentLabel || '-' },
+        { label: 'CHI NHÁNH', value: getValue('chiNhanh', 'chi_nhanh') || '-' },
+        { label: 'BỘ PHẬN', value: getValue('boPhan', 'bo_phan') || '-' },
+        { label: 'CẤP BẬC', value: getValue('capBac', 'cap_bac') || '-' },
+        { label: 'NGÀY NHẬN VIỆC', value: formatDate(getValue('ngayGiaNhap', 'ngay_gia_nhap')) },
+        { label: 'LOẠI HỢP ĐỒNG', value: getValue('loaiHopDong', 'loai_hop_dong') || '-' },
+        { label: 'TRẠNG THÁI', value: getValue('trangThai', 'trang_thai') || '-' },
+        { label: 'QUẢN LÝ TRỰC TIẾP', value: getValue('quanLyTrucTiep', 'quan_ly_truc_tiep') || 'Chưa cập nhật' },
+        { label: 'QUẢN LÝ GIÁN TIẾP', value: getValue('quanLyGianTiep', 'quan_ly_gian_tiep') || 'Chưa cập nhật' },
+    ].filter(card => card.value !== '-'); // Only show cards with values
 
-    const pickUserValue = (...keys) => {
-        const sources = [employeeProfile, currentUser];
-        for (const source of sources) {
-            if (!source) continue;
-            for (const key of keys) {
-                const value = source?.[key];
-                if (value !== undefined && value !== null) {
-                    if (typeof value === 'string') {
-                        if (value.trim().length) {
-                            return value;
-                        }
-                    } else {
-                        return value;
-                    }
-                }
-            }
-        }
-        return '';
-    };
-
-    const displayValue = (value) => {
-        if (value === undefined || value === null) return '-';
-        if (typeof value === 'string') {
-            const trimmed = value.trim();
-            return trimmed.length ? trimmed : '-';
-        }
-        if (typeof value === 'number') {
-            return String(value);
-        }
-        return value;
-    };
-
-    const departmentDisplay = displayValue(getDepartmentLabel(pickUserValue('phongBan', 'phong_ban')));
-    const employeeDataSources = [employeeProfile, currentUser];
-
-    const fieldDefinitions = {
-        basic: [
-            { label: 'Mã nhân viên', keys: ['maNhanVien', 'ma_nhan_vien'] },
-            { label: 'Họ và tên', keys: ['hoTen', 'ho_ten'] },
-            { label: 'Chức danh', keys: ['chucDanh', 'chuc_danh'] },
-            { label: 'Chi nhánh', keys: ['chiNhanh', 'chi_nhanh'] },
-            { label: 'Phòng ban', customValue: departmentDisplay, keys: ['phongBan', 'phong_ban'] },
-            { label: 'Cấp bậc', keys: ['capBac', 'cap_bac'] }
-        ],
-        contact: [
-            { label: 'Email', keys: ['email'] },
-            { label: 'Số điện thoại', keys: ['soDienThoai', 'so_dien_thoai'] },
-            { label: 'Địa chỉ', keys: ['diaChi', 'dia_chi'] }
-        ],
-        organization: [
-            { label: 'Ngày nhận việc', formatter: formatDate, keys: ['ngayGiaNhap', 'ngay_gia_nhap'] },
-            { label: 'Loại hợp đồng', keys: ['loaiHopDong', 'loai_hop_dong'] },
-            { label: 'Trạng thái', keys: ['trangThai', 'trang_thai'] },
-            { label: 'Ngày hết hạn hợp đồng', formatter: formatDate, keys: ['hetHanHopDong', 'het_han_hop_dong'] }
-        ],
-        management: [
-            { label: 'Quản lý trực tiếp', keys: ['quanLyTrucTiep', 'quan_ly_truc_tiep'] },
-            { label: 'Quản lý gián tiếp', keys: ['quanLyGianTiep', 'quan_ly_gian_tiep'] },
-            { label: 'Ngày sinh', formatter: formatDate, keys: ['ngaySinh', 'ngay_sinh'] },
-            { label: 'Giới tính', keys: ['gioiTinh', 'gioi_tinh'] },
-            { label: 'Tình trạng hôn nhân', keys: ['honNhan', 'hon_nhan'] }
-        ]
-    };
-
-    const resolveFieldValue = (definition) => {
-        if (definition.customValue !== undefined) {
-            return definition.customValue;
-        }
-        for (const source of employeeDataSources) {
-            if (!source) continue;
-            for (const key of definition.keys) {
-                const value = source?.[key];
-                if (value !== undefined && value !== null && String(value).trim() !== '') {
-                    return definition.formatter ? definition.formatter(value) : value;
-                }
-            }
-        }
-        return '';
-    };
-
-    const definedSections = [
-        { title: 'Thông tin cơ bản', key: 'basic' },
-        { title: 'Liên hệ', key: 'contact' },
-        { title: 'Công việc & Tổ chức', key: 'organization' },
-        { title: 'Quản lý & Cá nhân', key: 'management' }
-    ];
-
-    const infoSections = definedSections
-        .map((section) => {
-            const fields = fieldDefinitions[section.key]
-                .map((definition) => {
-                    const rawValue = resolveFieldValue(definition);
-                    const value = displayValue(rawValue);
-                    return value === '-' ? null : { label: definition.label, value };
-                })
-                .filter(Boolean);
-            return fields.length > 0 ? { ...section, fields } : null;
-        })
-        .filter(Boolean);
-
-    const avatarName = pickUserValue('hoTen', 'ho_ten', 'username') || 'NV';
-    const avatarInitials = avatarName
-        .split(' ')
-        .filter(Boolean)
-        .map((word) => word[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase() || 'NV';
-
-    const statusText = displayValue(pickUserValue('trangThai', 'trang_thai'));
-
-    const quickActions = [
-        {
-            key: 'leave-request',
-            title: 'Xin nghỉ phép',
-            description: 'Gửi đơn nghỉ phép và theo dõi trạng thái phê duyệt.',
-            icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1.8"
-                        d="M8 7V3m8 4V3m-9 8h10m-12 8h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                </svg>
-            )
-        },
-        {
-            key: 'leave-request-resign',
-            navigateTo: 'resignation-request',
-            title: 'Xin nghỉ việc',
-            description: 'Thông báo nghỉ việc và cập nhật quy trình bàn giao.',
-            icon: (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1.8"
-                        d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                </svg>
-            )
-        }
-    ];
-
-    const handleQuickAction = (actionKey, navigateOverride) => {
-        if (!onNavigate) return;
-        switch (navigateOverride || actionKey) {
-            case 'leave-request':
-                onNavigate('leave-request');
-                break;
-            case 'leave-request-resign':
-            case 'resignation-request':
-                onNavigate('resignation-request');
-                break;
-            default:
-                onNavigate(actionKey);
-                break;
-        }
-    };
+    if (loading) {
+        return (
+            <div className="employee-dashboard">
+                <div className="employee-dashboard-loading">
+                    <div className="employee-dashboard-spinner"></div>
+                    <p>Đang tải thông tin...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="employee-dashboard">
-            <div className="employee-dashboard-header">
-                <div className="employee-dashboard-welcome">
-                    <h1 className="employee-dashboard-title">
-                        Chào mừng, <span className="employee-name">{currentUser?.hoTen || 'Nhân viên'}</span>
-                    </h1>
-                    <p className="employee-dashboard-subtitle">
-                        Hệ thống quản lý nhân sự - Phiên làm việc của bạn
-                    </p>
+            <div className="employee-dashboard-main-card">
+                {/* Header Section */}
+                <div className="employee-dashboard-header">
+                    <div className="employee-dashboard-header-content">
+                        <h1 className="employee-dashboard-name">{employeeName}</h1>
+                        {(chucDanh || departmentLabel) && (
+                            <p className="employee-dashboard-subtitle">
+                                {[chucDanh, departmentLabel].filter(Boolean).join(' • ')}
+                            </p>
+                        )}
+                    </div>
+                    {maNhanVien && (
+                        <div className="employee-dashboard-code-tag">
+                            {maNhanVien}
+                        </div>
+                    )}
                 </div>
+
+                {/* Info Cards Section */}
+                {infoCards.length > 0 && (
+                    <div className="employee-dashboard-info-cards">
+                        {infoCards.map((card, index) => {
+                            const isImportant = card.label === 'MÃ NHÂN VIÊN' || card.label === 'NGÀY NHẬN VIỆC';
+                            return (
+                                <div
+                                    key={index}
+                                    className={`employee-info-card ${isImportant ? 'employee-info-card--important' : ''}`}
+                                >
+                                    <div className="employee-info-card-label">{card.label}</div>
+                                    <div className="employee-info-card-value">{card.value}</div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
-            <div className="employee-dashboard-content">
-                <div className="employee-info-layout">
-                    <div className="employee-info-card">
-                        <header className="employee-info-card-header">
-                            <div className="employee-info-card-title-group">
-                                <div className="employee-info-card-avatar">
-                                    <span>{avatarInitials}</span>
-                                </div>
-                                <div className="employee-info-card-text">
-                                    <h2 className="employee-info-title">Thông tin nhân viên</h2>
-                                    <p className="employee-info-subtitle">Chi tiết hồ sơ • cập nhật mới nhất</p>
-                                </div>
-                            </div>
-                            <div className="employee-info-card-meta">
-                                <span className="employee-info-meta-badge">ID: {displayValue(pickUserValue('maNhanVien', 'ma_nhan_vien'))}</span>
-                                <span className={`employee-info-meta-badge status ${statusText === '-' ? 'status-neutral' : 'status-active'}`}>
-                                    {statusText}
-                                </span>
-                            </div>
-                        </header>
-
-                        <div className="employee-info-card-body">
-                            {loadingProfile ? (
-                                <div className="employee-info-loading">
-                                    <div className="employee-info-spinner" />
-                                    <p>Đang tải dữ liệu nhân viên...</p>
-                                </div>
-                            ) : (
-                                infoSections.map((section, index) => (
-                                    <section className="employee-info-segment" key={section.title}>
-                                        <div className="employee-info-segment-title">
-                                            <h3>{section.title}</h3>
-                                        </div>
-                                        <div className="employee-info-fields">
-                                            {section.fields.map((field) => (
-                                                <div
-                                                    key={field.label}
-                                                    className="employee-info-field"
-                                                    tabIndex={0}
-                                                    data-empty={field.value === '-' ? 'true' : 'false'}
-                                                >
-                                                    <span className="employee-info-label">{field.label}</span>
-                                                    <p className="employee-info-value">{field.value}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {index !== infoSections.length - 1 && <div className="employee-info-divider" />}
-                                    </section>
-                                ))
-                            )}
+            {/* Equipment Section - Dark Card */}
+            <div className="employee-dashboard-equipment-card">
+                <div className="employee-equipment-header">
+                    <h2 className="employee-equipment-title">Vật dụng đã cấp</h2>
+                </div>
+                <div className="employee-equipment-content">
+                    {loadingEquipment ? (
+                        <div className="employee-equipment-loading">
+                            <div className="employee-equipment-spinner"></div>
+                            <p>Đang tải danh sách vật dụng...</p>
                         </div>
-                    </div>
-
-                    <section className="employee-quick-actions">
-                        <header className="employee-quick-actions-header">
-                            <h2>Thao tác nhanh</h2>
-                            <p>Truy cập nhanh các thao tác thường dùng của bạn.</p>
-                        </header>
-                        <div className="employee-quick-actions-grid">
-                            {quickActions.map((action) => (
-                                <button
-                                    key={action.key}
-                                    type="button"
-                                    className="quick-action-card"
-                                    onClick={() => handleQuickAction(action.key, action.navigateTo)}
-                                >
-                                    <div className="quick-action-icon">{action.icon}</div>
-                                    <div className="quick-action-content">
-                                        <span className="quick-action-title">{action.title}</span>
-                                        <span className="quick-action-description">{action.description}</span>
+                    ) : equipment.length === 0 ? (
+                        <div className="employee-equipment-empty">
+                            <svg className="employee-equipment-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                            </svg>
+                            <p>Chưa có vật dụng nào</p>
+                        </div>
+                    ) : (
+                        <div className="employee-equipment-grid">
+                            {equipment.map((item) => (
+                                <div key={item.id} className="employee-equipment-item">
+                                    <div className="equipment-item-header">
+                                        <h3 className="equipment-item-name">{item.tenThietBi || item.ten_thiet_bi || 'Vật dụng'}</h3>
+                                        {item.serialNumber || item.serial_number ? (
+                                            <span className="equipment-item-serial">
+                                                S/N: {item.serialNumber || item.serial_number}
+                                            </span>
+                                        ) : null}
                                     </div>
-                                </button>
+                                    <div className="equipment-item-details">
+                                        {item.maThietBi || item.ma_thiet_bi ? (
+                                            <div className="equipment-detail-row">
+                                                <span className="equipment-detail-label">Mã:</span>
+                                                <span className="equipment-detail-value">{item.maThietBi || item.ma_thiet_bi}</span>
+                                            </div>
+                                        ) : null}
+                                        {item.ngayCap || item.ngay_cap ? (
+                                            <div className="equipment-detail-row">
+                                                <span className="equipment-detail-label">Ngày cấp:</span>
+                                                <span className="equipment-detail-value">{formatDate(item.ngayCap || item.ngay_cap)}</span>
+                                            </div>
+                                        ) : null}
+                                        {(item.tinhTrang || item.tinh_trang) && (
+                                            <div className="equipment-detail-row">
+                                                <span className="equipment-detail-label">Tình trạng:</span>
+                                                <span className={`equipment-status-badge ${(item.tinhTrang || item.tinh_trang).toLowerCase()}`}>
+                                                    {item.tinhTrang || item.tinh_trang}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             ))}
                         </div>
-                    </section>
-
+                    )}
                 </div>
             </div>
         </div>
@@ -471,4 +316,3 @@ const EmployeeDashboard = ({ currentUser, onNavigate }) => {
 };
 
 export default EmployeeDashboard;
-

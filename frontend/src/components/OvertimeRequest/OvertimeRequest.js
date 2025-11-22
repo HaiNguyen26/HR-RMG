@@ -1,560 +1,399 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
-import { overtimeRequestsAPI } from '../../services/api';
-import {
-  formatDateToISO,
-  formatDateToTimeString,
-  parseISODateString,
-  parseTimeStringToDate
-} from '../../utils/dateUtils';
+import { employeesAPI, overtimeRequestsAPI } from '../../services/api';
+import { formatDateToISO, parseISODateString, today } from '../../utils/dateUtils';
 import { DATE_PICKER_LOCALE } from '../../utils/datepickerLocale';
-import '../LeaveRequest/LeaveRequest.css';
-
-const initialFormState = {
-  date: '',
-  startTime: '',
-  endTime: '',
-  duration: '',
-  reason: '',
-  notes: ''
-};
+import './OvertimeRequest.css';
 
 const OvertimeRequest = ({ currentUser, showToast }) => {
-  const [formData, setFormData] = useState(initialFormState);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [requestHistory, setRequestHistory] = useState([]);
+  const [formData, setFormData] = useState({
+    date: '',
+    startTime: '',
+    endTime: '',
+    estimatedHours: '',
+    reason: ''
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [deletingRequestId, setDeletingRequestId] = useState(null);
+  const [employeeProfile, setEmployeeProfile] = useState(null);
 
-  const directManagerName = useMemo(
-    () => (currentUser?.quanLyTrucTiep || '').trim(),
-    [currentUser]
-  );
-  const indirectManagerName = useMemo(
-    () => (currentUser?.quanLyGianTiep || '').trim(),
-    [currentUser]
-  );
-  const hasManagerInfo = Boolean(directManagerName) && Boolean(indirectManagerName);
-
-  const statusConfig = useMemo(
-    () => ({
-      PENDING_TEAM_LEAD: { label: 'Chờ quản lý duyệt', className: 'status-pending-team' },
-      PENDING_BRANCH: { label: 'Chờ quản lý gián tiếp duyệt', className: 'status-pending-branch' },
-      APPROVED: { label: 'Đã duyệt', className: 'status-approved' },
-      REJECTED: { label: 'Đã từ chối', className: 'status-rejected' },
-      CANCELLED: { label: 'Đã hủy', className: 'status-cancelled' }
-    }),
-    []
-  );
-
-  const formatDateDisplay = (value, withTime = false) => {
-    if (!value) return '-';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '-';
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      ...(withTime
-        ? {
-          hour: '2-digit',
-          minute: '2-digit'
-        }
-        : {})
-    });
-  };
-
-  const handleDeleteRequest = async (requestId) => {
-    if (!currentUser?.id) {
-      setError('Không xác định được thông tin nhân viên. Vui lòng đăng nhập lại.');
-      return;
-    }
-
-    const confirmDelete = window.confirm('Bạn có chắc muốn xóa đơn tăng ca này?');
-    if (!confirmDelete) return;
-
-    try {
-      setError('');
-      setDeletingRequestId(requestId);
-      await overtimeRequestsAPI.remove(requestId, { employeeId: currentUser.id });
-      setRequestHistory((prev) => prev.filter((request) => request.id !== requestId));
-      if (showToast) {
-        showToast('Đã xóa đơn tăng ca.', 'success');
-      }
-    } catch (err) {
-      const message = err.response?.data?.message || 'Không thể xóa đơn. Vui lòng thử lại.';
-      setError(message);
-      if (showToast) {
-        showToast(message, 'error');
-      }
-    } finally {
-      setDeletingRequestId(null);
-    }
-  };
-
+  // Fetch employee profile to get manager info
   useEffect(() => {
-    const fetchHistory = async () => {
-      if (!currentUser?.id) return;
-      setLoadingHistory(true);
+    const fetchEmployeeProfile = async () => {
+      if (!currentUser) return;
+
       try {
-        const response = await overtimeRequestsAPI.getAll({
-          mode: 'employee',
-          employeeId: currentUser.id
-        });
-        if (response.data.success) {
-          setRequestHistory(Array.isArray(response.data.data) ? response.data.data : []);
+        const candidateIds = [
+          currentUser.employeeId,
+          currentUser.employee_id,
+          currentUser.employee?.id,
+          currentUser.id
+        ]
+          .filter(Boolean)
+          .map(id => {
+            if (typeof id === 'number') return id;
+            const str = String(id).trim();
+            const numericMatch = str.match(/^\d+/);
+            if (numericMatch) {
+              return parseInt(numericMatch[0], 10);
+            }
+            return null;
+          })
+          .filter(id => id !== null && !isNaN(id) && id > 0);
+
+        let profile = null;
+
+        for (const id of candidateIds) {
+          try {
+            const response = await employeesAPI.getById(id);
+            if (response.data?.data) {
+              profile = response.data.data;
+              break;
+            }
+          } catch (err) {
+            continue;
+          }
         }
-      } catch (err) {
-        console.error('Error fetching overtime history:', err);
-        if (showToast) {
-          showToast('Không thể tải lịch sử đơn tăng ca.', 'error');
+
+        if (!profile) {
+          try {
+            const allResponse = await employeesAPI.getAll();
+            const employees = allResponse.data?.data || [];
+            profile = employees.find((emp) => {
+              const targetIds = new Set([
+                currentUser.id,
+                currentUser.employeeId,
+                currentUser.employee_id,
+              ].filter(Boolean));
+              return targetIds.has(emp.id) || targetIds.has(emp.employeeId) || targetIds.has(emp.employee_id);
+            }) || null;
+          } catch (err) {
+            console.error('[OvertimeRequest] Error fetching all employees:', err);
+          }
         }
-      } finally {
-        setLoadingHistory(false);
+
+        setEmployeeProfile(profile);
+      } catch (error) {
+        console.error('[OvertimeRequest] Error fetching employee profile:', error);
       }
     };
 
-    fetchHistory();
-  }, [currentUser?.id, showToast]);
+    fetchEmployeeProfile();
+  }, [currentUser]);
 
-  const handleFieldChange = (field, value) => {
-    setFormData((prev) => ({
+  // Helper to get value from multiple sources
+  const getValue = (...keys) => {
+    const sources = [employeeProfile, currentUser];
+    for (const source of sources) {
+      if (!source) continue;
+      for (const key of keys) {
+        const value = source?.[key];
+        if (value !== undefined && value !== null && value !== '') {
+          return value;
+        }
+      }
+    }
+    return null;
+  };
+
+  const directManagerName = getValue('quanLyTrucTiep', 'quan_ly_truc_tiep', 'team_lead_name') || 'Chưa cập nhật';
+
+  // Calculate estimated hours
+  useEffect(() => {
+    if (formData.startTime && formData.endTime) {
+      const [startHour, startMin] = formData.startTime.split(':').map(Number);
+      const [endHour, endMin] = formData.endTime.split(':').map(Number);
+
+      if (startHour !== undefined && endHour !== undefined) {
+        const startMinutes = startHour * 60 + (startMin || 0);
+        const endMinutes = endHour * 60 + (endMin || 0);
+
+        if (endMinutes > startMinutes) {
+          const totalMinutes = endMinutes - startMinutes;
+          const hours = (totalMinutes / 60).toFixed(2);
+          setFormData(prev => ({ ...prev, estimatedHours: hours }));
+        } else {
+          setFormData(prev => ({ ...prev, estimatedHours: '' }));
+        }
+      }
+    } else {
+      setFormData(prev => ({ ...prev, estimatedHours: '' }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.startTime, formData.endTime]);
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
       ...prev,
       [field]: value
     }));
     setError('');
   };
 
-  const handleDatePickerChange = (dateValue) => {
-    setFormData((prev) => ({
-      ...prev,
-      date: dateValue ? formatDateToISO(dateValue) : ''
-    }));
-    setError('');
+  const handleDateChange = (date) => {
+    if (!date) {
+      handleInputChange('date', '');
+    } else {
+      handleInputChange('date', formatDateToISO(date));
+    }
   };
 
-  const handleTimePickerChange = (field) => (timeValue) => {
-    setFormData((prev) => {
-      const next = { ...prev };
-      if (!timeValue) {
-        next[field] = '';
-        return next;
-      }
-
-      next[field] = formatDateToTimeString(timeValue);
-
-      if (field === 'startTime' && prev.endTime) {
-        const endDate = parseTimeStringToDate(prev.endTime);
-        if (endDate && endDate <= timeValue) {
-          next.endTime = '';
-        }
-      }
-
-      return next;
-    });
-    setError('');
+  const handleTimeChange = (field) => (e) => {
+    const value = e.target.value;
+    // Validate time format hh:mm
+    if (value === '' || /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(value)) {
+      handleInputChange(field, value);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (!currentUser?.id) {
-      setError('Không xác định được thông tin nhân viên. Vui lòng đăng nhập lại.');
-      return;
-    }
-
-    if (!directManagerName) {
-      setError('Không tìm thấy thông tin quản lý trực tiếp. Vui lòng liên hệ HR để cập nhật.');
-      return;
-    }
-
-    if (!indirectManagerName) {
-      setError('Không tìm thấy thông tin quản lý gián tiếp. Vui lòng liên hệ HR để cập nhật.');
-      return;
-    }
-
+    // Validation
     if (!formData.date || !formData.startTime || !formData.endTime || !formData.reason) {
-      setError('Vui lòng điền đầy đủ ngày, thời gian và nội dung tăng ca.');
+      setError('Vui lòng điền đầy đủ thông tin bắt buộc.');
       return;
     }
 
-    if (formData.endTime <= formData.startTime) {
-      setError('Giờ kết thúc phải sau giờ bắt đầu.');
-      return;
+    if (formData.startTime && formData.endTime) {
+      const [startHour, startMin] = formData.startTime.split(':').map(Number);
+      const [endHour, endMin] = formData.endTime.split(':').map(Number);
+      const startMinutes = startHour * 60 + (startMin || 0);
+      const endMinutes = endHour * 60 + (endMin || 0);
+
+      if (endMinutes <= startMinutes) {
+        setError('Giờ kết thúc phải sau giờ bắt đầu.');
+        return;
+      }
     }
 
+    setLoading(true);
     try {
-      setSubmitting(true);
+      if (!currentUser?.id) {
+        setError('Không xác định được thông tin nhân viên. Vui lòng đăng nhập lại.');
+        return;
+      }
+
       const payload = {
         employeeId: currentUser.id,
         requestDate: formData.date,
         startTime: formData.startTime,
         endTime: formData.endTime,
-        duration: formData.duration || null,
-        reason: formData.reason,
-        notes: formData.notes || null
+        duration: formData.estimatedHours || null,
+        reason: formData.reason
       };
 
       const response = await overtimeRequestsAPI.create(payload);
-      if (response.data.success) {
-        setFormData(initialFormState);
-        setRequestHistory((prev) => [response.data.data, ...prev]);
+
+      if (response.data?.success) {
         if (showToast) {
-          showToast('Đã gửi đơn tăng ca thành công.', 'success');
+          showToast('Đơn xin tăng ca đã được gửi thành công!', 'success');
         }
+
+        // Reset form
+        setFormData({
+          date: '',
+          startTime: '',
+          endTime: '',
+          estimatedHours: '',
+          reason: ''
+        });
+      } else {
+        throw new Error(response.data?.message || 'Không thể gửi đơn. Vui lòng thử lại.');
       }
-    } catch (err) {
-      console.error('Error submitting overtime request:', err);
-      const message = err.response?.data?.message || 'Không thể gửi đơn tăng ca. Vui lòng thử lại.';
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
       setError(message);
       if (showToast) {
         showToast(message, 'error');
       }
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
-
-  const renderTimelineStep = (title, action, actionAt, comment) => {
-    let description = 'Đang chờ xử lý';
-    if (action === 'APPROVED') {
-      description = 'Đã phê duyệt';
-    } else if (action === 'REJECTED') {
-      description = 'Đã từ chối';
-    } else if (action === 'ESCALATED') {
-      description = 'Đã đẩy lên cấp tiếp theo';
-    }
-
-    return (
-      <div className="leave-history-timeline-step">
-        <div className="leave-history-step-header">
-          <span className="leave-history-step-title">{title}</span>
-          <span className={`leave-history-step-status leave-history-step-${(action || 'PENDING').toLowerCase()}`}>
-            {description}
-          </span>
-        </div>
-        <div className="leave-history-step-meta">
-          <span>{actionAt ? formatDateDisplay(actionAt, true) : 'Chưa có thời gian xử lý'}</span>
-          {comment && <span className="leave-history-step-comment">"{comment}"</span>}
-        </div>
-      </div>
-    );
-  };
-
-  const renderHistory = () => (
-    <div className="leave-history-section">
-      <div className="leave-history-header">
-        <h2>Đơn tăng ca đã gửi</h2>
-        {loadingHistory && <span className="leave-history-loading">Đang tải...</span>}
-      </div>
-      {!loadingHistory && requestHistory.length === 0 && (
-        <p className="leave-history-empty">Bạn chưa có đơn tăng ca nào.</p>
-      )}
-      {!loadingHistory && requestHistory.length > 0 && (
-        <div className="leave-history-list">
-          {requestHistory.map((request) => {
-            const statusInfo =
-              statusConfig[request.status] || statusConfig.PENDING_TEAM_LEAD || {
-                label: request.status,
-                className: 'status-pending-team'
-              };
-            const canDeleteRequest = request.status === 'PENDING_TEAM_LEAD';
-            return (
-              <div key={request.id} className={`leave-history-card ${statusInfo.className}`}>
-                <div className="leave-history-card-header">
-                  <div>
-                    <h3>Đề xuất tăng ca</h3>
-                    <p>
-                      {formatDateDisplay(request.request_date)} • {request.start_time?.slice(0, 5)} →{' '}
-                      {request.end_time?.slice(0, 5)}
-                      {request.duration ? ` • ${request.duration}` : ''}
-                    </p>
-                  </div>
-                  <div className="leave-history-header-right">
-                    <div className="leave-history-status-group">
-                      {request.isOverdue && request.status === 'PENDING_TEAM_LEAD' && (
-                        <span className="leave-history-overdue">Quá hạn 24h</span>
-                      )}
-                      <span className={`leave-history-status ${statusInfo.className}`}>
-                        {statusInfo.label}
-                      </span>
-                    </div>
-                    {canDeleteRequest && (
-                      <button
-                        type="button"
-                        className="leave-history-action-btn"
-                        onClick={() => handleDeleteRequest(request.id)}
-                        disabled={deletingRequestId === request.id}
-                      >
-                        {deletingRequestId === request.id ? 'Đang xóa...' : 'Hủy đơn'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="leave-history-details">
-                  <div className="leave-history-detail-block">
-                    <span className="leave-history-detail-label">Nội dung công việc</span>
-                    <p className="leave-history-detail-value">{request.reason}</p>
-                  </div>
-                  {request.notes && (
-                    <div className="leave-history-detail-block">
-                      <span className="leave-history-detail-label">Ghi chú</span>
-                      <p className="leave-history-detail-value">{request.notes}</p>
-                    </div>
-                  )}
-                  <div className="leave-history-detail-block">
-                    <span className="leave-history-detail-label">Quản lý trực tiếp</span>
-                    <p className="leave-history-detail-value">{request.team_lead_name || 'Chưa cập nhật'}</p>
-                  </div>
-                  <div className="leave-history-detail-block">
-                    <span className="leave-history-detail-label">Quản lý gián tiếp</span>
-                    <p className="leave-history-detail-value">{request.branch_manager_name || 'Chưa cập nhật'}</p>
-                  </div>
-                  <div className="leave-history-detail-block">
-                    <span className="leave-history-detail-label">Gửi lúc</span>
-                    <p className="leave-history-detail-value">{formatDateDisplay(request.created_at, true)}</p>
-                  </div>
-                  <div className="leave-history-detail-block">
-                    <span className="leave-history-detail-label">Cập nhật</span>
-                    <p className="leave-history-detail-value">{formatDateDisplay(request.updated_at, true)}</p>
-                  </div>
-                </div>
-
-                <div className="leave-history-timeline">
-                  {renderTimelineStep(
-                    'Quản lý trực tiếp',
-                    request.team_lead_action,
-                    request.team_lead_action_at,
-                    request.team_lead_comment
-                  )}
-                  {renderTimelineStep(
-                    'Quản lý gián tiếp',
-                    request.branch_action,
-                    request.branch_action_at,
-                    request.branch_comment
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
 
   return (
-    <div className="leave-request">
-      <div className="leave-request-header">
-        <h1 className="leave-request-title">Xin tăng ca</h1>
-        <p className="leave-request-subtitle">
-          Điền chi tiết đề xuất tăng ca để gửi quản lý duyệt và quản lý gián tiếp theo dõi.
-        </p>
+    <div className="overtime-request-container">
+      {/* Header with Title */}
+      <div className="overtime-request-header">
+        <div className="overtime-request-header-content">
+          <div className="overtime-request-icon-wrapper">
+            <svg className="overtime-request-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 className="overtime-request-title">Đơn Xin Tăng ca</h1>
+            <p className="overtime-request-subtitle">
+              Điền đầy đủ thông tin để gửi đơn xin tăng ca đến quản lý duyệt.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="leave-request-form-container">
-        <form onSubmit={handleSubmit} className="leave-request-form">
+      {/* Form Box */}
+      <div className="overtime-request-form-wrapper">
+        <form onSubmit={handleSubmit} className="overtime-request-form">
+          {/* Error Message */}
           {error && (
-            <div className="leave-request-error">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
+            <div className="overtime-request-error">
+              <svg className="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
               <span>{error}</span>
             </div>
           )}
 
-          <div className="leave-form-grid">
-            <div className="leave-form-group">
-              <label className="leave-form-label">
-                Quản lý duyệt đơn *
+          {/* Form Fields */}
+          <div className="overtime-form-fields">
+            {/* Date Field - Highlighted */}
+            <div className="overtime-form-group overtime-date-group-highlight">
+              <label className="overtime-form-label overtime-date-label-highlight">
+                <svg className="overtime-label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span>Ngày tăng ca *</span>
               </label>
-              <input
-                className="leave-form-input"
-                type="text"
-                value={directManagerName || 'Chưa cập nhật'}
-                disabled
-              />
-              <p className="leave-form-hint">Thông tin quản lý được lấy từ hồ sơ nhân sự của bạn.</p>
-            </div>
-            <div className="leave-form-group">
-              <label className="leave-form-label">
-                Quản lý gián tiếp nhận thông báo *
-              </label>
-              <input
-                className="leave-form-input"
-                type="text"
-                value={indirectManagerName || 'Chưa cập nhật'}
-                disabled
-              />
-              <p className="leave-form-hint">Hệ thống sẽ gửi thông báo tới quản lý gián tiếp khi bạn gửi đơn.</p>
-            </div>
-          </div>
-
-          <div className="leave-form-grid">
-            <div className="leave-form-group">
-              <label htmlFor="overtimeDate" className="leave-form-label">
-                Ngày tăng ca *
-              </label>
-              <DatePicker
-                id="overtimeDate"
-                selected={parseISODateString(formData.date)}
-                onChange={handleDatePickerChange}
-                dateFormat="dd/MM/yyyy"
-                locale={DATE_PICKER_LOCALE}
-                placeholderText="dd/mm/yyyy"
-                className="leave-form-input leave-form-input--datepicker"
-                calendarClassName="date-picker-calendar"
-                popperClassName="date-picker-popper"
-                wrapperClassName="date-picker-wrapper"
-                required
-                autoComplete="off"
-              />
-            </div>
-            <div className="leave-form-group">
-              <label htmlFor="overtimeDuration" className="leave-form-label">
-                Thời lượng dự kiến
-              </label>
-              <input
-                type="text"
-                id="overtimeDuration"
-                value={formData.duration}
-                onChange={(event) => handleFieldChange('duration', event.target.value)}
-                className="leave-form-input"
-                placeholder="Ví dụ: 2 giờ"
-              />
-            </div>
-          </div>
-
-          <div className="leave-form-grid">
-            <div className="leave-form-group">
-              <label htmlFor="overtimeStart" className="leave-form-label">
-                Giờ bắt đầu *
-              </label>
-              <DatePicker
-                id="overtimeStart"
-                selected={parseTimeStringToDate(formData.startTime)}
-                onChange={handleTimePickerChange('startTime')}
-                showTimeSelect
-                showTimeSelectOnly
-                timeIntervals={5}
-                timeCaption="Giờ"
-                dateFormat="HH:mm"
-                locale={DATE_PICKER_LOCALE}
-                placeholderText="hh:mm"
-                className="leave-form-input leave-form-input--datepicker leave-form-input--time"
-                calendarClassName="date-picker-calendar time-picker-calendar"
-                popperClassName="date-picker-popper time-picker-popper"
-                wrapperClassName="date-picker-wrapper time-picker-wrapper"
-                required
-                autoComplete="off"
-              />
-            </div>
-            <div className="leave-form-group">
-              <label htmlFor="overtimeEnd" className="leave-form-label">
-                Giờ kết thúc *
-              </label>
-              <DatePicker
-                id="overtimeEnd"
-                selected={parseTimeStringToDate(formData.endTime)}
-                onChange={handleTimePickerChange('endTime')}
-                showTimeSelect
-                showTimeSelectOnly
-                timeIntervals={5}
-                timeCaption="Giờ"
-                dateFormat="HH:mm"
-                locale={DATE_PICKER_LOCALE}
-                placeholderText="hh:mm"
-                className="leave-form-input leave-form-input--datepicker leave-form-input--time"
-                calendarClassName="date-picker-calendar time-picker-calendar"
-                popperClassName="date-picker-popper time-picker-popper"
-                wrapperClassName="date-picker-wrapper time-picker-wrapper"
-                required
-                disabled={!formData.startTime}
-                autoComplete="off"
-              />
-            </div>
-          </div>
-
-          <div className="leave-form-group">
-            <label htmlFor="overtimeReason" className="leave-form-label">
-              Nội dung công việc / Lý do *
-            </label>
-            <textarea
-              id="overtimeReason"
-              value={formData.reason}
-              onChange={(event) => handleFieldChange('reason', event.target.value)}
-              className="leave-form-textarea"
-              rows="3"
-              placeholder="Mô tả công việc tăng ca, mục tiêu hoàn thành..."
-              required
-            />
-          </div>
-
-          <div className="leave-form-group">
-            <label htmlFor="overtimeNotes" className="leave-form-label">
-              Ghi chú (tùy chọn)
-            </label>
-            <textarea
-              id="overtimeNotes"
-              value={formData.notes}
-              onChange={(event) => handleFieldChange('notes', event.target.value)}
-              className="leave-form-textarea"
-              rows="2"
-              placeholder="Thêm thông tin bổ sung nếu cần..."
-            />
-          </div>
-
-          <div className="leave-form-actions">
-            <button
-              type="submit"
-              className="leave-submit-btn leave-submit-btn--secondary"
-              disabled={
-                submitting ||
-                !hasManagerInfo
-              }
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-              {submitting ? 'Đang gửi...' : 'Gửi đơn'}
-            </button>
-            <p className="leave-form-hint leave-form-hint--info">
-              Đơn tăng ca sẽ tự động gửi tới quản lý trực tiếp và thông báo cho quản lý gián tiếp theo lựa chọn phía trên.
-            </p>
-          </div>
-        </form>
-
-        <div className="leave-request-sidebar">
-          <div className="leave-request-info">
-            <div className="info-box">
-              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <h3 className="info-box-title">Hướng dẫn điền đơn</h3>
-                <p className="info-box-text">
-                  Ghi rõ nội dung công việc tăng ca, thời lượng dự kiến và ca làm việc để quản lý trực tiếp dễ dàng phê duyệt. Nếu có xác nhận từ khách hàng/đối tác,
-                  bạn có thể đính kèm mô tả trong phần ghi chú.
-                </p>
-                <div className="info-box-divider" />
-                <p className="info-box-text">
-                  Hệ thống sẽ gửi thông báo tới quản lý trực tiếp và quản lý gián tiếp dựa trên thông tin đã chọn.
-                </p>
+              <div className="overtime-date-picker-wrapper">
+                <DatePicker
+                  selected={formData.date ? parseISODateString(formData.date) : null}
+                  onChange={handleDateChange}
+                  minDate={today()}
+                  dateFormat="dd/MM/yyyy"
+                  locale={DATE_PICKER_LOCALE}
+                  placeholderText="Chọn ngày tăng ca"
+                  className="overtime-form-datepicker"
+                  required
+                  autoComplete="off"
+                />
+                <svg className="overtime-date-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
               </div>
             </div>
+
+            {/* Time Fields */}
+            <div className="overtime-form-row">
+              <div className="overtime-form-group">
+                <label className="overtime-form-label">
+                  <svg className="overtime-label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span>Giờ bắt đầu *</span>
+                </label>
+                <div className="overtime-time-picker-wrapper">
+                  <input
+                    type="time"
+                    className="overtime-form-timepicker"
+                    value={formData.startTime}
+                    onChange={handleTimeChange('startTime')}
+                    onClick={(e) => e.target.showPicker?.()}
+                    required
+                  />
+                  <svg className="overtime-time-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div className="overtime-form-group">
+                <label className="overtime-form-label">
+                  <svg className="overtime-label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span>Giờ kết thúc *</span>
+                </label>
+                <div className="overtime-time-picker-wrapper">
+                  <input
+                    type="time"
+                    className="overtime-form-timepicker"
+                    value={formData.endTime}
+                    onChange={handleTimeChange('endTime')}
+                    onClick={(e) => e.target.showPicker?.()}
+                    required
+                  />
+                  <svg className="overtime-time-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Estimated Hours */}
+            <div className="overtime-form-group">
+              <label className="overtime-form-label">Thời lượng dự kiến</label>
+              <div className="overtime-hours-input-wrapper">
+                <input
+                  type="text"
+                  className="overtime-form-input overtime-hours-input"
+                  value={formData.estimatedHours}
+                  readOnly
+                  disabled
+                />
+                <span className="overtime-hours-tag">giờ</span>
+              </div>
+            </div>
+
+            {/* Manager Field */}
+            <div className="overtime-form-group">
+              <label className="overtime-form-label">
+                <svg className="overtime-label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <span>Quản lý duyệt/nhận TB *</span>
+              </label>
+              <input
+                type="text"
+                className="overtime-form-input overtime-form-input-readonly"
+                value={directManagerName}
+                readOnly
+                disabled
+              />
+            </div>
+
+            {/* Reason Field */}
+            <div className="overtime-form-group">
+              <label className="overtime-form-label">
+                <svg className="overtime-label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Nội dung công việc / Lý do *</span>
+              </label>
+              <textarea
+                className="overtime-form-textarea overtime-form-textarea-large"
+                value={formData.reason}
+                onChange={(e) => handleInputChange('reason', e.target.value)}
+                placeholder="Vui lòng nhập nội dung công việc hoặc lý do xin tăng ca..."
+                required
+              />
+            </div>
           </div>
 
-          {renderHistory()}
-        </div>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="overtime-submit-button"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <div className="overtime-button-spinner"></div>
+                <span>Đang gửi...</span>
+              </>
+            ) : (
+              <>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="overtime-submit-icon">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                </svg>
+                <span>Gửi Đơn Tăng ca</span>
+              </>
+            )}
+          </button>
+        </form>
       </div>
     </div>
   );
 };
 
 export default OvertimeRequest;
+

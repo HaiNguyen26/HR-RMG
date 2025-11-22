@@ -7,10 +7,11 @@ const equipmentRoutes = require('./routes/equipment');
 const statisticsRoutes = require('./routes/statistics');
 const authRoutes = require('./routes/auth');
 const requestsRoutes = require('./routes/requests');
-const notificationsRoutes = require('./routes/notifications');
 const leaveRequestsRoutes = require('./routes/leaveRequests');
 const overtimeRequestsRoutes = require('./routes/overtimeRequests');
 const attendanceRequestsRoutes = require('./routes/attendanceRequests');
+const travelExpensesRoutes = require('./routes/travelExpenses');
+const candidatesRoutes = require('./routes/candidates');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,10 +27,11 @@ app.use('/api/equipment', equipmentRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/requests', requestsRoutes);
-app.use('/api/notifications', notificationsRoutes);
 app.use('/api/leave-requests', leaveRequestsRoutes);
 app.use('/api/overtime-requests', overtimeRequestsRoutes);
 app.use('/api/attendance-adjustments', attendanceRequestsRoutes);
+app.use('/api/travel-expenses', travelExpensesRoutes);
+app.use('/api/candidates', candidatesRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -41,16 +43,16 @@ app.get('/', (req, res) => {
     res.json({
         message: 'HR Management System API',
         version: '1.0.0',
-        endpoints: {
+            endpoints: {
             employees: '/api/employees',
             equipment: '/api/equipment',
             statistics: '/api/statistics',
             auth: '/api/auth',
             requests: '/api/requests',
-            notifications: '/api/notifications',
-        leaveRequests: '/api/leave-requests',
-        overtimeRequests: '/api/overtime-requests',
-        attendanceAdjustments: '/api/attendance-adjustments'
+            leaveRequests: '/api/leave-requests',
+            overtimeRequests: '/api/overtime-requests',
+            attendanceAdjustments: '/api/attendance-adjustments',
+            travelExpenses: '/api/travel-expenses'
         }
     });
 });

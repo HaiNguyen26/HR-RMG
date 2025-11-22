@@ -2,7 +2,7 @@ const { execSync } = require('child_process');
 const os = require('os');
 
 console.log('========================================');
-console.log('Checking and fixing ports 3000 and 3001');
+console.log('Checking and fixing ports 3000, 3001, and 3002');
 console.log('========================================\n');
 
 function killProcessOnPort(port) {
@@ -68,16 +68,22 @@ try {
   console.log('  ℹ No Node.js processes found');
 }
 
-console.log('\n[2/3] Checking and fixing port 3000...');
+console.log('\n[2/4] Checking and fixing port 3000...');
 const port3000Fixed = killProcessOnPort(3000);
 if (!port3000Fixed) {
   console.log('  ✓ Port 3000 is free');
 }
 
-console.log('\n[3/3] Checking and fixing port 3001...');
+console.log('\n[3/4] Checking and fixing port 3001...');
 const port3001Fixed = killProcessOnPort(3001);
 if (!port3001Fixed) {
   console.log('  ✓ Port 3001 is free');
+}
+
+console.log('\n[4/4] Checking and fixing port 3002...');
+const port3002Fixed = killProcessOnPort(3002);
+if (!port3002Fixed) {
+  console.log('  ✓ Port 3002 is free');
 }
 
 console.log('\n========================================');
@@ -85,7 +91,7 @@ console.log('Ports are ready!');
 console.log('========================================\n');
 
 // Wait a bit for ports to be fully released
-if (port3000Fixed || port3001Fixed) {
+if (port3000Fixed || port3001Fixed || port3002Fixed) {
   console.log('Waiting 2 seconds for ports to be fully released...\n');
   const start = Date.now();
   while (Date.now() - start < 2000) {

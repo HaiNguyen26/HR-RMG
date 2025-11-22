@@ -13,7 +13,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "dev": "react-scripts start",
+    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 react-scripts start",
+    "dev:hr": "cross-env NODE_OPTIONS=--max-old-space-size=4096 PORT=3001 react-scripts start",
+    "dev:employee": "cross-env NODE_OPTIONS=--max-old-space-size=4096 PORT=3002 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -35,5 +37,8 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:3000"
+  "proxy": "http://localhost:3000",
+  "devDependencies": {
+    "cross-env": "^10.1.0"
+  }
 }

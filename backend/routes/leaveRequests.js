@@ -4,15 +4,24 @@ const pool = require('../config/database');
 
 const normalizeManagerReference = (value) => {
     if (!value) return null;
-    let cleaned = value;
+    // Convert to string and trim
+    let cleaned = String(value).trim();
+    if (!cleaned) return null;
+    
+    // Remove content in parentheses
     cleaned = cleaned.replace(/\(.*?\)/g, ' ');
+    
+    // Split by common separators and take first part
     const splitTokens = [' - ', '|', '/', ','];
     for (const token of splitTokens) {
         if (cleaned.includes(token)) {
             cleaned = cleaned.split(token)[0];
         }
     }
+    
+    // Normalize whitespace
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
     return cleaned || null;
 };
 
@@ -22,34 +31,305 @@ const findManagerByReference = async (reference) => {
         return null;
     }
 
-    const strictMatchQuery = `
+    // Get all active employees from HR database for accurate matching
+    const allEmployeesQuery = `
+        SELECT id, ho_ten, email, chuc_danh, quan_ly_truc_tiep, quan_ly_gian_tiep
+        FROM employees
+        WHERE (trang_thai = 'ACTIVE' OR trang_thai = 'PENDING' OR trang_thai IS NULL)
+        ORDER BY id DESC
+    `;
+    
+    const allEmployeesResult = await pool.query(allEmployeesQuery);
+    const allEmployees = allEmployeesResult.rows;
+
+    if (allEmployees.length === 0) {
+        return null;
+    }
+
+    // Normalize the reference for comparison
+    const refLower = normalized.toLowerCase().trim();
+
+    // Try to find exact match first (by name or email)
+    for (const emp of allEmployees) {
+        const empName = (emp.ho_ten || '').toLowerCase().trim();
+        const empEmail = (emp.email || '').toLowerCase().trim();
+        
+        // Exact name match
+        if (empName === refLower) {
+            return emp;
+        }
+        
+        // Exact email match
+        if (empEmail && empEmail === refLower) {
+            return emp;
+        }
+    }
+
+    // Try partial match - check if reference is contained in name or vice versa
+    for (const emp of allEmployees) {
+        const empName = (emp.ho_ten || '').toLowerCase().trim();
+        
+        // Reference contains employee name (with word boundaries)
+        if (empName && refLower.includes(empName)) {
+            return emp;
+        }
+        
+        // Employee name contains reference (with word boundaries)
+        if (empName && empName.includes(refLower)) {
+            return emp;
+        }
+    }
+
+    // Try word-by-word matching for Vietnamese names
+    const refWords = refLower.split(/\s+/).filter(w => w.length > 0);
+    
+    if (refWords.length > 0) {
+        // Try to find employee where all words of reference match
+        for (const emp of allEmployees) {
+            const empName = (emp.ho_ten || '').toLowerCase().trim();
+            if (!empName) continue;
+            
+            const empWords = empName.split(/\s+/).filter(w => w.length > 0);
+            
+            // Check if all reference words are in employee name
+            const allWordsMatch = refWords.every(refWord => 
+                empWords.some(empWord => empWord.includes(refWord) || refWord.includes(empWord))
+            );
+            
+            if (allWordsMatch && empWords.length > 0) {
+                return emp;
+            }
+        }
+
+        // Try matching by first and last word (common in Vietnamese names)
+        if (refWords.length >= 2) {
+            const firstWord = refWords[0];
+            const lastWord = refWords[refWords.length - 1];
+            
+            for (const emp of allEmployees) {
+                const empName = (emp.ho_ten || '').toLowerCase().trim();
+                if (!empName) continue;
+                
+                const empWords = empName.split(/\s+/).filter(w => w.length > 0);
+                
+                // Check if first and last words match
+                const firstMatches = empWords.length > 0 && (
+                    empWords[0].includes(firstWord) || firstWord.includes(empWords[0])
+                );
+                const lastMatches = empWords.length > 0 && (
+                    empWords[empWords.length - 1].includes(lastWord) || lastWord.includes(empWords[empWords.length - 1])
+                );
+                
+                if (firstMatches && lastMatches) {
+                    return emp;
+                }
+            }
+        }
+
+        // Try matching by last word only (usually the given name)
+        const lastWord = refWords[refWords.length - 1];
+        let exactMatch = null;
+        let partialMatch = null;
+        
+        for (const emp of allEmployees) {
+            const empName = (emp.ho_ten || '').toLowerCase().trim();
+            if (!empName) continue;
+            
+            const empWords = empName.split(/\s+/).filter(w => w.length > 0);
+            if (empWords.length === 0) continue;
+            
+            const empLastWord = empWords[empWords.length - 1];
+            
+            // Check if last word matches exactly
+            if (empLastWord === lastWord) {
+                exactMatch = emp;
+                break; // Exact match found, prefer this
+            }
+            
+            // Check for partial match
+            if (!exactMatch && (empLastWord.includes(lastWord) || lastWord.includes(empLastWord))) {
+                if (!partialMatch) {
+                    partialMatch = emp;
+                }
+            }
+        }
+        
+        // Return exact match first, then partial match
+        if (exactMatch) {
+            return exactMatch;
+        }
+        
+        if (partialMatch) {
+            return partialMatch;
+        }
+    }
+
+    return null;
+};
+
+// Tìm giám đốc trong hệ thống (theo chức danh)
+const findDirector = async () => {
+    try {
+        const directorQuery = `
+            SELECT id, ho_ten, email, chuc_danh
+            FROM employees
+            WHERE (trang_thai = 'ACTIVE' OR trang_thai = 'PENDING' OR trang_thai IS NULL)
+              AND (
+                  LOWER(chuc_danh) LIKE '%giám đốc%'
+                  OR LOWER(chuc_danh) LIKE '%director%'
+                  OR LOWER(chuc_danh) LIKE '%tổng giám đốc%'
+                  OR LOWER(chuc_danh) LIKE '%ceo%'
+              )
+            ORDER BY 
+                CASE 
+                    WHEN LOWER(chuc_danh) LIKE '%tổng giám đốc%' OR LOWER(chuc_danh) LIKE '%ceo%' THEN 1
+                    WHEN LOWER(chuc_danh) LIKE '%giám đốc%' OR LOWER(chuc_danh) LIKE '%director%' THEN 2
+                    ELSE 3
+                END,
+                id DESC
+            LIMIT 1
+        `;
+        const result = await pool.query(directorQuery);
+        return result.rows[0] || null;
+    } catch (error) {
+        console.error('Error finding director:', error);
+        return null;
+    }
+};
+
+// Tự động tìm quản lý gián tiếp dựa vào thông tin nhân viên (DEPRECATED - không dùng nữa)
+const findIndirectManagerAuto = async (employee) => {
+    // Nếu nhân viên có quan_ly_gian_tiep đã được cập nhật, ưu tiên sử dụng
+    if (employee.quan_ly_gian_tiep) {
+        const manager = await findManagerByReference(employee.quan_ly_gian_tiep);
+        if (manager) {
+            return manager;
+        }
+    }
+
+    // Logic tự động tìm quản lý gián tiếp theo thứ tự ưu tiên:
+
+    // 1. Tìm quản lý của quản lý trực tiếp (nếu có)
+    if (employee.quan_ly_truc_tiep) {
+        const directManager = await findManagerByReference(employee.quan_ly_truc_tiep);
+        if (directManager && directManager.id) {
+            // Lấy thông tin chi tiết của quản lý trực tiếp
+            const directManagerDetail = await pool.query(
+                `SELECT id, ho_ten, email, phong_ban, chi_nhanh, quan_ly_truc_tiep, quan_ly_gian_tiep
+                 FROM employees WHERE id = $1`,
+                [directManager.id]
+            );
+
+            if (directManagerDetail.rows.length > 0) {
+                const dmDetail = directManagerDetail.rows[0];
+                // Nếu quản lý trực tiếp có quản lý gián tiếp, sử dụng nó
+                if (dmDetail.quan_ly_gian_tiep) {
+                    const indirectManager = await findManagerByReference(dmDetail.quan_ly_gian_tiep);
+                    if (indirectManager) {
+                        return indirectManager;
+                    }
+                }
+                // Nếu quản lý trực tiếp có quản lý trực tiếp khác, đó có thể là quản lý gián tiếp
+                if (dmDetail.quan_ly_truc_tiep && dmDetail.quan_ly_truc_tiep !== employee.quan_ly_truc_tiep) {
+                    const indirectManager = await findManagerByReference(dmDetail.quan_ly_truc_tiep);
+                    if (indirectManager) {
+                        return indirectManager;
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. Tìm theo chi nhánh: Tìm nhân viên cùng chi nhánh có chức danh quản lý/giám đốc
+    if (employee.chi_nhanh) {
+        const branchManagerQuery = `
+            SELECT id, ho_ten, email, chuc_danh
+            FROM employees
+            WHERE (trang_thai = 'ACTIVE' OR trang_thai = 'PENDING' OR trang_thai IS NULL)
+              AND chi_nhanh = $1
+              AND id != $2
+              AND (
+                  LOWER(chuc_danh) LIKE '%quản lý%'
+                  OR LOWER(chuc_danh) LIKE '%giám đốc%'
+                  OR LOWER(chuc_danh) LIKE '%trưởng phòng%'
+                  OR LOWER(chuc_danh) LIKE '%director%'
+                  OR LOWER(chuc_danh) LIKE '%manager%'
+                  OR LOWER(chuc_danh) LIKE '%head%'
+              )
+            ORDER BY 
+                CASE 
+                    WHEN LOWER(chuc_danh) LIKE '%giám đốc%' OR LOWER(chuc_danh) LIKE '%director%' THEN 1
+                    WHEN LOWER(chuc_danh) LIKE '%trưởng phòng%' OR LOWER(chuc_danh) LIKE '%head%' THEN 2
+                    WHEN LOWER(chuc_danh) LIKE '%quản lý%' OR LOWER(chuc_danh) LIKE '%manager%' THEN 3
+                    ELSE 4
+                END,
+                id DESC
+            LIMIT 1
+        `;
+        const branchResult = await pool.query(branchManagerQuery, [employee.chi_nhanh, employee.id]);
+        if (branchResult.rows.length > 0) {
+            return branchResult.rows[0];
+        }
+    }
+
+    // 3. Tìm theo phòng ban: Tìm nhân viên cùng phòng ban có chức danh quản lý/giám đốc
+    if (employee.phong_ban) {
+        const departmentManagerQuery = `
+            SELECT id, ho_ten, email, chuc_danh
+            FROM employees
+            WHERE (trang_thai = 'ACTIVE' OR trang_thai = 'PENDING' OR trang_thai IS NULL)
+              AND phong_ban = $1
+              AND id != $2
+              AND (
+                  LOWER(chuc_danh) LIKE '%quản lý%'
+                  OR LOWER(chuc_danh) LIKE '%giám đốc%'
+                  OR LOWER(chuc_danh) LIKE '%trưởng phòng%'
+                  OR LOWER(chuc_danh) LIKE '%director%'
+                  OR LOWER(chuc_danh) LIKE '%manager%'
+                  OR LOWER(chuc_danh) LIKE '%head%'
+              )
+            ORDER BY 
+                CASE 
+                    WHEN LOWER(chuc_danh) LIKE '%giám đốc%' OR LOWER(chuc_danh) LIKE '%director%' THEN 1
+                    WHEN LOWER(chuc_danh) LIKE '%trưởng phòng%' OR LOWER(chuc_danh) LIKE '%head%' THEN 2
+                    WHEN LOWER(chuc_danh) LIKE '%quản lý%' OR LOWER(chuc_danh) LIKE '%manager%' THEN 3
+                    ELSE 4
+                END,
+                id DESC
+            LIMIT 1
+        `;
+        const deptResult = await pool.query(departmentManagerQuery, [employee.phong_ban, employee.id]);
+        if (deptResult.rows.length > 0) {
+            return deptResult.rows[0];
+        }
+    }
+
+    // 4. Tìm bất kỳ nhân viên nào có chức danh quản lý/giám đốc trong hệ thống (fallback)
+    const anyManagerQuery = `
         SELECT id, ho_ten, email, chuc_danh
         FROM employees
         WHERE (trang_thai = 'ACTIVE' OR trang_thai = 'PENDING' OR trang_thai IS NULL)
           AND (
-              LOWER(TRIM(ho_ten)) = LOWER(TRIM($1))
-           OR LOWER(TRIM(email)) = LOWER(TRIM($1))
+              LOWER(chuc_danh) LIKE '%giám đốc%'
+              OR LOWER(chuc_danh) LIKE '%director%'
+              OR LOWER(chuc_danh) LIKE '%trưởng phòng%'
+              OR LOWER(chuc_danh) LIKE '%head%'
           )
-        ORDER BY id DESC
+        ORDER BY 
+            CASE 
+                WHEN LOWER(chuc_danh) LIKE '%giám đốc%' OR LOWER(chuc_danh) LIKE '%director%' THEN 1
+                WHEN LOWER(chuc_danh) LIKE '%trưởng phòng%' OR LOWER(chuc_danh) LIKE '%head%' THEN 2
+                ELSE 3
+            END,
+            id DESC
         LIMIT 1
     `;
-
-    const strictResult = await pool.query(strictMatchQuery, [normalized]);
-    if (strictResult.rows.length > 0) {
-        return strictResult.rows[0];
+    const anyManagerResult = await pool.query(anyManagerQuery);
+    if (anyManagerResult.rows.length > 0) {
+        return anyManagerResult.rows[0];
     }
 
-    const partialMatchQuery = `
-        SELECT id, ho_ten, email, chuc_danh
-        FROM employees
-        WHERE (trang_thai = 'ACTIVE' OR trang_thai = 'PENDING' OR trang_thai IS NULL)
-          AND LOWER(ho_ten) LIKE LOWER($1)
-        ORDER BY id DESC
-        LIMIT 1
-    `;
-
-    const partialResult = await pool.query(partialMatchQuery, [`%${normalized}%`]);
-    return partialResult.rows[0] || null;
+    return null;
 };
 
 let ensureLeaveRequestsTablePromise = null;
@@ -144,6 +424,8 @@ const ensureLeaveRequestsTable = async () => {
                         CHECK (status IN (
                             ''PENDING_TEAM_LEAD'',
                             ''PENDING_BRANCH'',
+                            ''PENDING_DIRECTOR'',
+                            ''PENDING_HR'',
                             ''APPROVED'',
                             ''REJECTED'',
                             ''CANCELLED''
@@ -237,7 +519,9 @@ const ensureLeaveRequestsTable = async () => {
 
 const LEAVE_STATUSES = {
     PENDING_TEAM_LEAD: 'PENDING_TEAM_LEAD',
-    PENDING_BRANCH: 'PENDING_BRANCH',
+    PENDING_BRANCH: 'PENDING_BRANCH', // Giữ lại để tương thích với dữ liệu cũ
+    PENDING_DIRECTOR: 'PENDING_DIRECTOR', // Đơn được HR đẩy lên giám đốc
+    PENDING_HR: 'PENDING_HR',
     APPROVED: 'APPROVED',
     REJECTED: 'REJECTED',
     CANCELLED: 'CANCELLED'
@@ -250,7 +534,8 @@ const DECISION_TYPES = {
 
 const ACTOR_TYPES = {
     TEAM_LEAD: 'TEAM_LEAD',
-    BRANCH: 'BRANCH'
+    BRANCH: 'BRANCH', // Giữ lại để tương thích với dữ liệu cũ
+    DIRECTOR: 'DIRECTOR' // Giám đốc duyệt đơn được HR đẩy lên
 };
 
 const DEFAULT_DUE_HOURS = 24;
@@ -280,38 +565,24 @@ const getUserIdsByEmails = async (emails = []) => {
     return result.rows.map((row) => row.id);
 };
 
-const notifyUsers = async (userIds, title, message) => {
-    if (!Array.isArray(userIds) || userIds.length === 0) return;
+// Notification system removed
 
-    const insertValues = userIds.map((_, idx) => `($${idx + 1}, NULL, 'SYSTEM', $${userIds.length + 1}, $${userIds.length + 2})`);
-    const params = [...userIds, title, message];
-
-    await pool.query(
-        `INSERT INTO notifications (user_id, employee_id, type, title, message)
-         VALUES ${insertValues.join(', ')}`,
-        params
-    );
-};
-
-const notifyEmployees = async (employeeIds, title, message) => {
-    if (!Array.isArray(employeeIds) || employeeIds.length === 0) return;
-
-    const insertValues = employeeIds.map((_, idx) => `(NULL, $${idx + 1}, 'SYSTEM', $${employeeIds.length + 1}, $${employeeIds.length + 2})`);
-    const params = [...employeeIds, title, message];
-
-    await pool.query(
-        `INSERT INTO notifications (user_id, employee_id, type, title, message)
-         VALUES ${insertValues.join(', ')}`,
-        params
-    );
-};
-
-const notifyHrAdmins = async (title, message) => {
-    const result = await pool.query(
-        `SELECT id FROM users WHERE role = 'HR' AND trang_thai = 'ACTIVE'`
-    );
-    const userIds = result.rows.map((row) => row.id);
-    await notifyUsers(userIds, title, message);
+// Helper to get user IDs from employee IDs
+const getUserIdFromEmployeeId = async (employeeIds) => {
+    if (!Array.isArray(employeeIds) || employeeIds.length === 0) return [];
+    try {
+        const result = await pool.query(
+            `SELECT DISTINCT u.id 
+             FROM users u
+             INNER JOIN employees e ON u.email = e.email OR u.ho_ten = e.ho_ten
+             WHERE e.id = ANY($1::int[])`,
+            [employeeIds]
+        );
+        return result.rows.map(row => row.id);
+    } catch (error) {
+        console.error('[getUserIdFromEmployeeId] Error:', error);
+        return [];
+    }
 };
 
 const fetchLeaveRequestById = async (id) => {
@@ -575,22 +846,24 @@ router.post('/', async (req, res) => {
 
         const employee = employeeResult.rows[0];
 
+        // Kiểm tra nếu nhân viên không có thông tin quản lý trực tiếp
+        if (!employee.quan_ly_truc_tiep || employee.quan_ly_truc_tiep.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: `Nhân viên chưa có thông tin quản lý trực tiếp. Vui lòng cập nhật thông tin quản lý trực tiếp cho nhân viên "${employee.ho_ten || 'N/A'}" trong module Quản lý nhân viên.`
+            });
+        }
+
         const teamLead = await findManagerByReference(employee.quan_ly_truc_tiep);
         if (!teamLead) {
+            console.error(`[LeaveRequest] Không tìm thấy quản lý trực tiếp. Nhân viên: ${employee.ho_ten}, quan_ly_truc_tiep: "${employee.quan_ly_truc_tiep}"`);
             return res.status(404).json({
                 success: false,
-                message: 'Không tìm thấy quản lý trực tiếp trong hệ thống. Vui lòng cập nhật thông tin quản lý cho nhân viên.'
+                message: `Không tìm thấy quản lý trực tiếp "${employee.quan_ly_truc_tiep}" trong hệ thống. Vui lòng kiểm tra lại tên quản lý trực tiếp của nhân viên "${employee.ho_ten || 'N/A'}" trong module Quản lý nhân viên. Tên phải khớp chính xác với tên trong hệ thống.`
             });
         }
 
-        const branchManager = await findManagerByReference(employee.quan_ly_gian_tiep);
-        if (!branchManager) {
-            return res.status(404).json({
-                success: false,
-                message: 'Không tìm thấy quản lý gián tiếp trong hệ thống. Vui lòng cập nhật thông tin quản lý gián tiếp cho nhân viên.'
-            });
-        }
-
+        // Không cần quản lý gián tiếp nữa - quy trình mới: Nhân viên -> Quản lý trực tiếp -> HR/Giám đốc
         const dueAt = computeDueDate();
         const insertQuery = `
             INSERT INTO leave_requests (
@@ -611,7 +884,7 @@ router.post('/', async (req, res) => {
         const insertValues = [
             employeeId,
             teamLead.id,
-            branchManager.id,
+            null, // Không cần quản lý gián tiếp
             normalizedType,
             formatDateOnly(start),
             normalizedType === 'LEAVE' ? formatDateOnly(end) : null,
@@ -625,19 +898,7 @@ router.post('/', async (req, res) => {
         const insertedRow = insertResult.rows[0];
         const leaveRequest = mapLeaveRequestRow(await fetchLeaveRequestById(insertedRow.id));
 
-        // Gửi thông báo cho quản lý trực tiếp
-        await notifyEmployees(
-            [teamLead.id],
-            'Đơn xin nghỉ mới',
-            `Nhân viên ${employee.ho_ten || employee.email || employee.id} đã gửi đơn xin ${normalizedType === 'LEAVE' ? 'nghỉ phép' : 'nghỉ việc'}.`
-        );
-
-        // Gửi thông báo cho quản lý gián tiếp
-        await notifyEmployees(
-            [branchManager.id],
-            'Thông báo đơn xin nghỉ',
-            `Nhân viên ${employee.ho_ten || employee.email || employee.id} đã gửi đơn xin ${normalizedType === 'LEAVE' ? 'nghỉ phép' : 'nghỉ việc'}. Bạn được thông báo với vai trò quản lý gián tiếp.`
-        );
+        // Notification system removed
 
         res.status(201).json({
             success: true,
@@ -653,16 +914,16 @@ router.post('/', async (req, res) => {
     }
 });
 
-// DELETE /api/leave-requests/:id - Nhân viên xóa đơn chưa duyệt
+// DELETE /api/leave-requests/:id - Nhân viên xóa đơn chưa duyệt hoặc HR xóa đơn đã từ chối
 router.delete('/:id', async (req, res) => {
     try {
         await ensureLeaveRequestsTable();
 
         const { id } = req.params;
-        const { employeeId } = req.body;
+        const { employeeId, role } = req.body;
 
         const requestId = Number(id);
-        const employeeIdNumber = Number(employeeId);
+        const employeeIdNumber = employeeId ? Number(employeeId) : null;
 
         if (!Number.isInteger(requestId) || requestId <= 0) {
             return res.status(400).json({
@@ -671,10 +932,54 @@ router.delete('/:id', async (req, res) => {
             });
         }
 
+        // Kiểm tra đơn có tồn tại không
+        const checkQuery = `SELECT id, status, employee_id FROM leave_requests WHERE id = $1`;
+        const checkResult = await pool.query(checkQuery, [requestId]);
+
+        if (checkResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy đơn'
+            });
+        }
+
+        const request = checkResult.rows[0];
+
+        // HR có thể xóa đơn đã bị từ chối
+        if (role === 'HR' && request.status === LEAVE_STATUSES.REJECTED) {
+            const deleteResult = await pool.query(
+                `DELETE FROM leave_requests
+                 WHERE id = $1
+                   AND status = $2
+                 RETURNING *`,
+                [requestId, LEAVE_STATUSES.REJECTED]
+            );
+
+            if (deleteResult.rowCount === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Không thể xóa đơn đã từ chối'
+                });
+            }
+
+            return res.json({
+                success: true,
+                message: 'Đã xóa đơn đã từ chối'
+            });
+        }
+
+        // Nhân viên chỉ có thể xóa đơn chưa duyệt của chính mình
         if (!Number.isInteger(employeeIdNumber) || employeeIdNumber <= 0) {
             return res.status(400).json({
                 success: false,
                 message: 'Thiếu thông tin nhân viên'
+            });
+        }
+
+        if (request.employee_id !== employeeIdNumber) {
+            return res.status(403).json({
+                success: false,
+                message: 'Bạn chỉ có thể xóa đơn của chính mình'
             });
         }
 
@@ -748,10 +1053,7 @@ router.post('/overdue/process', async (_req, res) => {
             ids
         );
 
-        await notifyHrAdmins(
-            'Đơn xin nghỉ quá hạn',
-            `Có ${overdueRequests.length} đơn xin nghỉ đã chờ duyệt hơn 24 giờ. Vui lòng xem xét và xử lý.`
-        );
+        // Notification system removed
 
         res.json({
             success: true,
@@ -798,52 +1100,51 @@ router.post('/:id/escalate', async (req, res) => {
         if (leaveRequest.status !== LEAVE_STATUSES.PENDING_TEAM_LEAD) {
             return res.status(400).json({
                 success: false,
-                message: 'Chỉ có thể chuyển phiếu khi đơn đang chờ quản lý duyệt'
+                message: 'Chỉ có thể đẩy đơn khi đơn đang chờ quản lý trực tiếp duyệt'
             });
         }
 
-        if (!leaveRequest.branch_manager_id) {
-            return res.status(400).json({
+        // Tìm giám đốc để đẩy đơn lên
+        const director = await findDirector();
+        if (!director) {
+            return res.status(404).json({
                 success: false,
-                message: 'Đơn này chưa có thông tin quản lý gián tiếp, không thể chuyển phiếu'
+                message: 'Không tìm thấy giám đốc trong hệ thống. Vui lòng cập nhật thông tin nhân viên có chức danh giám đốc.'
             });
         }
 
-        const newDueAt = computeDueDate();
-
+        // HR có quyền đẩy đơn ngay lập tức, không cần kiểm tra thời gian ở backend
+        // (Frontend đã kiểm tra và hiển thị cảnh báo nếu cần)
         const updateQuery = `
             UPDATE leave_requests
             SET status = $1,
                 hr_admin_user_id = $2,
+                branch_manager_id = $3,
                 escalated_at = CURRENT_TIMESTAMP,
                 team_lead_action = 'ESCALATED',
                 team_lead_action_at = CURRENT_TIMESTAMP,
-                team_lead_comment = COALESCE($3, team_lead_comment),
-                due_at = $4,
+                team_lead_comment = COALESCE($4, team_lead_comment),
+                due_at = NULL,
                 overdue_notified = FALSE
             WHERE id = $5
             RETURNING *
         `;
 
         const updateResult = await pool.query(updateQuery, [
-            LEAVE_STATUSES.PENDING_BRANCH,
+            LEAVE_STATUSES.PENDING_DIRECTOR,
             hrUserIdNumber,
+            director.id, // Lưu ID giám đốc vào branch_manager_id để tương thích
             comment || null,
-            newDueAt.toISOString(),
             id
         ]);
 
         const updatedRequest = mapLeaveRequestRow(await fetchLeaveRequestById(id));
 
-        await notifyEmployees(
-            [leaveRequest.branch_manager_id].filter(Boolean),
-            'Đơn xin nghỉ cần duyệt',
-            `Đơn xin nghỉ của nhân viên ${leaveRequest.employee_name || leaveRequest.employee_email || leaveRequest.employee_id} đã được HR chuyển cho quản lý gián tiếp để xử lý.`
-        );
+        // Notification system removed
 
         res.json({
             success: true,
-            message: 'Đơn đã được chuyển cho quản lý gián tiếp',
+            message: 'Đơn đã được đẩy lên giám đốc',
             data: updatedRequest
         });
     } catch (error) {
@@ -919,34 +1220,29 @@ router.post('/:id/decision', async (req, res) => {
             }
 
             if (decision === DECISION_TYPES.APPROVE) {
-                const dueAt = computeDueDate();
+                // Quy trình mới: Quản lý trực tiếp duyệt -> APPROVED (không qua quản lý gián tiếp)
                 const updateQuery = `
                     UPDATE leave_requests
                     SET status = $1,
                         team_lead_action = 'APPROVED',
                         team_lead_action_at = $2,
                         team_lead_comment = $3,
-                        due_at = $4,
+                        due_at = NULL,
                         overdue_notified = FALSE
-                    WHERE id = $5
+                    WHERE id = $4
                     RETURNING *
                 `;
 
                 const updateResult = await pool.query(updateQuery, [
-                    LEAVE_STATUSES.PENDING_BRANCH,
+                    LEAVE_STATUSES.APPROVED,
                     now.toISOString(),
                     comment || null,
-                    dueAt.toISOString(),
                     id
                 ]);
 
                 updatedRequest = mapLeaveRequestRow(await fetchLeaveRequestById(id));
 
-                await notifyEmployees(
-                    [leaveRequest.branch_manager_id].filter(Boolean),
-                    'Đơn xin nghỉ cần duyệt',
-                    `Quản lý ${leaveRequest.team_lead_name || leaveRequest.team_lead_email || leaveRequest.team_lead_id} đã duyệt đơn xin nghỉ. Quản lý gián tiếp vui lòng xem xét.`
-                );
+                // Notification system removed
             } else {
                 const updateQuery = `
                     UPDATE leave_requests
@@ -968,23 +1264,21 @@ router.post('/:id/decision', async (req, res) => {
 
                 updatedRequest = mapLeaveRequestRow(await fetchLeaveRequestById(id));
 
-                await notifyHrAdmins(
-                    'Đơn xin nghỉ bị từ chối',
-                    `Quản lý ${leaveRequest.team_lead_name || leaveRequest.team_lead_email || leaveRequest.team_lead_id} đã từ chối đơn xin nghỉ của ${leaveRequest.employee_name || leaveRequest.employee_email || leaveRequest.employee_id}.`
-                );
+                // Notification system removed
             }
-        } else if (actorType === ACTOR_TYPES.BRANCH) {
-            if (leaveRequest.branch_manager_id !== actorIdNumber) {
+        } else if (actorType === ACTOR_TYPES.DIRECTOR) {
+            // Giám đốc duyệt đơn được HR đẩy lên
+            if (!leaveRequest.branch_manager_id || leaveRequest.branch_manager_id !== actorIdNumber) {
                 return res.status(403).json({
                     success: false,
                     message: 'Bạn không có quyền xử lý đơn này'
                 });
             }
 
-            if (leaveRequest.status !== LEAVE_STATUSES.PENDING_BRANCH) {
+            if (leaveRequest.status !== LEAVE_STATUSES.PENDING_DIRECTOR) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Đơn không còn ở bước quản lý gián tiếp duyệt'
+                    message: 'Đơn không còn ở bước chờ giám đốc duyệt'
                 });
             }
 
@@ -1009,16 +1303,7 @@ router.post('/:id/decision', async (req, res) => {
 
                 updatedRequest = mapLeaveRequestRow(await fetchLeaveRequestById(id));
 
-                await notifyHrAdmins(
-                    'Đơn xin nghỉ đã được duyệt',
-                    `Quản lý gián tiếp ${leaveRequest.branch_manager_name || leaveRequest.branch_manager_email || leaveRequest.branch_manager_id} đã duyệt đơn xin nghỉ của ${leaveRequest.employee_name || leaveRequest.employee_email || leaveRequest.employee_id}.`
-                );
-
-                await notifyEmployees(
-                    [leaveRequest.team_lead_id].filter(Boolean),
-                    'Đơn xin nghỉ hoàn tất',
-                    `Đơn xin nghỉ của ${leaveRequest.employee_name || leaveRequest.employee_email || leaveRequest.employee_id} đã được quản lý gián tiếp phê duyệt.`
-                );
+                // Notification system removed
             } else {
                 const updateQuery = `
                     UPDATE leave_requests
@@ -1040,17 +1325,16 @@ router.post('/:id/decision', async (req, res) => {
 
                 updatedRequest = mapLeaveRequestRow(await fetchLeaveRequestById(id));
 
-                await notifyHrAdmins(
-                    'Đơn xin nghỉ bị từ chối',
-                    `Quản lý gián tiếp ${leaveRequest.branch_manager_name || leaveRequest.branch_manager_email || leaveRequest.branch_manager_id} đã từ chối đơn xin nghỉ của ${leaveRequest.employee_name || leaveRequest.employee_email || leaveRequest.employee_id}.`
-                );
-
-                await notifyEmployees(
-                    [leaveRequest.team_lead_id].filter(Boolean),
-                    'Đơn xin nghỉ bị từ chối',
-                    `Đơn xin nghỉ của ${leaveRequest.employee_name || leaveRequest.employee_email || leaveRequest.employee_id} đã bị quản lý gián tiếp từ chối.`
-                );
+                // Notification system removed
             }
+        }
+        // Bỏ logic xử lý quản lý gián tiếp (BRANCH actor) - quy trình mới không có bước này
+
+        if (!updatedRequest) {
+            return res.status(400).json({
+                success: false,
+                message: 'Loại người duyệt không hợp lệ hoặc không được hỗ trợ'
+            });
         }
 
         res.json({

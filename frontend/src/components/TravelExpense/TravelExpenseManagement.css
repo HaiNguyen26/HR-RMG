@@ -1,0 +1,1078 @@
+/* Travel Expense Management - HR Module */
+
+/* I. MÔI TRƯỜNG CHUNG (CONTAINER & NỀN) */
+/* Nền Body: Calm Integrity Gradient nhạt, tạo không gian thoáng đãng */
+.travel-expense-management {
+    flex: 1;
+    overflow-y: auto;
+    /* Scroll bằng scrollbar ứng dụng */
+    overflow-x: hidden;
+    padding: 2rem;
+    /* Calm Integrity Gradient nhạt */
+    background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 50%, #e0e7ff 100%);
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    /* Thêm gap giữa header và main container */
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* Custom Scrollbar - Tối ưu cho nền Calm Integrity Gradient */
+.travel-expense-management::-webkit-scrollbar {
+    width: 8px;
+}
+
+.travel-expense-management::-webkit-scrollbar-track {
+    background: rgba(224, 242, 254, 0.3);
+    /* Sky blue nhạt với transparency */
+    border-radius: 4px;
+    backdrop-filter: blur(5px);
+}
+
+.travel-expense-management::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.4);
+    /* Blue-500 với transparency */
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.travel-expense-management::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.6);
+}
+
+/* Header: Quản Lý Kinh Phí Công Tác với Calm Integrity Gradient */
+.travel-expense-management-header {
+    margin-bottom: 1.5rem;
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 80rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Header Background: Gradient Calm Integrity (from-sky-50 to-emerald-50) */
+.travel-expense-management-header-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1;
+    /* Gradient Calm Integrity: from-sky-50 to-emerald-50 */
+    background: linear-gradient(to right, #e0f2fe, #ecfdf5);
+    padding: 1.25rem 1.75rem;
+    border-radius: 0.875rem;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.travel-expense-management-header-content:hover {
+    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.15);
+}
+
+/* Icon Banner Block - Glass Block Xanh Dương Nhạt */
+.travel-expense-management-icon-wrapper {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 0.75rem;
+    /* rounded-xl */
+    background: rgba(239, 246, 255, 0.7);
+    /* bg-blue-50/70 - Glass Block Xanh Dương Nhạt */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    /* shadow-md */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.travel-expense-management-icon-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.22), 0 3px 8px rgba(59, 130, 246, 0.15), 0 1px 4px rgba(59, 130, 246, 0.1);
+}
+
+.travel-expense-management-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: #3b82f6;
+    /* text-blue-500 - Xanh Dương Sáng */
+    stroke-width: 2;
+}
+
+/* Header Text Container */
+.travel-expense-management-header-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+/* Tiêu đề chính - Màu đen */
+.travel-expense-management-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #000000;
+    /* Màu đen */
+    margin: 0;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+/* Mô tả - Màu đen */
+.travel-expense-management-subtitle {
+    font-size: 0.875rem;
+    color: #000000;
+    /* Màu đen */
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Main Container: Glass Card - Thẻ chính chứa toàn bộ giao diện */
+/* Max-width 7xl, rounded-3xl, bg-white/85, backdrop-filter: blur(20px), shadow-2xl */
+.travel-expense-management-main-container {
+    width: 100%;
+    max-width: 80rem;
+    /* max-width 7xl (1280px) */
+    min-height: 700px;
+    /* h-[700px] - Chiều cao tối thiểu */
+    height: auto;
+    /* Cho phép container mở rộng theo nội dung */
+    margin: 0 auto;
+    padding: 0;
+    /* Glass Card */
+    background: rgba(255, 255, 255, 0.85);
+    /* bg-white/85 */
+    backdrop-filter: blur(20px);
+    /* backdrop-blur-lg */
+    -webkit-backdrop-filter: blur(20px);
+    /* Safari support */
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 1.5rem;
+    /* rounded-3xl */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    /* shadow-2xl */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    position: relative;
+    overflow: visible;
+    /* Cho phép container mở rộng theo nội dung */
+    flex-shrink: 0;
+    /* Ngăn container bị thu nhỏ, cho phép nó mở rộng */
+}
+
+/* Bố cục chính: Flex - Chia thành hai cột cho Danh sách và Chi tiết */
+/* flex, min-height - Đảm bảo không gian làm việc đủ lớn và mở rộng theo nội dung */
+.travel-expense-management-main-layout {
+    width: 100%;
+    min-height: 700px;
+    /* h-[700px] - Chiều cao tối thiểu */
+    height: auto;
+    /* Cho phép layout mở rộng theo nội dung */
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    box-sizing: border-box;
+    overflow: visible;
+    /* Cho phép layout mở rộng theo nội dung */
+    align-items: stretch;
+    /* Đảm bảo cả 2 cột có cùng chiều cao và container bao phủ đầy đủ */
+    flex-shrink: 0;
+    /* Ngăn layout bị thu nhỏ, cho phép nó mở rộng theo nội dung của cột cao nhất */
+}
+
+/* II. CỘT TRÁI: DANH SÁCH CHỜ CẤP NGÂN SÁCH (35% Width) */
+.travel-expense-management-list-column {
+    flex: 0 0 35%;
+    /* 35% chiều rộng */
+    min-height: 700px;
+    /* Chiều cao tối thiểu */
+    height: auto;
+    /* Cho phép cột mở rộng theo nội dung */
+    overflow: visible;
+    /* Không scroll riêng, để scroll bằng scrollbar ứng dụng */
+    border-right: 1px solid rgba(226, 232, 240, 0.6);
+    box-sizing: border-box;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    /* Đảm bảo cột có cùng chiều cao với cột bên phải */
+}
+
+/* Nền Cột: bg-white (Solid), rounded-xl, shadow-lg - Nền trắng tinh khiết, tách biệt với nền Glass Card */
+.travel-expense-list-column-container {
+    width: 100%;
+    min-height: 100%;
+    /* Chiều cao tối thiểu bằng chiều cao cột */
+    background: #ffffff;
+    /* bg-white (Solid) */
+    border-radius: 0.75rem;
+    /* rounded-xl */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    /* shadow-lg */
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    box-sizing: border-box;
+    overflow: visible;
+    /* Cho phép container mở rộng theo nội dung */
+    flex: 1;
+    /* Cho phép container mở rộng theo nội dung */
+}
+
+/* Tiêu đề: text-xl font-bold text-indigo-600 - Dùng màu Indigo (tông đậm của Calm Integrity) */
+.travel-expense-list-title {
+    font-size: 1.25rem;
+    /* text-xl */
+    font-weight: 700;
+    /* font-bold */
+    color: #4f46e5;
+    /* text-indigo-600 */
+    margin: 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Thanh Tìm kiếm Wrapper */
+.travel-expense-search-wrapper {
+    flex-shrink: 0;
+}
+
+/* Thanh Tìm kiếm: Input field - p-3, shadow-inner, focus:border-blue-500, focus:ring-blue-300 */
+/* Nền trắng, viền border-gray-200 */
+.travel-expense-search-input {
+    width: 100%;
+    padding: 0.75rem;
+    /* p-3 */
+    border: 1px solid #e5e7eb;
+    /* border-gray-200 */
+    border-radius: 0.5rem;
+    background: #ffffff;
+    /* Nền trắng */
+    font-size: 0.875rem;
+    color: #374151;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    /* shadow-inner */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    outline: none;
+}
+
+.travel-expense-search-input::placeholder {
+    color: #9ca3af;
+}
+
+.travel-expense-search-input:focus {
+    border-color: #3b82f6;
+    /* focus:border-blue-500 */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    /* focus:ring-blue-300 + shadow-inner */
+}
+
+/* Danh sách Items */
+.travel-expense-list-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow: visible;
+    /* Không scroll riêng, để scroll bằng scrollbar ứng dụng */
+}
+
+/* List Item: Mini Data Card - bg-white, rounded-xl, shadow-md, cursor-pointer */
+.travel-expense-list-item {
+    background: #ffffff;
+    /* bg-white - Nền trắng cho inactive */
+    padding: 1rem;
+    /* p-4 - Padding lớn hơn */
+    border-radius: 0.75rem;
+    /* rounded-xl - Bo tròn đẹp hơn */
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.travel-expense-list-item:hover {
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+    background: rgba(239, 246, 255, 0.5);
+    /* Light blue background on hover */
+}
+
+/* Trạng thái Active: bg-blue-100/70, border-left: 5px solid #3b82f6 (Blue 500), shadow-md */
+/* Đây là hiệu ứng Fluent quan trọng */
+.travel-expense-list-item.active {
+    background: rgba(219, 234, 254, 0.7);
+    /* bg-blue-100/70 - Light blue background */
+    border-left: 5px solid #3b82f6;
+    /* border-left: 5px solid Blue 500 - Blue left border */
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    /* shadow-md */
+    transform: translateY(-1px);
+}
+
+/* Cột trái: ID và Tên */
+.travel-expense-item-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+/* Cột phải: Địa điểm và Trạng thái */
+.travel-expense-item-right {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+    /* Căn phải */
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* Mã Yêu cầu: text-sm font-bold text-blue-600 - Ở trên cùng bên trái */
+.travel-expense-request-code {
+    font-size: 0.875rem;
+    /* text-sm */
+    font-weight: 700;
+    /* font-bold */
+    color: #2563eb;
+    /* text-blue-600 - Dark blue text */
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Tên nhân viên: Ở dưới ID, bên trái */
+.travel-expense-request-employee {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #000000;
+    /* Black text */
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Địa điểm: Ở trên cùng bên phải */
+.travel-expense-request-location {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #000000;
+    /* Black text */
+    margin: 0;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+/* Trạng thái: Ở dưới Location, bên phải */
+.travel-expense-request-status {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    /* Bold */
+    margin: 0;
+    line-height: 1.4;
+    white-space: nowrap;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+}
+
+/* Trạng thái: Trong nước - Green */
+.travel-expense-request-status.domestic {
+    color: #16a34a;
+    /* text-green-600 - Bold green text */
+    background: rgba(34, 197, 94, 0.1);
+    /* Green background nhạt */
+}
+
+/* Trạng thái: Nước ngoài - Red */
+.travel-expense-request-status.foreign {
+    color: #dc2626;
+    /* text-red-600 - Bold red text */
+    background: rgba(239, 68, 68, 0.1);
+    /* Red background nhạt */
+}
+
+/* III. CỘT PHẢI: CHI TIẾT CẤP NGÂN SÁCH (65% Width) */
+.travel-expense-management-detail-column {
+    flex: 1;
+    /* Chiếm phần còn lại (65%) */
+    min-height: 700px;
+    /* Chiều cao tối thiểu */
+    height: auto;
+    /* Cho phép cột mở rộng theo nội dung */
+    overflow: visible;
+    /* Không scroll riêng, để scroll bằng scrollbar ứng dụng */
+    box-sizing: border-box;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    /* Đảm bảo cột có cùng chiều cao với cột bên trái */
+    flex-shrink: 0;
+    /* Ngăn cột bị thu nhỏ, cho phép nó mở rộng theo nội dung */
+}
+
+/* Nền Cột: bg-white (Solid), rounded-xl, shadow-lg - Nền trắng tinh khiết, sạch sẽ */
+.travel-expense-detail-column-container {
+    width: 100%;
+    /* Loại bỏ min-height để container mở rộng tự nhiên */
+    background: #ffffff;
+    /* bg-white (Solid) */
+    border-radius: 0.75rem;
+    /* rounded-xl */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    /* shadow-lg */
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    box-sizing: border-box;
+    overflow: visible;
+    /* Cho phép container mở rộng theo nội dung */
+    /* Loại bỏ flex: 1 để container mở rộng tự nhiên theo nội dung */
+    flex-shrink: 0;
+    /* Ngăn container bị thu nhỏ, cho phép nó mở rộng theo nội dung */
+}
+
+/* A. Tóm Tắt & Tab Menu */
+
+/* A.1. Thông tin Tóm tắt: Light blue card với layout 2 cột */
+.travel-expense-summary-block {
+    background: rgba(224, 242, 254, 0.6);
+    /* Light blue background */
+    border-radius: 0.75rem;
+    /* rounded-xl */
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Tiêu đề: Bold blue text */
+.travel-expense-summary-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2563eb;
+    /* text-blue-600 - Bold blue text */
+    margin: 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* Layout 2 cột */
+.travel-expense-summary-content {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+/* Cột trái: Nhân viên, Địa điểm */
+.travel-expense-summary-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    min-width: 0;
+}
+
+/* Cột phải: Mục đích, Trạng thái */
+.travel-expense-summary-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    min-width: 0;
+}
+
+.travel-expense-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.travel-expense-summary-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #64748b;
+    /* text-slate-500 */
+    flex-shrink: 0;
+}
+
+.travel-expense-summary-value {
+    font-size: 0.875rem;
+    color: #1e293b;
+    /* text-slate-800 */
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+/* Trạng thái: Bold orange text */
+.travel-expense-summary-status {
+    font-size: 0.875rem;
+    font-weight: 700;
+    /* Bold */
+    color: #ea580c;
+    /* text-orange-600 - Bold orange text */
+    background: rgba(251, 146, 60, 0.1);
+    /* Orange background nhạt */
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    display: inline-block;
+    width: fit-content;
+}
+
+/* A.2. Tab Menu: flex border-b border-gray-200 - Chứa 2 nút chuyển đổi nội dung */
+.travel-expense-tab-menu {
+    display: flex;
+    border-bottom: none;
+    /* Bỏ border-bottom để tab buttons tự bo tròn */
+    gap: 0.75rem;
+    /* Gap giữa 2 nút */
+    flex-shrink: 0;
+    padding: 0.5rem;
+    background: rgba(241, 245, 249, 0.5);
+    /* Nền nhạt cho tab menu container */
+    border-radius: 1rem;
+    /* Bo tròn container */
+}
+
+/* Tab Button Base - Bo tròn và có hiệu ứng đẹp */
+.travel-expense-tab-button {
+    flex: 1;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 0.75rem;
+    /* Bo tròn đẹp */
+    background: #ffffff;
+    /* Nền trắng cho inactive */
+    color: #4b5563;
+    /* text-gray-600 */
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Transition mượt mà hơn */
+    outline: none;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Hiệu ứng hover cho inactive tab */
+.travel-expense-tab-button:hover:not(.active) {
+    background: #f3f4f6;
+    /* hover:bg-gray-100 */
+    color: #374151;
+    transform: translateY(-2px);
+    /* Lift effect */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Tab Active: Nút Solid Blue với gradient và hiệu ứng đẹp */
+.travel-expense-tab-button.active {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    /* bg-blue-600 gradient */
+    color: #ffffff;
+    /* text-white */
+    font-weight: 600;
+    /* font-semibold */
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.2);
+    /* shadow-lg với blue glow */
+    transform: translateY(-2px);
+    /* Lift effect khi active */
+    position: relative;
+}
+
+/* Hiệu ứng glow cho active tab */
+.travel-expense-tab-button.active::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 0.875rem;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+    filter: blur(8px);
+}
+
+.travel-expense-tab-button.active:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    /* Darker blue gradient on hover */
+    transform: translateY(-3px);
+    /* Lift mạnh hơn khi hover */
+    box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.4), 0 8px 10px -6px rgba(37, 99, 235, 0.3);
+    /* Shadow mạnh hơn */
+}
+
+.travel-expense-tab-button.active:hover::after {
+    opacity: 1;
+    /* Hiển thị glow khi hover */
+}
+
+/* Hiệu ứng scale khi click */
+.travel-expense-tab-button:active {
+    transform: translateY(0) scale(0.98);
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.travel-expense-tab-button.active:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+/* Tab Content */
+.travel-expense-tab-content {
+    overflow: visible;
+    /* Không scroll riêng, để scroll bằng scrollbar ứng dụng */
+    overflow-x: hidden;
+    padding-top: 1rem;
+    /* Cho phép content mở rộng tự nhiên theo nội dung */
+}
+
+/* B. Nội dung Tab (Tab A: Cấp Ngân Sách Tối Đa) */
+.travel-expense-tab-a {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+/* Tab B: Xử Lý Tạm Ứng */
+.travel-expense-tab-b {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+/* 1. Khối Thông Báo Xác Nhận (Indigo Alert Box) */
+.travel-expense-indigo-alert {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(129, 140, 248, 0.05) 100%);
+    border: 2px solid #6366f1;
+    border-left: 4px solid #4f46e5;
+    border-radius: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.travel-expense-indigo-alert--info {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.05) 100%);
+    border-color: #3b82f6;
+    border-left-color: #2563eb;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.travel-expense-indigo-alert-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.travel-expense-indigo-alert-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #4f46e5;
+    flex-shrink: 0;
+}
+
+.travel-expense-indigo-alert--info .travel-expense-indigo-alert-icon {
+    color: #2563eb;
+}
+
+.travel-expense-indigo-alert-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #312e81;
+    letter-spacing: 0.025em;
+}
+
+.travel-expense-indigo-alert--info .travel-expense-indigo-alert-title {
+    color: #1e40af;
+}
+
+.travel-expense-indigo-alert-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.travel-expense-indigo-alert-message {
+    font-size: 0.9375rem;
+    color: #4338ca;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.travel-expense-indigo-alert--info .travel-expense-indigo-alert-message {
+    color: #1e40af;
+}
+
+.travel-expense-indigo-alert-amount {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.875rem 1.125rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    margin: 0.5rem 0;
+}
+
+.travel-expense-indigo-alert-amount-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #4f46e5;
+    letter-spacing: -0.025em;
+}
+
+.travel-expense-indigo-alert-amount-original {
+    font-size: 0.875rem;
+    color: #6366f1;
+    font-weight: 500;
+}
+
+.travel-expense-indigo-alert-warning {
+    font-size: 0.875rem;
+    color: #6366f1;
+    line-height: 1.6;
+    margin: 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.travel-expense-indigo-alert-warning strong {
+    color: #312e81;
+    font-weight: 700;
+}
+
+/* 2. Form Xử Lý Chuyển Khoản (Main Form) */
+.travel-expense-advance-form {
+    margin-top: 2rem;
+}
+
+.travel-expense-form-section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1d4ed8;
+    margin: 0 0 0.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(29, 78, 216, 0.2);
+}
+
+.travel-expense-form-section-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.5;
+}
+
+.travel-expense-advance-form-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+/* Currency Input Wrapper */
+.travel-expense-currency-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.travel-expense-currency-input {
+    padding-right: 4rem !important;
+}
+
+.travel-expense-currency-suffix {
+    position: absolute;
+    right: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6366f1;
+    pointer-events: none;
+}
+
+/* Readonly Input */
+.travel-expense-form-input-readonly {
+    background: #f9fafb !important;
+    color: #6b7280 !important;
+    cursor: not-allowed !important;
+    border-color: #e5e7eb !important;
+}
+
+.travel-expense-form-input-readonly:focus {
+    border-color: #e5e7eb !important;
+    box-shadow: none !important;
+}
+
+/* Textarea */
+.travel-expense-form-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    font-size: 0.875rem;
+    color: #1f2937;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: vertical;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.travel-expense-form-textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.travel-expense-form-textarea::placeholder {
+    color: #9ca3af;
+}
+
+/* Input Hint */
+.travel-expense-input-hint {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    margin: 0.5rem 0 0 0;
+    line-height: 1.5;
+}
+
+/* Input Error */
+.travel-expense-input-error {
+    font-size: 0.8125rem;
+    color: #ef4444;
+    margin: 0.5rem 0 0 0;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+/* Required Asterisk */
+.required {
+    color: #ef4444;
+    margin-left: 0.25rem;
+}
+
+/* Tiêu đề Form: text-xl font-bold text-blue-700 - Dùng màu Xanh Dương đậm để phân cấp cho Form */
+.travel-expense-form-title {
+    font-size: 1.25rem;
+    /* text-xl */
+    font-weight: 700;
+    /* font-bold */
+    color: #1d4ed8;
+    /* text-blue-700 */
+    margin: 0 0 0.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(29, 78, 216, 0.2);
+}
+
+/* Form Group */
+.travel-expense-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Label: text-sm font-semibold text-gray-700 - Label rõ ràng */
+.travel-expense-form-label {
+    font-size: 0.875rem;
+    /* text-sm */
+    font-weight: 600;
+    /* font-semibold */
+    color: #374151;
+    /* text-gray-700 */
+    margin: 0;
+}
+
+/* Input Fields: shadow-inner, focus:border-blue-500 - Input màu trắng, áp dụng hiệu ứng Fluent Focus */
+.travel-expense-form-input,
+.travel-expense-form-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    /* border-gray-300 */
+    border-radius: 0.5rem;
+    background: #ffffff;
+    /* Input màu trắng */
+    font-size: 0.875rem;
+    color: #1f2937;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    /* shadow-inner */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    outline: none;
+}
+
+.travel-expense-form-input::placeholder {
+    color: #9ca3af;
+}
+
+.travel-expense-form-input:focus,
+.travel-expense-form-select:focus {
+    border-color: #3b82f6;
+    /* focus:border-blue-500 */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    /* Fluent Focus: ring-blue-300 + shadow-inner */
+}
+
+.travel-expense-form-input:disabled {
+    background: #f9fafb;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+/* TOTAL Ngân Sách: Khối Cảnh báo/Kết quả - bg-teal-50, border-l-4 border-teal-400 */
+/* Dùng màu Teal để nhấn mạnh đây là KẾT QUẢ TÀI CHÍNH (tính năng hoàn tất) */
+.travel-expense-total-budget-block {
+    background: #f0fdfa;
+    /* bg-teal-50 */
+    border-left: 4px solid #2dd4bf;
+    /* border-l-4 border-teal-400 */
+    border-radius: 0.75rem;
+    /* rounded-xl */
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.travel-expense-total-budget-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0f766e;
+    /* text-teal-700 */
+}
+
+/* Số tiền: text-3xl font-extrabold text-teal-600 - Phải cực kỳ nổi bật */
+.travel-expense-total-budget-amount {
+    font-size: 1.875rem;
+    /* text-3xl */
+    font-weight: 800;
+    /* font-extrabold */
+    color: #0d9488;
+    /* text-teal-600 */
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+/* Form Actions */
+.travel-expense-form-actions {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+}
+
+/* Nút Chính (Xác Nhận): Fluent Lift Button - bg-blue-600 gradient, text-white */
+/* hover:translate-y-[-2px], shadow-lg shadow-blue-400/50 */
+.travel-expense-primary-button {
+    flex: 1;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 0.75rem;
+    background: linear-gradient(to right, #2563eb, #1d4ed8);
+    /* bg-blue-600 gradient */
+    color: #ffffff;
+    /* text-white */
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    outline: none;
+}
+
+.travel-expense-primary-button:hover {
+    transform: translateY(-2px);
+    /* hover:translate-y-[-2px] */
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4), 0 4px 6px -2px rgba(59, 130, 246, 0.25);
+    /* shadow-lg shadow-blue-400/50 */
+    background: linear-gradient(to right, #1d4ed8, #1e40af);
+}
+
+.travel-expense-primary-button:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Nút Phụ (Hủy): bg-gray-200, text-gray-700 - Nút trung tính */
+.travel-expense-secondary-button {
+    padding: 0.875rem 1.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    background: #e5e7eb;
+    /* bg-gray-200 */
+    color: #374151;
+    /* text-gray-700 */
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.travel-expense-secondary-button:hover {
+    background: #d1d5db;
+    /* hover:bg-gray-300 */
+    border-color: #d1d5db;
+}
+
+.travel-expense-secondary-button:active {
+    background: #9ca3af;
+}
+
+/* No Selection State */
+.travel-expense-no-selection {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #9ca3af;
+    font-size: 0.9375rem;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Custom Scrollbar cho các cột */
+.travel-expense-management-list-column::-webkit-scrollbar,
+.travel-expense-management-detail-column::-webkit-scrollbar {
+    width: 6px;
+}
+
+.travel-expense-management-list-column::-webkit-scrollbar-track,
+.travel-expense-management-detail-column::-webkit-scrollbar-track {
+    background: rgba(241, 245, 249, 0.5);
+    border-radius: 3px;
+}
+
+.travel-expense-management-list-column::-webkit-scrollbar-thumb,
+.travel-expense-management-detail-column::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 3px;
+}
+
+.travel-expense-management-list-column::-webkit-scrollbar-thumb:hover,
+.travel-expense-management-detail-column::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.6);
+}

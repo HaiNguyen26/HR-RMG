@@ -361,6 +361,69 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * GET /api/employees/:id - Lấy thông tin một nhân viên theo ID
+ */
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const numericId = parseInt(id, 10);
+
+        if (isNaN(numericId) || numericId <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID nhân viên không hợp lệ'
+            });
+        }
+
+        await ensureChiNhanhColumn();
+        await ensurePhongBanConstraintDropped();
+        await ensureManagerColumns();
+
+        const query = `
+            SELECT 
+                id, 
+                ma_nhan_vien,
+                ho_ten, 
+                chuc_danh, 
+                phong_ban, 
+                bo_phan, 
+                chi_nhanh,
+                ngay_gia_nhap, 
+                email, 
+                quan_ly_truc_tiep,
+                quan_ly_gian_tiep,
+                trang_thai,
+                created_at,
+                updated_at
+            FROM employees 
+            WHERE id = $1
+            AND trang_thai IN ('ACTIVE', 'PENDING')
+        `;
+
+        const result = await pool.query(query, [numericId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy nhân viên'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Thông tin nhân viên',
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error fetching employee:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy thông tin nhân viên: ' + error.message
+        });
+    }
+});
+
+/**
  * POST /api/employees - Tạo nhân viên mới
  */
 router.post('/', async (req, res) => {
@@ -810,8 +873,7 @@ router.delete('/:id', async (req, res) => {
         const requestIds = requestIdsResult.rows.map(row => row.id);
 
         if (requestIds.length > 0) {
-            // Delete notifications related to these requests first
-            await client.query('DELETE FROM notifications WHERE request_id = ANY($1::int[])', [requestIds]);
+            // Notification system removed
 
             // Delete request_items for these requests
             await client.query('DELETE FROM request_items WHERE request_id = ANY($1::int[])', [requestIds]);

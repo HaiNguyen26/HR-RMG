@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import StatisticsCards from './StatisticsCards';
 import EmployeeTable from '../EmployeeTable/EmployeeTable';
+import EmployeeForm from '../EmployeeForm/EmployeeForm';
 import { statisticsAPI, employeesAPI } from '../../services/api';
 import { exportEmployeeTemplate, exportEmployeesToExcel, parseExcelFile } from '../../utils/excelUtils';
 import './Dashboard.css';
 
 const Dashboard = ({ onAddEmployee, employees, onRefreshEmployees, currentUser, showToast, showConfirm, onUpdateEquipment }) => {
+  const [isEmployeeFormOpen, setIsEmployeeFormOpen] = useState(false);
   const [statistics, setStatistics] = useState({
     tongNhanVien: 0,
     tyLeTheoPhongBan: [],
@@ -17,7 +19,7 @@ const Dashboard = ({ onAddEmployee, employees, onRefreshEmployees, currentUser, 
     choDuyet: 0,
     tyLeNghiPhep: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false, only show loading when actually fetching
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef(null);
   const [branchFilter, setBranchFilter] = useState('');
@@ -172,14 +174,42 @@ const Dashboard = ({ onAddEmployee, employees, onRefreshEmployees, currentUser, 
 
   const fetchStatistics = async () => {
     try {
-      setLoading(true);
-      const response = await statisticsAPI.getStatistics();
+      // Only set loading if we don't have statistics yet
+      const hasStatistics = statistics.tongNhanVien > 0 || statistics.donNghiPhep > 0 || statistics.tyLeTheoPhongBan.length > 0;
+      if (!hasStatistics) {
+        setLoading(true);
+      }
+
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Statistics API timeout')), 10000)
+      );
+
+      const response = await Promise.race([
+        statisticsAPI.getStatistics(),
+        timeoutPromise
+      ]);
+
       if (response.data.success) {
         setStatistics(response.data.data);
+      } else {
+        console.warn('Statistics API returned success=false:', response.data);
       }
     } catch (error) {
       console.error('Error fetching statistics:', error);
-      // Giữ lại giá trị cũ nếu lỗi
+      console.error('Error details:', error.response?.data || error.message);
+      // Set default values to prevent infinite loading
+      setStatistics({
+        tongNhanVien: 0,
+        tyLeTheoPhongBan: [],
+        donNghiPhep: 0,
+        donNghiViec: 0,
+        offboarding: 0,
+        nghiPhepConLai: 0,
+        donDaDuyet: 0,
+        choDuyet: 0,
+        tyLeNghiPhep: 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -256,138 +286,164 @@ const Dashboard = ({ onAddEmployee, employees, onRefreshEmployees, currentUser, 
   );
 
   return (
-    <div className="dashboard-view">
-      {/* Company Header */}
-      <div className="dashboard-header">
-        <h1 className="dashboard-header-title">Dashboard</h1>
-      </div>
-
-      {/* Summary Cards Row 1 */}
-      <div className="summary-cards-wrapper">
-        <div className="summary-cards-row">
-          {renderSummaryCards()}
+    <div className="dashboard-container">
+      <div className="dashboard-view">
+        {/* Banner chào mừng */}
+        <div className="dashboard-banner">
+          <div className="dashboard-banner-content">
+            <h1 className="dashboard-title">Dashboard</h1>
+          </div>
         </div>
-      </div>
 
-      {/* Statistics Cards Row 2 */}
-      <StatisticsCards statistics={statistics} loading={loading} />
+        {/* Nội dung dashboard */}
+        <div className="dashboard-content">
+          {/* Summary Cards Row 1 */}
+          <div className="summary-cards-wrapper">
+            <div className="summary-cards-row">
+              {renderSummaryCards()}
+            </div>
+          </div>
 
-      {/* Employee Table & Statistics */}
-      <div className="dashboard-main-grid">
-        {/* Employee Table */}
-        <div className="employee-table-section">
-          <div className="employee-table-header">
-            <div className="employee-table-title-wrapper">
-              <h2 className="employee-table-title">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                  </path>
-                </svg>
-                Danh sách nhân viên
-              </h2>
-              <div className="employee-table-title-meta">
-                <span className="employee-table-count">
-                  Tổng: <strong>{statistics.tongNhanVien || employees.length}</strong> nhân viên
-                </span>
-                <div ref={branchSelectRef} className={`branch-select ${branchDropdownOpen ? 'open' : ''}`}>
-                  <button
-                    type="button"
-                    className="branch-select-trigger"
-                    onClick={() => setBranchDropdownOpen((prev) => !prev)}
-                  >
-                    <span>{getBranchLabel(branchFilter)}</span>
-                    <svg viewBox="0 0 24 24" aria-hidden>
-                      <path d="M7 10l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
+          {/* Statistics Cards Row 2 */}
+          <StatisticsCards statistics={statistics} loading={loading} />
+
+          {/* Employee Table */}
+          <div className="dashboard-main-grid">
+            <div className="employee-table-section">
+              <div className="employee-table-header">
+                <div className="employee-table-title-wrapper">
+                  <h2 className="employee-table-title">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                      </path>
                     </svg>
-                  </button>
-                  <div className="branch-select-menu">
-                    {BRANCH_OPTIONS.map((option) => (
+                    Danh sách nhân viên
+                  </h2>
+                  <div className="employee-table-title-meta">
+                    <span className="employee-table-count">
+                      Tổng: <strong>{statistics.tongNhanVien || employees.length}</strong> nhân viên
+                    </span>
+                    <div ref={branchSelectRef} className={`branch-select ${branchDropdownOpen ? 'open' : ''}`}>
                       <button
                         type="button"
-                        key={option.value || 'all'}
-                        className={`branch-select-option ${branchFilter === option.value ? 'active' : ''}`}
-                        onClick={() => {
-                          setBranchFilter(option.value);
-                          setBranchDropdownOpen(false);
-                        }}
+                        className="branch-select-trigger"
+                        onClick={() => setBranchDropdownOpen((prev) => !prev)}
                       >
-                        {option.label}
+                        <span>{getBranchLabel(branchFilter)}</span>
+                        <svg viewBox="0 0 24 24" aria-hidden>
+                          <path d="M7 10l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
+                        </svg>
                       </button>
-                    ))}
+                      <div className="branch-select-menu">
+                        {BRANCH_OPTIONS.map((option) => (
+                          <button
+                            type="button"
+                            key={option.value || 'all'}
+                            className={`branch-select-option ${branchFilter === option.value ? 'active' : ''}`}
+                            onClick={() => {
+                              setBranchFilter(option.value);
+                              setBranchDropdownOpen(false);
+                            }}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
+                {currentUser?.role !== 'EMPLOYEE' && (
+                  <div className="employee-table-actions-group">
+                    <button
+                      className="btn-action-secondary"
+                      onClick={handleExportTemplate}
+                      title="Xuất file mẫu Excel"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                      </svg>
+                      <span>Xuất mẫu</span>
+                    </button>
+                    <button
+                      className="btn-action-secondary"
+                      onClick={handleExportEmployees}
+                      title="Xuất danh sách nhân viên ra Excel"
+                      disabled={employees.length === 0}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
+                        </path>
+                      </svg>
+                      <span>Xuất Excel</span>
+                    </button>
+                    <button
+                      className="btn-action-secondary"
+                      onClick={handleImportClick}
+                      disabled={importing}
+                      title="Import nhân viên từ file Excel"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12">
+                        </path>
+                      </svg>
+                      <span>{importing ? 'Đang import...' : 'Import Excel'}</span>
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleFileChange}
+                      style={{ display: 'none' }}
+                    />
+                    <button className="btn-add-employee-header" onClick={() => setIsEmployeeFormOpen(true)}>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                          d="M12 4v16m8-8H4"></path>
+                      </svg>
+                      <span>Thêm nhân viên</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="employee-table-content">
+                <EmployeeTable
+                  employees={employees}
+                  onRefresh={onRefreshEmployees}
+                  currentUser={currentUser}
+                  showToast={showToast}
+                  showConfirm={showConfirm}
+                  onUpdateEquipment={onUpdateEquipment}
+                  branchFilter={branchFilter}
+                />
               </div>
             </div>
-            {/* Chỉ hiển thị các nút quản trị cho HR, ADMIN - không hiển thị cho EMPLOYEE */}
-            {currentUser?.role !== 'EMPLOYEE' && (
-              <div className="employee-table-actions-group">
-                <button
-                  className="btn-action-secondary"
-                  onClick={handleExportTemplate}
-                  title="Xuất file mẫu Excel"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                    </path>
-                  </svg>
-                  <span>Xuất mẫu</span>
-                </button>
-                <button
-                  className="btn-action-secondary"
-                  onClick={handleExportEmployees}
-                  title="Xuất danh sách nhân viên ra Excel"
-                  disabled={employees.length === 0}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
-                    </path>
-                  </svg>
-                  <span>Xuất Excel</span>
-                </button>
-                <button
-                  className="btn-action-secondary"
-                  onClick={handleImportClick}
-                  disabled={importing}
-                  title="Import nhân viên từ file Excel"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12">
-                    </path>
-                  </svg>
-                  <span>{importing ? 'Đang import...' : 'Import Excel'}</span>
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleFileChange}
-                  style={{ display: 'none' }}
-                />
-                <button className="btn-add-employee-header" onClick={onAddEmployee}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                      d="M12 4v16m8-8H4"></path>
-                  </svg>
-                  <span>Thêm nhân viên</span>
-                </button>
-              </div>
-            )}
           </div>
-          <EmployeeTable
-            employees={employees}
-            onRefresh={onRefreshEmployees}
-            currentUser={currentUser}
-            showToast={showToast}
-            showConfirm={showConfirm}
-            onUpdateEquipment={onUpdateEquipment}
-            branchFilter={branchFilter}
-          />
         </div>
       </div>
+
+      {/* Employee Form Modal */}
+      {isEmployeeFormOpen && (
+        <EmployeeForm
+          onSuccess={(employeeData) => {
+            setIsEmployeeFormOpen(false);
+            if (onAddEmployee) {
+              onAddEmployee(employeeData);
+            }
+            if (onRefreshEmployees) {
+              onRefreshEmployees();
+            }
+          }}
+          onCancel={() => setIsEmployeeFormOpen(false)}
+          currentUser={currentUser}
+          showToast={showToast}
+          showConfirm={showConfirm}
+        />
+      )}
     </div>
   );
 };

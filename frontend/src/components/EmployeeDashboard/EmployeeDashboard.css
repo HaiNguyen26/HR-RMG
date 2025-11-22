@@ -1,395 +1,678 @@
+/* Employee Dashboard - Thiết kế lại hoàn toàn */
+
+/* Nền Trang: Off-White (Xám Rất Nhạt) - Không cuộn, nằm trên 1 trang */
 .employee-dashboard {
-    padding: 1.8rem 2.4rem;
+    height: 100vh;
     width: 100%;
-    min-height: 100%;
-    background: linear-gradient(180deg, #f8f9ff 0%, #eef2fb 55%, #ffffff 100%);
-    overflow-y: auto;
-    overflow-x: hidden;
+    background: #f5f7fa;
+    padding: 1.5rem;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 1.6rem;
-}
-
-.employee-dashboard-header {
-    flex-shrink: 0;
-}
-
-.employee-dashboard-welcome {
-    position: relative;
-    background: linear-gradient(135deg, rgba(14, 165, 255, 0.92), rgba(59, 130, 246, 0.88));
-    padding: 1.65rem 1.95rem;
-    border-radius: 1.2rem;
-    box-shadow: 0 30px 55px -28px rgba(14, 165, 255, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    backdrop-filter: blur(26px);
-    color: #ffffff;
+    align-items: center;
     overflow: hidden;
 }
 
-.employee-dashboard-welcome::after {
-    content: '';
-    position: absolute;
-    inset: -30% 35% 50% -20%;
-    background: rgba(255, 255, 255, 0.18);
-    filter: blur(60px);
-    pointer-events: none;
-}
-
-.employee-dashboard-title {
-    font-size: 1.65rem;
-    font-weight: 700;
-    margin-bottom: 0.35rem;
-    color: rgba(255, 255, 255, 0.96);
-}
-
-.employee-name {
-    color: #ffffff;
-    text-shadow: 0 12px 32px rgba(14, 165, 255, 0.6);
-}
-
-.employee-dashboard-subtitle {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.92rem;
-}
-
-.employee-dashboard-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.6rem;
-}
-
-.employee-info-layout {
+/* Main Card: Gradient Pastel tĩnh - Nâng cấp hiệu ứng */
+.employee-dashboard-main-card {
     width: 100%;
-    max-width: 1140px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.6rem;
-}
-
-.employee-info-card {
-    position: relative;
-    background: linear-gradient(145deg, #1f2f4c, #15243d);
-    border-radius: 1.2rem;
-    padding: 1.95rem 2.1rem;
+    max-width: 1200px;
+    /* Gradient Pastel: Off-White (màu chính) + Electric Blue Pastel + Xanh Lá Pastel */
+    /* Gradient từ góc trên bên trái sang góc dưới bên phải */
+    background: linear-gradient(135deg,
+            #f8fafc 0%,
+            /* Off-White (Xám Rất Nhạt) - màu chính */
+            #f1f5f9 25%,
+            /* Off-White nhạt hơn */
+            #eef2f7 50%,
+            /* Off-White nhạt nhất */
+            rgba(239, 246, 255, 0.95) 75%,
+            /* Electric Blue Pastel Rất Nhạt */
+            rgba(236, 253, 245, 0.92) 100%
+            /* Xanh Lá Pastel Rất Nhạt */
+        );
+    border-radius: 1rem;
+    /* Soft Shadow: Tăng độ sâu và độ mờ của bóng đổ - Glassmorphism */
     box-shadow:
-        0 40px 70px -38px rgba(8, 14, 30, 0.8),
-        0 0 0 1px rgba(99, 179, 255, 0.35);
-    border: 1px solid rgba(148, 192, 255, 0.35);
-    display: flex;
-    flex-direction: column;
-    gap: 1.75rem;
-    color: #f8fafc;
-    opacity: 1.0;
+        0 20px 60px rgba(0, 0, 0, 0.12),
+        0 10px 30px rgba(0, 0, 0, 0.08),
+        0 5px 15px rgba(0, 0, 0, 0.06),
+        0 2px 6px rgba(0, 0, 0, 0.04),
+        0 1px 3px rgba(0, 0, 0, 0.03);
+    padding: 1.5rem;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform, box-shadow;
 }
 
-.employee-info-card::before {
+
+/* Ambient Light Effect - Ánh sáng mờ nhẹ từ góc trên bên trái */
+.employee-dashboard-main-card::before {
     content: '';
     position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.18), transparent 55%),
-        radial-gradient(circle at 85% 20%, rgba(14, 165, 255, 0.12), transparent 60%);
-    border-radius: inherit;
+    top: -30%;
+    left: -10%;
+    width: 50%;
+    height: 60%;
+    background: radial-gradient(ellipse 80% 70% at 0% 0%,
+            rgba(59, 130, 246, 0.06) 0%,
+            rgba(96, 165, 250, 0.04) 25%,
+            rgba(147, 197, 253, 0.02) 40%,
+            transparent 60%);
     pointer-events: none;
+    z-index: 0;
+    opacity: 0.7;
 }
 
-.employee-info-card-header {
-    position: relative;
+
+/* Viền Gradient Tinh tế - 1px Electric Blue từ đậm sang nhạt ở cạnh trên và trái */
+.employee-dashboard-main-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 1rem;
+    pointer-events: none;
     z-index: 1;
+    /* Tạo viền gradient bằng cách sử dụng conic gradient ở góc trên trái */
+    background:
+        /* Border top gradient */
+        linear-gradient(to right,
+            rgba(59, 130, 246, 0.35) 0%,
+            rgba(96, 165, 250, 0.25) 15%,
+            rgba(147, 197, 253, 0.15) 30%,
+            transparent 50%) top / 100% 1px no-repeat,
+        /* Border left gradient */
+        linear-gradient(to bottom,
+            rgba(59, 130, 246, 0.35) 0%,
+            rgba(96, 165, 250, 0.25) 20%,
+            rgba(147, 197, 253, 0.15) 40%,
+            transparent 60%) left / 1px 100% no-repeat;
+}
+
+/* Ensure content is above pseudo-elements */
+.employee-dashboard-main-card>* {
+    position: relative;
+    z-index: 2;
+}
+
+/* Hover Effect - Lift rõ ràng hơn */
+.employee-dashboard-main-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 25px 80px rgba(0, 0, 0, 0.15),
+        0 12px 40px rgba(0, 0, 0, 0.1),
+        0 6px 20px rgba(0, 0, 0, 0.08),
+        0 3px 10px rgba(0, 0, 0, 0.05),
+        0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* Header Section với Ambient Light Effect */
+.employee-dashboard-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 1.8rem;
-    padding-bottom: 1.4rem;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+    gap: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
 }
 
-.employee-info-card-title-group {
-    display: flex;
-    align-items: center;
-    gap: 1.05rem;
+/* Ambient Light Effect - Ánh sáng lan tỏa từ góc trên */
+.employee-dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -10%;
+    width: 120%;
+    height: 200%;
+    background: radial-gradient(ellipse 80% 60% at 20% 10%,
+            rgba(59, 130, 246, 0.08) 0%,
+            rgba(96, 165, 250, 0.05) 30%,
+            rgba(147, 197, 253, 0.03) 50%,
+            transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: ambientGlow 6s ease-in-out infinite alternate;
 }
 
-.employee-info-card-avatar {
-    width: 3.4rem;
-    height: 3.4rem;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #0ea5ff, #2563eb);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    font-size: 1.45rem;
-    font-weight: 700;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+@keyframes ambientGlow {
+    0% {
+        opacity: 0.6;
+        transform: translate(-5%, -5%) scale(1);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translate(0%, 0%) scale(1.05);
+    }
 }
 
-.employee-info-card-text {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.employee-info-title {
-    font-size: 1.46rem;
-    font-weight: 700;
-    color: #f8fafc;
-}
-
-.employee-info-subtitle {
-    font-size: 0.94rem;
-    color: rgba(226, 232, 240, 0.7);
-}
-
-.employee-info-card-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-}
-
-.employee-info-meta-badge {
-    padding: 0.45rem 0.85rem;
-    background: rgba(59, 130, 246, 0.12);
-    border: 1px solid rgba(59, 130, 246, 0.24);
-    color: #60a5fa;
-    border-radius: 0.8rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.employee-info-meta-badge.status {
-    background: rgba(34, 197, 94, 0.14);
-    border-color: rgba(34, 197, 94, 0.3);
-    color: #4ade80;
-}
-
-.employee-info-meta-badge.status.status-neutral {
-    background: rgba(148, 163, 184, 0.16);
-    border-color: rgba(148, 163, 184, 0.28);
-    color: rgba(226, 232, 240, 0.75);
-}
-
-.employee-info-card-body {
+.employee-dashboard-header>* {
     position: relative;
     z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 1.7rem;
 }
 
-.employee-info-segment {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+.employee-dashboard-header-content {
+    flex: 1;
 }
 
-.employee-info-segment-title h3 {
-    font-size: 1.06rem;
+/* Tên Nhân viên: Chữ Đen/Xám Đậm, Cỡ Lớn, In Đậm */
+.employee-dashboard-name {
+    font-size: 1.75rem;
     font-weight: 700;
-    color: #e2e8f0;
+    color: #1f2937;
+    margin: 0;
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
 }
 
-.employee-info-fields {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.05rem;
+/* Chức danh/Phòng ban: Xám Rất Nhạt (Sub-text) */
+.employee-dashboard-subtitle {
+    font-size: 0.95rem;
+    color: #9ca3af;
+    margin: 0;
+    line-height: 1.5;
 }
 
-.employee-info-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-    padding: 1.05rem 1.2rem;
-    background: rgba(46, 62, 82, 0.72);
-    border-radius: 1rem;
-    border: 1px solid rgba(99, 179, 255, 0.18);
+/* Mã Nhân viên Tag: Electric Blue Gradient nhẹ - Nổi bật */
+.employee-dashboard-code-tag {
+    padding: 0.5rem 1rem;
+    /* Nền Electric Blue Gradient nhẹ */
+    background: linear-gradient(135deg,
+            rgba(59, 130, 246, 0.2) 0%,
+            rgba(96, 165, 250, 0.15) 50%,
+            rgba(147, 197, 253, 0.12) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1e40af;
+    white-space: nowrap;
+    flex-shrink: 0;
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.06),
-        0 0 0 1px rgba(14, 165, 255, 0.08);
-    transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.18s ease;
-}
-
-.employee-info-field:hover {
-    border-color: rgba(99, 179, 255, 0.45);
-    box-shadow: 0 16px 34px -26px rgba(59, 130, 246, 0.45), 0 0 0 1px rgba(99, 179, 255, 0.35);
-    transform: translateY(-1px);
-}
-
-.employee-info-field:focus-visible {
-    outline: none;
-    border-color: rgba(99, 179, 255, 0.8);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22), 0 12px 30px -18px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(99, 179, 255, 0.5);
-    transform: translateY(-1px);
-}
-
-.employee-info-field[data-empty='true'] .employee-info-value {
-    color: rgba(226, 232, 240, 0.6);
-}
-
-.employee-info-label {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: rgba(203, 213, 225, 0.85);
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-}
-
-.employee-info-value {
-    font-size: 1.06rem;
-    font-weight: 600;
-    color: #f8fafc;
-    word-break: break-word;
-}
-
-.employee-info-divider {
-    height: 1px;
-    background: rgba(148, 163, 184, 0.18);
-    width: 100%;
-    margin-top: 0.6rem;
-}
-
-.employee-quick-actions {
-    margin-top: 1.2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.2rem;
-}
-
-.employee-quick-actions-header h2 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #0f172a;
-}
-
-.employee-quick-actions-header p {
-    font-size: 0.9rem;
-    color: #475569;
-}
-
-.employee-quick-actions-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.1rem;
-}
-
-.quick-action-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.2rem 1.4rem;
-    border-radius: 1.2rem;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(99, 102, 241, 0.28);
-    box-shadow: 0 18px 36px -28px rgba(79, 70, 229, 0.28);
-    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        0 2px 8px rgba(59, 130, 246, 0.2),
+        0 1px 4px rgba(59, 130, 246, 0.15);
     cursor: pointer;
-    text-align: left;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    user-select: all;
+    -webkit-user-select: all;
+    -moz-user-select: all;
+    -ms-user-select: all;
 }
 
-.quick-action-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 26px 48px -24px rgba(59, 130, 246, 0.45);
-    border-color: rgba(59, 130, 246, 0.45);
+.employee-dashboard-code-tag:hover {
+    background: linear-gradient(135deg,
+            rgba(59, 130, 246, 0.25) 0%,
+            rgba(96, 165, 250, 0.2) 50%,
+            rgba(147, 197, 253, 0.15) 100%);
+    box-shadow:
+        0 4px 12px rgba(59, 130, 246, 0.3),
+        0 2px 6px rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
 }
 
-.quick-action-card:focus-visible {
-    outline: none;
-    transform: translateY(-4px);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22), 0 26px 48px -24px rgba(79, 70, 229, 0.4);
-    border-color: rgba(59, 130, 246, 0.6);
+/* Hiệu ứng "Pressed Down" khi click */
+.employee-dashboard-code-tag:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow:
+        0 1px 4px rgba(59, 130, 246, 0.2),
+        0 0 2px rgba(59, 130, 246, 0.15);
+    background: linear-gradient(135deg,
+            rgba(59, 130, 246, 0.15) 0%,
+            rgba(96, 165, 250, 0.12) 50%,
+            rgba(147, 197, 253, 0.1) 100%);
 }
 
-.quick-action-icon {
-    width: 3.3rem;
-    height: 3.3rem;
-    border-radius: 1.1rem;
-    background: radial-gradient(circle at 30% 30%, rgba(129, 140, 248, 0.35), rgba(59, 130, 246, 0.7));
-    color: #1d4ed8;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 12px 24px -16px rgba(59, 130, 246, 0.4);
-}
-
-.quick-action-icon svg {
-    width: 1.7rem;
-    height: 1.7rem;
-}
-
-.quick-action-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-.quick-action-title {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #1d1f2f;
-}
-
-.quick-action-description {
-    font-size: 0.88rem;
-    color: #475569;
-}
-
-.employee-info-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+/* Info Cards Section - 3 Column Layout */
+.employee-dashboard-info-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.75rem;
-    padding: 2.6rem 1.2rem;
-    color: rgba(226, 232, 240, 0.75);
+    margin-top: 1rem;
+    flex-shrink: 0;
 }
 
-.employee-info-spinner {
+/* Info Card - Mini Card Design với hiệu ứng Lift & Bounce */
+.employee-info-card {
+    /* Nền Màu Pastel Siêu Nhạt: Xám Rất Nhạt (Off-White) hoặc Electric Blue Pastel Rất Nhạt */
+    background: linear-gradient(to bottom,
+            rgba(241, 245, 249, 0.98) 0%,
+            rgba(237, 242, 247, 0.95) 50%,
+            rgba(233, 240, 245, 0.92) 100%);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    /* Inner Shadow Tinh tế: Electric Blue Nhạt ở góc trên và dưới */
+    box-shadow:
+        inset 0 2px 4px rgba(59, 130, 246, 0.08),
+        inset 0 -1px 2px rgba(59, 130, 246, 0.06),
+        0 1px 3px rgba(0, 0, 0, 0.04),
+        0 1px 2px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    position: relative;
+    will-change: transform, box-shadow;
+    overflow: hidden;
+}
+
+/* Mini-Card Important (Mã Nhân viên/Ngày nhập việc) - Nền Electric Blue Pastel nhạt hơn */
+.employee-info-card--important {
+    background: linear-gradient(to bottom,
+            rgba(239, 246, 255, 0.98) 0%,
+            rgba(235, 243, 252, 0.95) 50%,
+            rgba(230, 240, 250, 0.92) 100%);
+    border-color: rgba(59, 130, 246, 0.15);
+    box-shadow:
+        inset 0 2px 4px rgba(59, 130, 246, 0.12),
+        inset 0 -1px 2px rgba(59, 130, 246, 0.08),
+        0 1px 3px rgba(59, 130, 246, 0.06),
+        0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* Overlay Gradient Trắng trong suốt nhẹ từ trên xuống dưới */
+.employee-info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom,
+            rgba(255, 255, 255, 0.6) 0%,
+            rgba(255, 255, 255, 0.3) 30%,
+            transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+/* Hiệu ứng Hover "Bounce & Glow" - Lift nhẹ nhưng rõ ràng với Soft Glow Electric Blue */
+.employee-info-card:hover {
+    /* Nền Electric Blue Pastel đậm hơn một chút (để phản hồi) */
+    background: linear-gradient(to bottom,
+            rgba(239, 246, 255, 1) 0%,
+            rgba(235, 243, 252, 0.98) 50%,
+            rgba(230, 240, 250, 0.96) 100%);
+    border-color: rgba(59, 130, 246, 0.4);
+    /* Soft Glow Electric Blue mờ xung quanh viền + Inner Shadow */
+    box-shadow:
+        /* Inner Shadow - tạo cảm giác "in sâu" */
+        inset 0 2px 4px rgba(59, 130, 246, 0.12),
+        inset 0 -1px 2px rgba(59, 130, 246, 0.08),
+        /* Outer Shadow - Soft Glow Electric Blue */
+        0 12px 32px rgba(59, 130, 246, 0.3),
+        0 6px 16px rgba(59, 130, 246, 0.2),
+        0 3px 8px rgba(96, 165, 250, 0.15),
+        0 1px 4px rgba(147, 197, 253, 0.1),
+        0 1px 3px rgba(0, 0, 0, 0.05);
+    /* Animation Bounce - nảy nhẹ lên rồi về vị trí hover */
+    animation: miniCardBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Mini-Card Important Hover - Nền Electric Blue Pastel đậm hơn */
+.employee-info-card--important:hover {
+    background: linear-gradient(to bottom,
+            rgba(219, 234, 254, 1) 0%,
+            rgba(219, 234, 254, 0.98) 50%,
+            rgba(219, 234, 254, 0.96) 100%);
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow:
+        inset 0 2px 4px rgba(59, 130, 246, 0.15),
+        inset 0 -1px 2px rgba(59, 130, 246, 0.12),
+        0 12px 32px rgba(59, 130, 246, 0.35),
+        0 6px 16px rgba(59, 130, 246, 0.25),
+        0 3px 8px rgba(96, 165, 250, 0.2),
+        0 1px 4px rgba(147, 197, 253, 0.15),
+        0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Animation Bounce - nảy nhẹ lên rồi về vị trí hover */
+@keyframes miniCardBounce {
+    0% {
+        transform: translateY(0) scale(1);
+    }
+
+    40% {
+        transform: translateY(-4px) scale(1.015);
+    }
+
+    60% {
+        transform: translateY(-2px) scale(1.005);
+    }
+
+    80% {
+        transform: translateY(-3px) scale(1.01);
+    }
+
+    100% {
+        transform: translateY(-2px) scale(1.005);
+    }
+}
+
+/* Giữ trạng thái Lift sau khi bounce animation kết thúc */
+.employee-info-card:hover::before {
+    opacity: 1;
+}
+
+/* Soft Glow Electric Blue lan tỏa - Pseudo-element cho glow effect */
+.employee-info-card::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 0.875rem;
+    background: radial-gradient(circle at center,
+            rgba(59, 130, 246, 0.15) 0%,
+            rgba(96, 165, 250, 0.08) 40%,
+            transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.employee-info-card:hover::after {
+    opacity: 1;
+}
+
+/* Ensure content is above pseudo-elements */
+.employee-info-card>* {
+    position: relative;
+    z-index: 1;
+}
+
+/* Label: Chữ Xám Trung tính, IN HOA */
+.employee-info-card-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+/* Value: Chữ Đen/Xám Đậm, In Đậm */
+.employee-info-card-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.4;
+}
+
+/* Loading State */
+.employee-dashboard-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 4rem 2rem;
+    color: #6b7280;
+}
+
+.employee-dashboard-spinner {
     width: 2.5rem;
     height: 2.5rem;
+    border: 3px solid #e5e7eb;
+    border-top-color: #3b82f6;
     border-radius: 50%;
-    border: 3px solid rgba(59, 130, 246, 0.18);
-    border-top-color: #60a5fa;
-    animation: employee-info-spin 0.9s linear infinite;
+    animation: spin 0.8s linear infinite;
 }
 
-@keyframes employee-info-spin {
+@keyframes spin {
     to {
         transform: rotate(360deg);
     }
 }
 
+/* Equipment Section - Dark Card (Xám Đậm/Than chì hoặc Xanh Đậm/Tím) */
+.employee-dashboard-equipment-card {
+    width: 100%;
+    max-width: 1200px;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    box-sizing: border-box;
+    margin-top: 1rem;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.employee-equipment-header {
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
+.employee-equipment-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.employee-equipment-content {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Equipment Loading */
+.employee-equipment-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem 1rem;
+    color: #94a3b8;
+}
+
+.employee-equipment-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid rgba(148, 163, 184, 0.2);
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Equipment Empty State */
+.employee-equipment-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2rem 1rem;
+    color: #64748b;
+}
+
+.employee-equipment-empty-icon {
+    width: 3rem;
+    height: 3rem;
+    color: #475569;
+    opacity: 0.6;
+}
+
+.employee-equipment-empty p {
+    font-size: 1rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* Equipment Grid - Grid Cards Layout */
+.employee-equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.75rem;
+}
+
+/* Equipment Item Card */
+.employee-equipment-item {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(100, 116, 139, 0.2);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.employee-equipment-item:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(148, 163, 184, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.equipment-item-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+.equipment-item-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    flex: 1;
+    line-height: 1.3;
+}
+
+.equipment-item-serial {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #94a3b8;
+    background: rgba(59, 130, 246, 0.15);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.equipment-item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.equipment-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.equipment-detail-label {
+    color: #94a3b8;
+    font-weight: 500;
+    min-width: 80px;
+}
+
+.equipment-detail-value {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.equipment-status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.equipment-status-badge.active,
+.equipment-status-badge.đang_sử_dụng,
+.equipment-status-badge.đang_sd {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.equipment-status-badge.inactive,
+.equipment-status-badge.không_sử_dụng,
+.equipment-status-badge.ngừng_sử_dụng {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.equipment-status-badge.pending,
+.equipment-status-badge.chờ_duyệt {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+/* Responsive */
 @media (max-width: 1024px) {
-    .employee-dashboard {
-        padding: 1.6rem 1.6rem;
+    .employee-dashboard-info-cards {
+        grid-template-columns: repeat(2, 1fr);
     }
 
-    .employee-info-card {
-        padding: 1.7rem 1.6rem;
+    .employee-equipment-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     }
 }
 
 @media (max-width: 768px) {
     .employee-dashboard {
-        padding: 1.4rem;
+        padding: 1rem;
     }
 
-    .employee-dashboard-title {
-        font-size: 1.45rem;
+    .employee-dashboard-main-card {
+        padding: 1.5rem;
     }
 
-    .employee-info-card-header {
+    .employee-dashboard-name {
+        font-size: 1.5rem;
+    }
+
+    .employee-dashboard-header {
         flex-direction: column;
         align-items: flex-start;
     }
 
-    .employee-info-card-meta {
-        width: 100%;
+    .employee-dashboard-code-tag {
+        align-self: flex-start;
     }
 
-    .employee-quick-actions-grid {
+    .employee-dashboard-info-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .employee-dashboard-equipment-card {
+        padding: 1.5rem;
+    }
+
+    .employee-equipment-title {
+        font-size: 1.25rem;
+    }
+
+    .employee-equipment-grid {
         grid-template-columns: 1fr;
     }
 }

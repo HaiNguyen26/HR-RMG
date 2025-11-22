@@ -1,0 +1,4944 @@
+/* Candidate Management - Gradient Calm Integrity Theme */
+
+/* I. CẤU TRÚC NỀN & VỎ ỨNG DỤNG (SHELL & GLASS CARD) */
+/* Nền BODY: Nền sáng, mềm mại (Light Mode) với Gradient Calm Integrity - xanh dương/xanh lá nhạt tạo cảm giác yên bình */
+.candidate-management {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2rem;
+    /* Gradient Calm Integrity: Nền nhẹ nhàng từ xanh dương nhạt sang xanh lá nhạt */
+    background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 50%, #ecfdf5 100%);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+}
+
+/* Custom Scrollbar - Tối ưu cho nền gradient Calm Integrity */
+.candidate-management::-webkit-scrollbar {
+    width: 8px;
+}
+
+.candidate-management::-webkit-scrollbar-track {
+    background: rgba(224, 242, 254, 0.3);
+    /* Sky blue nhạt với transparency */
+    border-radius: 4px;
+    backdrop-filter: blur(5px);
+}
+
+.candidate-management::-webkit-scrollbar-thumb {
+    background: rgba(14, 165, 233, 0.4);
+    /* Sky blue với transparency */
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.candidate-management::-webkit-scrollbar-thumb:hover {
+    background: rgba(14, 165, 233, 0.6);
+}
+
+/* Header */
+.candidate-management-header {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Màu Chủ Đạo: Gradient Calm Integrity - Gradient xanh dương/xanh lá nhạt tạo cảm giác yên bình và chuyên nghiệp */
+.candidate-management-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    /* Gradient Calm Integrity: from-sky-50 to-emerald-50 - Từ xanh dương nhạt sang xanh lá nhạt, tạo cảm giác yên bình và đáng tin cậy */
+    background: linear-gradient(to right, #e0f2fe, #ecfdf5);
+    padding: 1.25rem 1.75rem;
+    border-radius: 0.875rem;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.candidate-management-header-top:hover {
+    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.15);
+}
+
+.candidate-management-header-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1;
+}
+
+.candidate-management-icon-wrapper {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 1.125rem;
+    /* Nền Electric Blue Pastel - Giữ nguyên màu riêng của module */
+    background: linear-gradient(135deg,
+            rgba(147, 197, 253, 0.35) 0%,
+            rgba(191, 219, 254, 0.25) 50%,
+            rgba(219, 234, 254, 0.2) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow:
+        0 4px 12px rgba(59, 130, 246, 0.18),
+        0 2px 6px rgba(59, 130, 246, 0.12),
+        0 1px 3px rgba(59, 130, 246, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.candidate-management-icon-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 6px 16px rgba(59, 130, 246, 0.22),
+        0 3px 8px rgba(59, 130, 246, 0.15),
+        0 1px 4px rgba(59, 130, 246, 0.1);
+}
+
+.candidate-management-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    /* Electric Blue Đậm */
+    color: #2563eb;
+    stroke-width: 2;
+}
+
+/* Tiêu đề chính - Màu đen */
+.candidate-management-title {
+    font-size: 1.5rem;
+    /* text-2xl */
+    font-weight: 700;
+    /* font-bold */
+    color: #000000;
+    /* Màu đen */
+    margin: 0 0 0.375rem 0;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+/* Mô tả - Màu đen */
+.candidate-management-subtitle {
+    font-size: 0.875rem;
+    /* text-sm */
+    color: #000000;
+    /* Màu đen */
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Add Candidate Button - Clean Implementation */
+.candidate-management-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    border: none;
+    background: #0096FF;
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    outline: none;
+    box-shadow: 0 4px 12px rgba(0, 150, 255, 0.3);
+    position: relative;
+}
+
+.candidate-management-add-btn:hover {
+    background: #0077CC;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0, 150, 255, 0.4), 0 4px 12px rgba(0, 150, 255, 0.3);
+}
+
+.candidate-management-add-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 150, 255, 0.35);
+}
+
+/* SVG Container - Always White */
+.candidate-management-add-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+.candidate-management-add-btn svg,
+.candidate-management-add-btn:hover svg {
+    stroke: #ffffff;
+    fill: none;
+    color: #ffffff;
+}
+
+/* Icon Plus - Rotate on Hover */
+.candidate-management-add-btn .icon-plus {
+    stroke: #ffffff;
+    transform-origin: center center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.candidate-management-add-btn:hover .icon-plus {
+    transform: rotate(90deg);
+    transform-origin: center center;
+    stroke: #ffffff;
+}
+
+/* Icon X - Hidden by Default */
+.candidate-management-add-btn .icon-x {
+    display: none;
+    stroke: #ffffff;
+}
+
+/* Modal Open State */
+.candidate-management-add-btn.modal-open .icon-plus {
+    display: none;
+}
+
+.candidate-management-add-btn.modal-open .icon-x {
+    display: block;
+}
+
+/* Search Bar - Flat with Focus Glow */
+.candidate-management-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.candidate-management-search-icon {
+    position: absolute;
+    left: 1rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #94a3b8;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.candidate-management-search-input {
+    width: 100%;
+    padding: 0.85rem 1.1rem 0.85rem 3rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 0.95rem;
+    font-weight: 400;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    box-sizing: border-box;
+}
+
+.candidate-management-search-input::placeholder {
+    color: #94a3b8;
+}
+
+.candidate-management-search-input:hover {
+    border-color: #cbd5e1;
+}
+
+/* Focus: Electric Blue Glow */
+.candidate-management-search-input:focus {
+    border-color: #0096FF;
+    box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.1);
+    outline: none;
+}
+
+.candidate-management-search-input:focus+.candidate-management-search-icon,
+.candidate-management-search-input:focus~.candidate-management-search-icon {
+    color: #0096FF;
+}
+
+/* Filter Tabs - Vibrant Colors */
+.candidate-management-filters {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.candidate-management-filter-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.625rem;
+    border: 2px solid rgba(226, 232, 240, 0.8);
+    background: #ffffff;
+    color: #64748b;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.candidate-management-filter-tab::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.candidate-management-filter-tab:hover::before {
+    left: 100%;
+}
+
+.candidate-management-filter-tab:hover {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+.candidate-management-filter-tab.active {
+    background: linear-gradient(135deg, rgba(var(--filter-color-rgb, 100, 116, 139), 0.15) 0%, rgba(var(--filter-color-rgb, 100, 116, 139), 0.25) 100%);
+    color: var(--filter-color, #64748b);
+    border-color: var(--filter-color, #64748b);
+    border-width: 2px;
+    box-shadow: 0 4px 16px rgba(var(--filter-color-rgb, 100, 116, 139), 0.3),
+        0 0 0 3px rgba(var(--filter-color-rgb, 100, 116, 139), 0.1);
+    font-weight: 700;
+}
+
+.candidate-management-filter-tab.active:hover {
+    background: linear-gradient(135deg, rgba(var(--filter-color-rgb, 100, 116, 139), 0.2) 0%, rgba(var(--filter-color-rgb, 100, 116, 139), 0.3) 100%);
+    box-shadow: 0 6px 20px rgba(var(--filter-color-rgb, 100, 116, 139), 0.4),
+        0 0 0 3px rgba(var(--filter-color-rgb, 100, 116, 139), 0.15);
+    transform: translateY(-2px);
+}
+
+.candidate-management-filter-tab.active .candidate-management-filter-count {
+    background: var(--filter-color, #64748b);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(var(--filter-color-rgb, 100, 116, 139), 0.4);
+}
+
+.candidate-management-filter-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.4rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, rgba(100, 116, 139, 0.15) 0%, rgba(100, 116, 139, 0.25) 100%);
+    color: #64748b;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    margin-left: 0.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(100, 116, 139, 0.2);
+    box-shadow: 0 1px 3px rgba(100, 116, 139, 0.2);
+}
+
+.candidate-management-filter-tab:hover:not(.active) .candidate-management-filter-count {
+    background: linear-gradient(135deg, rgba(100, 116, 139, 0.2) 0%, rgba(100, 116, 139, 0.3) 100%);
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(100, 116, 139, 0.3);
+}
+
+/* Table Container */
+.candidate-management-table-container {
+    background: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.05);
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 180px);
+    position: relative;
+    width: 100%;
+}
+
+.candidate-management-table-container .candidate-management-table {
+    margin: 0;
+    border-spacing: 0;
+    width: 100%;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Ensure table takes full width and header background extends */
+.candidate-management-table-container .candidate-management-table thead {
+    width: 100%;
+}
+
+.candidate-management-table-container .candidate-management-table thead tr {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.candidate-management-table-container .candidate-management-table thead th:last-child {
+    width: auto;
+}
+
+/* Custom Scrollbar for Table Container */
+.candidate-management-table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.candidate-management-table-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 0.5rem;
+}
+
+.candidate-management-table-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 0.5rem;
+    transition: background 0.2s ease;
+}
+
+.candidate-management-table-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Firefox scrollbar */
+.candidate-management-table-container {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Table */
+.candidate-management-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    table-layout: fixed;
+    min-width: 100%;
+    border-spacing: 0;
+}
+
+.candidate-management-table thead {
+    background: #f8fafc;
+    border-bottom: 2px solid rgba(226, 232, 240, 0.8);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    width: 100%;
+    display: table-header-group;
+}
+
+.candidate-management-table thead tr {
+    width: 100%;
+    display: table-row;
+    background: #f8fafc;
+    height: auto;
+    vertical-align: middle;
+}
+
+.candidate-management-table th {
+    padding: 0.625rem 0.375rem !important;
+    text-align: left !important;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: normal;
+    word-wrap: break-word;
+    background: #f8fafc;
+    border: none;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    vertical-align: middle;
+    box-sizing: border-box;
+    line-height: 1.4;
+    height: auto;
+    min-height: 2.5rem;
+}
+
+.candidate-management-table th:hover {
+    background: rgba(0, 150, 255, 0.05);
+    color: #0096FF;
+}
+
+/* Sorting Arrow Icon - Hidden */
+.candidate-table-sort-icon {
+    display: none !important;
+    width: 0;
+    height: 0;
+    margin: 0;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.candidate-management-table th:hover .candidate-table-sort-icon {
+    display: none !important;
+}
+
+.candidate-management-table th.sort-asc .candidate-table-sort-icon,
+.candidate-management-table th.sort-desc .candidate-table-sort-icon {
+    display: none !important;
+}
+
+.candidate-management-table th.sort-asc .candidate-table-sort-icon {
+    display: none !important;
+}
+
+.candidate-management-table th.sort-desc .candidate-table-sort-icon {
+    display: none !important;
+}
+
+.candidate-management-table tbody {
+    background: #ffffff;
+}
+
+.candidate-management-table tbody tr {
+    border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    background: #ffffff;
+}
+
+.candidate-management-table tbody tr:not(:last-child) {
+    border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+    margin-bottom: 0.5rem;
+}
+
+.candidate-table-row {
+    position: relative;
+}
+
+.candidate-management-table tbody tr:hover {
+    background: rgba(0, 150, 255, 0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 150, 255, 0.15), 0 2px 4px rgba(0, 150, 255, 0.1);
+    border-bottom-color: rgba(0, 150, 255, 0.2);
+}
+
+.candidate-management-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.candidate-management-table td {
+    padding: 0.75rem 0.375rem;
+    font-size: 0.8125rem;
+    color: #1e293b;
+    vertical-align: middle;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    overflow: visible;
+    white-space: normal;
+    box-sizing: border-box;
+}
+
+/* Candidate Name Cell - Column 1 (was Column 2) */
+.candidate-management-table td:nth-child(1),
+.candidate-management-table th:nth-child(1) {
+    width: 15%;
+    white-space: nowrap;
+    overflow: visible;
+    padding: 0.625rem 0.375rem !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+    min-height: 2.5rem;
+}
+
+.candidate-name-cell {
+    white-space: nowrap;
+    overflow: visible;
+}
+
+.candidate-name-cell strong {
+    color: #1e293b;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+/* Date Cells - Column 2 (was Column 3) */
+.candidate-management-table td:nth-child(2),
+.candidate-management-table th:nth-child(2) {
+    width: 12%;
+    white-space: nowrap;
+    padding: 0.625rem 0.375rem !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+    min-height: 2.5rem;
+}
+
+/* Position Cell - Column 3 (was Column 4) */
+.candidate-management-table td:nth-child(3),
+.candidate-management-table th:nth-child(3) {
+    width: 16%;
+    padding: 0.625rem 0.375rem !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+    height: auto;
+    min-height: 2.5rem;
+}
+
+/* Department Cell - Column 4 (was Column 5) */
+.candidate-management-table td:nth-child(4),
+.candidate-management-table th:nth-child(4) {
+    width: 12%;
+    padding: 0.625rem 0.375rem !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+    height: auto;
+    min-height: 2.5rem;
+}
+
+/* Phone Cell - Column 5 (was Column 6) */
+.candidate-management-table td:nth-child(5),
+.candidate-management-table th:nth-child(5) {
+    width: 11%;
+    white-space: nowrap;
+    padding: 0.625rem 0.25rem !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+    min-height: 2.5rem;
+}
+
+/* CCCD Cell - Column 6 (was Column 7) */
+.candidate-management-table td:nth-child(6),
+.candidate-management-table th:nth-child(6) {
+    width: 11%;
+    white-space: nowrap;
+    padding: 0.625rem 0.25rem !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+    min-height: 2.5rem;
+}
+
+/* CV Date Cell - Column 7 (was Column 8) */
+.candidate-management-table td:nth-child(7),
+.candidate-management-table th:nth-child(7) {
+    width: 12%;
+    white-space: nowrap;
+    padding: 0.625rem 0.375rem !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+    min-height: 2.5rem;
+}
+
+/* PHỐI MÀU & HIỆU ỨNG CHO THẺ TRẠNG THÁI (STATUS TAGS) */
+/* Status Cell - Column 8 (was Column 9) */
+.candidate-management-table td:nth-child(8),
+.candidate-management-table th:nth-child(8) {
+    width: 17%;
+    padding: 0.625rem 0.375rem !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    line-height: 1.4 !important;
+    min-height: 2.5rem;
+}
+
+.candidate-status-cell {
+    text-align: center;
+    padding: 0 !important;
+}
+
+/* I. MÀU ACCENT VÀ PHÂN CẤP (Color Hierarchy) */
+/* II. CHI TIẾT HIỆU ỨNG TỪNG LOẠI THẺ */
+/* Base Style cho Status Tag - Đảm bảo các thuộc tính quan trọng */
+.candidate-status-tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.375rem 0.75rem;
+    /* Bo góc: rounded-xl (0.75rem) - Bo góc lớn cho thẻ trạng thái */
+    border-radius: 0.75rem;
+    /* rounded-xl */
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid;
+    /* Transition: duration-200 (0.2s) - Luôn thêm transition để làm mượt các hiệu ứng hover và scale */
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* duration-200 */
+    width: fit-content;
+    min-width: fit-content;
+    max-width: 100%;
+    position: relative;
+    /* Shadow: shadow-md (0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)) - Áp dụng shadow-md đến shadow-lg */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    /* shadow-md */
+}
+
+/* Soft Glow Effect for Status Tags */
+.candidate-status-tag::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 0.875rem;
+    /* rounded-xl cho ::before */
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* duration-200 */
+    z-index: -1;
+    filter: blur(4px);
+}
+
+/* II. CHI TIẾT HIỆU ỨNG - 1. Thẻ Đang Hoạt Động (Active Tag) */
+/* Ví dụ: "Đang chờ quản lý phỏng vấn" - Đây là thẻ quan trọng nhất, cần nổi bật nhất trên nền Glass Card */
+/* I. MÀU ACCENT VÀ PHÂN CẤP - Đang Active/Chờ Duyệt: Amber (bg-amber-100 / text-amber-700) */
+/* Thu hút sự chú ý, báo hiệu công việc đang cần xử lý (như "Đang chờ quản lý phỏng vấn") */
+.candidate-status-tag[style*="#fef3c7"],
+.candidate-status-tag[style*="fef3c7"],
+.candidate-status-tag[style*="b45309"] {
+    font-weight: 600;
+    /* font-semibold */
+    /* Nền ấm, nổi bật: bg-amber-100 (#fffbeb) - Đã được set trong inline style */
+    /* Viền đậm, tương phản: border border-amber-400 (#fbbf24) - Đã được set trong inline style */
+    /* Chữ tương phản với nền: text-amber-700 (#b45309) - Đã được set trong inline style */
+}
+
+.candidate-status-tag[style*="#fef3c7"]::before,
+.candidate-status-tag[style*="fef3c7"]::before,
+.candidate-status-tag[style*="b45309"]::before {
+    background: rgba(245, 158, 11, 0.4);
+    /* amber-400 */
+    /* Shadow: Đổ bóng mờ màu ấm - shadow-amber-200/50 */
+    box-shadow: 0 0 12px rgba(254, 243, 199, 0.5), 0 0 24px rgba(254, 243, 199, 0.25);
+    /* shadow-amber-200/50 */
+}
+
+.candidate-status-tag[style*="#fef3c7"]:hover::before,
+.candidate-status-tag[style*="fef3c7"]:hover::before,
+.candidate-status-tag[style*="b45309"]:hover::before {
+    opacity: 1;
+}
+
+/* Hiệu ứng Hover: Phóng to nhẹ (Fluent Pop) - hover:scale-105, shadow-lg */
+.candidate-status-tag[style*="#fef3c7"]:hover,
+.candidate-status-tag[style*="fef3c7"]:hover,
+.candidate-status-tag[style*="b45309"]:hover {
+    /* hover:scale-105 - Phóng to nhẹ (Fluent Pop) */
+    transform: scale(1.05);
+    /* scale-105 */
+    /* shadow-lg - Shadow lớn hơn khi hover */
+    box-shadow:
+        0 10px 15px -3px rgba(254, 243, 199, 0.4),
+        /* shadow-amber-200/40 */
+        0 4px 6px -2px rgba(254, 243, 199, 0.3),
+        /* shadow-amber-200/30 */
+        0 0 12px rgba(245, 158, 11, 0.4),
+        0 0 24px rgba(245, 158, 11, 0.2);
+}
+
+/* II. CHI TIẾT HIỆU ỨNG - 2. Thẻ Trung Lập (Neutral Tag) */
+/* Ví dụ: "Tất cả", "Đã Đậu" - Các thẻ này sử dụng tông màu lạnh, trung tính để hòa hợp với nền Calm Integrity */
+/* I. MÀU ACCENT VÀ PHÂN CẤP - Active/Primary: Blue (bg-blue-600 / text-white) */
+/* Thẻ Hành động chính (ví dụ: Nút "Thêm Ứng viên"), trạng thái thành công */
+.candidate-status-tag[style*="#2563eb"],
+.candidate-status-tag[style*="2563eb"],
+.candidate-status-tag[style*="#ffffff"],
+.candidate-status-tag[style*="ffffff"] {
+    font-weight: 700;
+    /* Nền trắng Glass: bg-white/70, backdrop-blur-sm - Áp dụng cho thẻ trung lập */
+    /* background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(4px); - Được override bởi inline style */
+    /* Chữ xám trung tính: text-gray-700 - Đã được set trong inline style */
+}
+
+.candidate-status-tag[style*="#2563eb"]::before,
+.candidate-status-tag[style*="2563eb"]::before,
+.candidate-status-tag[style*="#ffffff"]::before,
+.candidate-status-tag[style*="ffffff"]::before {
+    background: rgba(37, 99, 235, 0.3);
+    /* blue-600 nhẹ hơn */
+    box-shadow: 0 0 16px rgba(37, 99, 235, 0.2), 0 0 32px rgba(59, 130, 246, 0.15);
+    opacity: 0.6;
+    /* Glow nhẹ hơn cho neutral */
+}
+
+.candidate-status-tag[style*="#2563eb"]:hover::before,
+.candidate-status-tag[style*="2563eb"]:hover::before,
+.candidate-status-tag[style*="#ffffff"]:hover::before,
+.candidate-status-tag[style*="ffffff"]:hover::before {
+    opacity: 0.8;
+}
+
+/* Hiệu ứng Hover: Shadow nhẹ - hover:shadow-lg, hover:border-blue-300 */
+.candidate-status-tag[style*="#2563eb"]:hover,
+.candidate-status-tag[style*="2563eb"]:hover,
+.candidate-status-tag[style*="#ffffff"]:hover,
+.candidate-status-tag[style*="ffffff"]:hover {
+    /* hover:shadow-lg - Shadow nhẹ */
+    box-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    /* hover:border-blue-300 - Viền xanh dương nhẹ khi hover */
+    border-color: #93c5fd !important;
+    /* border-blue-300 */
+    transform: scale(1.02);
+    /* Transform nhẹ hơn cho neutral */
+}
+
+/* II. CHI TIẾT HIỆU ỨNG - 3. Thẻ Trạng thái Kết thúc (Final Status Tag) */
+/* Ví dụ: "Đã Rớt" - Để phân biệt các trạng thái "Đã xong" hoặc "Tiêu cực" (Đã Rớt), nên sử dụng một màu accent nhẹ nhàng để giữ giao diện tổng thể không quá gay gắt */
+/* I. MÀU ACCENT VÀ PHÂN CẤP - Inactive/Neutral: Gray (bg-gray-200 / text-gray-500) */
+/* Các trạng thái đã qua, đã xử lý, hoặc không cần ưu tiên ngay lập tức */
+.candidate-status-tag[style*="#e5e7eb"],
+.candidate-status-tag[style*="e5e7eb"],
+.candidate-status-tag[style*="#6b7280"],
+.candidate-status-tag[style*="6b7280"] {
+    font-weight: 500;
+    opacity: 0.9;
+    /* Nền hồng nhạt/xám: bg-rose-50/70 hoặc bg-gray-100 - Đã được set trong inline style (#e5e7eb = gray-200) */
+    /* Viền màu lạnh: border border-gray-300 - Đã được set trong inline style */
+    /* Chữ xám đậm hoặc Đỏ nhẹ: text-gray-700 - Đã được set trong inline style */
+}
+
+.candidate-status-tag[style*="#e5e7eb"]::before,
+.candidate-status-tag[style*="e5e7eb"]::before,
+.candidate-status-tag[style*="#6b7280"]::before,
+.candidate-status-tag[style*="6b7280"]::before {
+    background: rgba(107, 114, 128, 0.15);
+    /* gray-500 nhẹ hơn */
+    box-shadow: 0 0 6px rgba(107, 114, 128, 0.1), 0 0 12px rgba(107, 114, 128, 0.05);
+}
+
+.candidate-status-tag[style*="#e5e7eb"]:hover::before,
+.candidate-status-tag[style*="e5e7eb"]:hover::before,
+.candidate-status-tag[style*="#6b7280"]:hover::before,
+.candidate-status-tag[style*="6b7280"]:hover::before {
+    opacity: 0.4;
+    /* Glow rất nhẹ cho final status */
+}
+
+.candidate-status-tag[style*="#e5e7eb"]:hover,
+.candidate-status-tag[style*="e5e7eb"]:hover,
+.candidate-status-tag[style*="#6b7280"]:hover,
+.candidate-status-tag[style*="6b7280"]:hover {
+    /* Shadow nhẹ hơn cho final status */
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.08),
+        0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    transform: scale(1.01);
+    /* Transform rất nhẹ cho final status */
+}
+
+/* Actions Cell */
+.candidate-actions-cell {
+    text-align: center;
+}
+
+.candidate-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.candidate-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.candidate-action-pass {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.candidate-action-pass:hover {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10B981;
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5), 0 2px 8px rgba(16, 185, 129, 0.3);
+    filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.6));
+}
+
+.candidate-action-fail {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.candidate-action-fail:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #EF4444;
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5), 0 2px 8px rgba(239, 68, 68, 0.3);
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));
+}
+
+.candidate-action-delete {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+}
+
+.candidate-action-delete:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.candidate-action-btn:active {
+    transform: scale(0.95);
+}
+
+.candidate-action-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke: currentColor;
+}
+
+/* Loading State */
+.candidate-management-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    gap: 1rem;
+    color: #64748b;
+}
+
+.candidate-management-spinner {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 3px solid rgba(226, 232, 240, 0.5);
+    border-top-color: #0096FF;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.candidate-management-loading p {
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Empty State */
+.candidate-management-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    gap: 1rem;
+    color: #94a3b8;
+}
+
+.candidate-management-empty .empty-icon {
+    width: 3rem;
+    height: 3rem;
+    color: #cbd5e1;
+}
+
+.candidate-management-empty p {
+    font-size: 0.875rem;
+    margin: 0;
+    color: #64748b;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .candidate-management {
+        padding: 1.5rem;
+    }
+
+    .candidate-management-title {
+        font-size: 1.5rem;
+    }
+
+    .candidate-management-header-top {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .candidate-management-add-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .candidate-management-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .candidate-management-table {
+        width: 100%;
+    }
+
+    .candidate-management-table th,
+    .candidate-management-table td {
+        padding: 0.625rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    .candidate-name-cell,
+    .candidate-status-cell {
+        min-width: auto;
+    }
+}
+
+/* ============================================
+   Modal Add Candidate - Glassmorphism Design
+   ============================================ */
+
+/* Modal Overlay - Low Opacity Dark Background */
+.candidate-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.5rem;
+    animation: overlayFadeInBlur 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes overlayFadeInBlur {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
+    }
+
+    to {
+        opacity: 1;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+}
+
+/* Modal Box - Clean White with Glassmorphism */
+.candidate-modal-box {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    width: 1100px;
+    max-width: 95vw;
+    height: auto;
+    max-height: 98vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalZoomInFade 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    box-sizing: border-box;
+    transform-origin: center center;
+}
+
+/* Modal Content Wrapper - Make it scrollable */
+.candidate-modal-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+}
+
+@keyframes modalZoomInFade {
+    from {
+        transform: scale(0.85) translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Modal Header */
+.candidate-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+.candidate-modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.candidate-modal-title-icon {
+    width: 2rem;
+    height: 2rem;
+    color: #0096FF;
+    flex-shrink: 0;
+    position: relative;
+    animation: iconGradientPulse 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(0, 150, 255, 0.4));
+}
+
+/* Gradient animation for icon */
+@keyframes iconGradientPulse {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 8px rgba(0, 150, 255, 0.4)) drop-shadow(0 0 12px rgba(0, 150, 255, 0.2));
+        transform: scale(1);
+    }
+
+    50% {
+        filter: drop-shadow(0 0 12px rgba(0, 150, 255, 0.6)) drop-shadow(0 0 16px rgba(0, 150, 255, 0.3));
+        transform: scale(1.02);
+    }
+}
+
+/* Ambient light circle around icon */
+.candidate-modal-title-icon::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 150, 255, 0.2) 0%, transparent 70%);
+    animation: ambientLight 3s ease-in-out infinite;
+    z-index: -1;
+}
+
+@keyframes ambientLight {
+
+    0%,
+    100% {
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+}
+
+.candidate-modal-close {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    border: none;
+    background: rgba(241, 245, 249, 0.8);
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.candidate-modal-close:hover {
+    background: rgba(226, 232, 240, 0.8);
+    color: #1e293b;
+    transform: scale(1.05);
+}
+
+.candidate-modal-close svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Modal Form */
+.candidate-modal-form {
+    padding: 1.5rem 2rem 1.25rem 2rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+/* Form Section */
+.candidate-modal-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.candidate-modal-form-section:last-of-type {
+    border-bottom: none;
+}
+
+.candidate-modal-form-section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    padding: 0.75rem 0;
+    border-bottom: 2px solid #0096FF;
+    position: relative;
+}
+
+.candidate-modal-form-section-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, #0096FF 0%, rgba(0, 150, 255, 0.3) 100%);
+}
+
+.candidate-modal-form-section-placeholder {
+    padding: 2rem;
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    background: rgba(241, 245, 249, 0.5);
+    border-radius: 0.5rem;
+    border: 1px dashed #cbd5e1;
+}
+
+.candidate-modal-form-section-placeholder p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Experience Table */
+.candidate-experience-table-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+.candidate-experience-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.candidate-experience-table thead {
+    background: #f8fafc;
+}
+
+.candidate-experience-table thead tr {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.candidate-experience-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1e293b;
+    border-right: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.candidate-experience-table th:last-child {
+    border-right: none;
+}
+
+.candidate-experience-table-actions {
+    width: 80px;
+    text-align: center;
+}
+
+.candidate-experience-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.2s ease;
+}
+
+.candidate-experience-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.candidate-experience-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.candidate-experience-table td {
+    padding: 0.75rem 1rem;
+    border-right: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.candidate-experience-table td:last-child {
+    border-right: none;
+}
+
+.candidate-experience-table-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    color: #1e293b;
+    background: #ffffff;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.candidate-experience-table-input:focus {
+    outline: none;
+    border-color: #0096FF;
+    box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.1);
+}
+
+.candidate-experience-table-input::placeholder {
+    color: #94a3b8;
+}
+
+.candidate-experience-remove-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #ef4444;
+    cursor: pointer;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+}
+
+.candidate-experience-remove-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    transform: scale(1.1);
+}
+
+.candidate-experience-remove-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.candidate-experience-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border: 1px dashed #cbd5e1;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    color: #0096FF;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-self: flex-start;
+}
+
+.candidate-experience-add-btn:hover {
+    border-color: #0096FF;
+    background: rgba(0, 150, 255, 0.05);
+    color: #0077CC;
+}
+
+.candidate-experience-add-btn svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    stroke-width: 2.5;
+}
+
+/* Preview Modal */
+.candidate-preview-modal-box {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    width: 1200px;
+    max-width: 95vw;
+    height: auto;
+    max-height: 98vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalZoomInFade 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    box-sizing: border-box;
+}
+
+.candidate-preview-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+}
+
+.candidate-preview-content {
+    padding: 1.5rem 2rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
+}
+
+.candidate-preview-section {
+    margin-bottom: 2rem;
+    page-break-inside: avoid;
+}
+
+.candidate-preview-section:last-child {
+    margin-bottom: 0;
+}
+
+.candidate-preview-section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 1rem 0;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-bottom: 2px solid #0096FF;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.candidate-preview-section-subtitle {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: #64748b;
+    font-style: italic;
+}
+
+.candidate-preview-table {
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.candidate-preview-info-table,
+.candidate-preview-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+}
+
+.candidate-preview-info-table td,
+.candidate-preview-data-table td,
+.candidate-preview-data-table th {
+    padding: 0.625rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    text-align: left;
+    font-size: 0.875rem;
+    vertical-align: middle;
+}
+
+.candidate-preview-info-table .candidate-preview-label {
+    font-weight: 700;
+    color: #1e293b;
+    background: #f8fafc;
+    width: auto;
+    white-space: nowrap;
+}
+
+.candidate-preview-info-table .candidate-preview-sub-label {
+    font-weight: 600;
+    color: #475569;
+    font-style: italic;
+    background: #f8fafc;
+    padding-left: 1rem;
+}
+
+.candidate-preview-info-table .candidate-preview-value {
+    color: #0096FF;
+    font-style: italic;
+    font-weight: 300;
+    background: #ffffff;
+}
+
+.candidate-preview-data-table th {
+    font-weight: 700;
+    color: #1e293b;
+    background: #f8fafc;
+    text-align: center;
+}
+
+.candidate-preview-data-table td {
+    color: #0096FF;
+    font-style: italic;
+    font-weight: 300;
+    background: #ffffff;
+    text-align: center;
+}
+
+.candidate-preview-data-table tbody tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+.candidate-preview-data-table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+.candidate-preview-actions {
+    padding: 1rem 2rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.8);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    background: #ffffff;
+}
+
+.candidate-modal-btn-preview {
+    background: #0096FF;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 150, 255, 0.3);
+}
+
+.candidate-modal-btn-preview:hover:not(:disabled) {
+    background: #0077CC;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 150, 255, 0.4);
+}
+
+.candidate-modal-btn-preview svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.candidate-modal-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+}
+
+.candidate-modal-form-row--2cols {
+    grid-template-columns: 1fr 1fr;
+}
+
+.candidate-modal-form-row--full {
+    grid-template-columns: 1fr;
+}
+
+.candidate-modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: relative;
+    min-height: fit-content;
+}
+
+.candidate-modal-file-upload-group {
+    grid-column: 1 / -1;
+}
+
+.candidate-modal-form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: left top;
+    position: relative;
+    padding-bottom: 0.25rem;
+    margin-bottom: 0.25rem;
+    width: fit-content;
+    border-bottom: 1px solid #0096FF;
+}
+
+/* Float Up Animation for Label */
+.candidate-modal-form-group:focus-within .candidate-modal-form-label {
+    color: #0096FF;
+    transform: translateY(-4px) scale(0.98);
+    letter-spacing: 0.01em;
+}
+
+/* Underline animation for section headers (if needed) */
+.candidate-modal-form-section-title {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.5rem;
+}
+
+.candidate-modal-form-section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #0096FF, #0077CC);
+    animation: underlineExpand 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-delay: 0.2s;
+}
+
+@keyframes underlineExpand {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+.candidate-modal-form-label .required {
+    color: #EF4444;
+    transition: color 0.3s ease;
+}
+
+.candidate-modal-form-group:focus-within .candidate-modal-form-label .required {
+    color: #EF4444;
+}
+
+.candidate-modal-form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 0.875rem;
+    transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    font-family: inherit;
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Select dropdown styling - Rounded corners and smooth appearance */
+.candidate-modal-form-select,
+.candidate-modal-form-input select {
+    border-radius: 0.5rem !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    background-size: 1.25rem !important;
+    padding-right: 2.5rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.candidate-modal-form-input select::-ms-expand {
+    display: none !important;
+}
+
+.candidate-modal-form-input select:hover {
+    border-color: #cbd5e1 !important;
+}
+
+.candidate-modal-form-input select:active {
+    border-color: #0096FF !important;
+}
+
+.candidate-modal-form-input:focus {
+    border-color: #0096FF;
+    box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.15),
+        0 0 20px rgba(0, 150, 255, 0.2),
+        0 0 40px rgba(0, 150, 255, 0.1);
+    animation: inputGlowPulse 2s ease-in-out infinite;
+}
+
+/* Subtle glow animation for focused inputs */
+@keyframes inputGlowPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.15),
+            0 0 20px rgba(0, 150, 255, 0.2),
+            0 0 40px rgba(0, 150, 255, 0.1);
+    }
+
+    50% {
+        box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.2),
+            0 0 25px rgba(0, 150, 255, 0.3),
+            0 0 50px rgba(0, 150, 255, 0.15);
+    }
+}
+
+.candidate-modal-form-input.error {
+    border-color: #EF4444;
+}
+
+.candidate-modal-form-input.error:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15), 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+/* Select focus styles */
+.candidate-modal-form-input select:focus {
+    border-color: #0096FF !important;
+    box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.15),
+        0 0 20px rgba(0, 150, 255, 0.2),
+        0 0 40px rgba(0, 150, 255, 0.1) !important;
+    animation: inputGlowPulse 2s ease-in-out infinite !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%230096FF' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") !important;
+}
+
+/* Style for select options - Rounded corners */
+.candidate-modal-form-select option,
+.candidate-modal-form-input select option {
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.5rem !important;
+    margin: 0.25rem 0 !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.candidate-modal-form-select option:hover,
+.candidate-modal-form-input select option:hover {
+    background: rgba(59, 130, 246, 0.1) !important;
+    color: #1e293b !important;
+}
+
+.candidate-modal-form-select option:checked,
+.candidate-modal-form-select option:focus,
+.candidate-modal-form-input select option:checked,
+.candidate-modal-form-input select option:focus {
+    background: #3b82f6 !important;
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+/* Global style for select dropdown menu (browser native) */
+/* Note: Native select dropdown styling is limited, but we can style the select element itself */
+select {
+    border-radius: 0.5rem !important;
+}
+
+/* For better dropdown appearance on different browsers */
+.candidate-modal-form-input select {
+    clip-path: inset(0 round 0.5rem) !important;
+    -webkit-clip-path: inset(0 round 0.5rem) !important;
+}
+
+/* Smooth transition when dropdown opens */
+.candidate-modal-form-input select {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Additional styling to ensure rounded corners on all browsers */
+.candidate-modal-form-input select {
+    -webkit-border-radius: 0.5rem !important;
+    -moz-border-radius: 0.5rem !important;
+    border-radius: 0.5rem !important;
+}
+
+/* Style for when select is open (limited browser support) */
+.candidate-modal-form-input select:focus {
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+/* Ensure options have proper spacing and rounded appearance */
+.candidate-modal-form-input select option {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+}
+
+/* Additional global select styling for smooth dropdown */
+select {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    border-radius: 0.5rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Custom Dropdown - Rounded and Smooth */
+.custom-dropdown-wrapper {
+    position: relative;
+    width: 100%;
+    z-index: 1;
+}
+
+/* When dropdown is open, increase z-index */
+.custom-dropdown-wrapper.open {
+    z-index: 1005 !important;
+}
+
+/* In interview modal, ensure dropdowns have higher z-index when open */
+.candidate-manager-select-modal-content .custom-dropdown-wrapper.open {
+    z-index: 10052 !important;
+    position: relative !important;
+}
+
+.candidate-manager-select-modal-content .custom-dropdown-wrapper.open .custom-dropdown-menu {
+    z-index: 10053 !important;
+}
+
+/* In modal, ensure dropdown is above other elements */
+.candidate-action-modal-content .custom-dropdown-wrapper,
+.candidate-modal-form-group .custom-dropdown-wrapper {
+    z-index: 1006 !important;
+}
+
+.candidate-action-modal-content .custom-dropdown-wrapper.open,
+.candidate-modal-form-group .custom-dropdown-wrapper.open {
+    z-index: 1007 !important;
+}
+
+.custom-dropdown-trigger {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    padding-right: 2.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 0.875rem;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.custom-dropdown-trigger:hover {
+    border-color: #cbd5e1;
+}
+
+.custom-dropdown-trigger.open {
+    border-color: #0096FF;
+    box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.15),
+        0 0 20px rgba(0, 150, 255, 0.2),
+        0 0 40px rgba(0, 150, 255, 0.1);
+}
+
+.custom-dropdown-trigger.error {
+    border-color: #EF4444;
+}
+
+.custom-dropdown-trigger.error.open {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15), 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+.custom-dropdown-value {
+    flex: 1;
+    text-align: left;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.custom-dropdown-trigger:not(.open) .custom-dropdown-value {
+    color: #94a3b8;
+}
+
+/* When value is selected, show in dark color */
+.custom-dropdown-wrapper:not(.open) .custom-dropdown-trigger .custom-dropdown-value:not(:empty) {
+    color: #1e293b !important;
+}
+
+.custom-dropdown-arrow {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #6b7280;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+    transform: rotate(0deg);
+}
+
+.custom-dropdown-arrow.open {
+    transform: rotate(180deg);
+    color: #0096FF;
+}
+
+.custom-dropdown-trigger.open .custom-dropdown-arrow {
+    transform: rotate(180deg);
+    color: #0096FF;
+}
+
+/* Dropdown Menu - Rounded and Smooth Animation */
+.custom-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15),
+        0 4px 16px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    z-index: 1008 !important;
+    max-height: 280px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    animation: dropdownSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top center;
+    padding: 0.5rem;
+    margin-top: 0.25rem;
+    pointer-events: auto;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* In modals, ensure menu is above modal content */
+.candidate-action-modal-content .custom-dropdown-menu,
+.candidate-modal-form-group .custom-dropdown-menu {
+    z-index: 1009 !important;
+}
+
+/* Dropdown Menu - Top Position (when not enough space below) */
+.custom-dropdown-menu-top {
+    top: auto;
+    bottom: calc(100% + 0.5rem);
+    margin-top: 0;
+    margin-bottom: 0.25rem;
+    transform-origin: bottom center;
+    animation: dropdownSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdownSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Dropdown Menu in Manager Select Modal - Higher z-index and constrained height */
+.candidate-manager-select-modal-content .custom-dropdown-menu {
+    z-index: 10051 !important;
+    position: absolute !important;
+    max-height: 280px !important;
+}
+
+/* Ensure dropdown doesn't exceed viewport in manager select modal */
+.candidate-manager-select-modal-content .custom-dropdown-wrapper {
+    position: relative !important;
+    z-index: 10050 !important;
+    overflow: visible !important;
+}
+
+.candidate-manager-select-modal-content .custom-dropdown-wrapper.open {
+    z-index: 10052 !important;
+    position: relative !important;
+}
+
+.candidate-manager-select-modal-content .custom-dropdown-wrapper.open .custom-dropdown-menu {
+    z-index: 10053 !important;
+}
+
+.candidate-manager-select-modal-content .custom-dropdown-menu-top {
+    max-height: 280px !important;
+}
+
+@keyframes dropdownSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Dropdown Options - Rounded with smooth hover */
+.custom-dropdown-option {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 0.625rem;
+    background: transparent;
+    color: #1e293b;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0.125rem 0;
+    display: block;
+    outline: none;
+    font-family: inherit;
+    position: relative;
+    overflow: hidden;
+}
+
+.custom-dropdown-option:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: #1e293b;
+}
+
+.custom-dropdown-option.selected {
+    background: #3b82f6;
+    background-color: #3b82f6;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.custom-dropdown-option.selected:hover {
+    background: #2563eb;
+    background-color: #2563eb;
+}
+
+/* First and last option rounded corners */
+.custom-dropdown-menu .custom-dropdown-option:first-child {
+    margin-top: 0;
+}
+
+.custom-dropdown-menu .custom-dropdown-option:last-child {
+    margin-bottom: 0;
+}
+
+/* Scrollbar styling for dropdown menu */
+.custom-dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 0.5rem;
+    margin: 0.25rem 0;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 0.5rem;
+    transition: background 0.2s ease;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Firefox scrollbar */
+.custom-dropdown-menu {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* DatePicker */
+.candidate-modal-datepicker {
+    cursor: pointer;
+}
+
+.candidate-modal-datepicker:focus {
+    border-color: #0096FF;
+    box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.15),
+        0 0 20px rgba(0, 150, 255, 0.2),
+        0 0 40px rgba(0, 150, 255, 0.1);
+    animation: inputGlowPulse 2s ease-in-out infinite;
+}
+
+/* Ensure date picker popper doesn't affect layout when using portal */
+/* Calendar should always be above dropdown menus */
+.react-datepicker__portal {
+    z-index: 1010 !important;
+}
+
+/* Ensure calendar is above all other elements in modal */
+.candidate-action-modal-content~.react-datepicker__portal,
+.candidate-modal-form-group~.react-datepicker__portal {
+    z-index: 1011 !important;
+}
+
+.react-datepicker__portal .react-datepicker {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    font-family: inherit;
+    overflow: hidden;
+}
+
+/* DatePicker Header - Red background with white text */
+.react-datepicker__portal .react-datepicker__header {
+    background: #dc2626 !important;
+    background-color: #dc2626 !important;
+    border-bottom: none !important;
+    border-radius: 0 !important;
+    padding: 0.875rem 1rem !important;
+    text-align: center !important;
+}
+
+.react-datepicker__portal .react-datepicker__current-month {
+    display: block !important;
+    text-align: center !important;
+    margin-bottom: 0 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+}
+
+/* Hide month and year dropdowns */
+.react-datepicker__portal .react-datepicker__month-dropdown-container,
+.react-datepicker__portal .react-datepicker__year-dropdown-container,
+.react-datepicker__portal .react-datepicker__month-read-view,
+.react-datepicker__portal .react-datepicker__year-read-view,
+.react-datepicker__portal .react-datepicker__month-dropdown,
+.react-datepicker__portal .react-datepicker__year-dropdown,
+.react-datepicker__portal .react-datepicker__month-select,
+.react-datepicker__portal .react-datepicker__year-select {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Navigation arrows - White color */
+.react-datepicker__portal .react-datepicker__navigation {
+    top: 0.875rem !important;
+}
+
+.react-datepicker__portal .react-datepicker__navigation-icon::before {
+    border-color: #ffffff !important;
+}
+
+.react-datepicker__portal .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+    border-color: #fecaca !important;
+}
+
+/* Days of week row - Dark blue-grey background with white text */
+.react-datepicker__portal .react-datepicker__day-names {
+    background: #334155 !important;
+    background-color: #334155 !important;
+    margin: 0 !important;
+    padding: 0.625rem 0 !important;
+    display: flex !important;
+    justify-content: space-around !important;
+}
+
+.react-datepicker__portal .react-datepicker__day-name {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    margin: 0 !important;
+    width: 2.5rem !important;
+    line-height: 2.5rem !important;
+    text-align: center !important;
+    display: inline-block !important;
+    flex: 0 0 2.5rem !important;
+}
+
+/* Calendar grid - White background */
+.react-datepicker__portal .react-datepicker__month {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0.5rem !important;
+}
+
+/* Week row - Align with day names */
+.react-datepicker__portal .react-datepicker__week {
+    display: flex !important;
+    justify-content: space-around !important;
+    margin: 0 !important;
+}
+
+/* Date cells - Aligned with day names */
+.react-datepicker__portal .react-datepicker__day {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    line-height: 2.5rem !important;
+    margin: 0.125rem !important;
+    border-radius: 50% !important;
+    color: #1e293b !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s ease !important;
+    text-align: center !important;
+    display: inline-block !important;
+    flex: 0 0 2.5rem !important;
+    box-sizing: border-box !important;
+}
+
+/* Empty cells (outside current month) - Light grey background */
+.react-datepicker__portal .react-datepicker__day--outside-month {
+    background: #f1f5f9 !important;
+    color: #94a3b8 !important;
+}
+
+/* Hover state - Light blue background */
+.react-datepicker__portal .react-datepicker__day:hover:not(.react-datepicker__day--disabled):not(.react-datepicker__day--selected) {
+    background: rgba(59, 130, 246, 0.2) !important;
+    color: #1e293b !important;
+}
+
+/* Selected date - Solid light blue circle with white text */
+.react-datepicker__portal .react-datepicker__day--selected,
+.react-datepicker__portal .react-datepicker__day--keyboard-selected {
+    background: #3b82f6 !important;
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.react-datepicker__portal .react-datepicker__day--selected:hover,
+.react-datepicker__portal .react-datepicker__day--keyboard-selected:hover {
+    background: #2563eb !important;
+    background-color: #2563eb !important;
+}
+
+/* Today - Light blue outline */
+.react-datepicker__portal .react-datepicker__day--today {
+    border: 2px solid #3b82f6 !important;
+    background: transparent !important;
+    color: #1e293b !important;
+    font-weight: 600 !important;
+}
+
+.react-datepicker__portal .react-datepicker__day--today:hover {
+    background: rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Disabled dates */
+.react-datepicker__portal .react-datepicker__day--disabled {
+    color: #cbd5e1 !important;
+    cursor: not-allowed !important;
+}
+
+.react-datepicker__portal .react-datepicker__triangle {
+    display: none;
+}
+
+/* DatePicker Month and Year Dropdowns - Beautiful Styling */
+.react-datepicker__portal .react-datepicker__month-dropdown,
+.react-datepicker__portal .react-datepicker__year-dropdown {
+    border-radius: 0.75rem !important;
+    border-top-left-radius: 0.75rem !important;
+    border-top-right-radius: 0.75rem !important;
+    border-bottom-left-radius: 0.75rem !important;
+    border-bottom-right-radius: 0.75rem !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    padding: 0.5rem !important;
+    margin-top: 0.5rem !important;
+    max-height: 260px !important;
+    overflow: hidden !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    animation: dropdownSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transform-origin: top center !important;
+    position: absolute !important;
+    z-index: 1012 !important;
+    min-width: 150px !important;
+    will-change: transform, opacity !important;
+    -webkit-border-radius: 0.75rem !important;
+    -moz-border-radius: 0.75rem !important;
+    /* Remove all browser default styles */
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    outline: none !important;
+    /* Clip path to ensure rounded corners */
+    clip-path: inset(0 round 0.75rem) !important;
+    -webkit-clip-path: inset(0 round 0.75rem) !important;
+}
+
+/* Force rounded corners on all child elements */
+.react-datepicker__portal .react-datepicker__month-dropdown *,
+.react-datepicker__portal .react-datepicker__year-dropdown * {
+    border-radius: inherit !important;
+}
+
+/* Override any inline styles that might prevent rounded corners */
+.react-datepicker__portal .react-datepicker__month-dropdown[style],
+.react-datepicker__portal .react-datepicker__year-dropdown[style] {
+    border-radius: 0.75rem !important;
+    border-top-left-radius: 0.75rem !important;
+    border-top-right-radius: 0.75rem !important;
+    border-bottom-left-radius: 0.75rem !important;
+    border-bottom-right-radius: 0.75rem !important;
+}
+
+/* Additional selectors to catch all possible dropdown containers */
+.react-datepicker__portal select.react-datepicker__month-select,
+.react-datepicker__portal select.react-datepicker__year-select {
+    border-radius: 0.75rem !important;
+}
+
+/* Style for the wrapper that contains the dropdown */
+.react-datepicker__portal .react-datepicker__month-read-view,
+.react-datepicker__portal .react-datepicker__year-read-view {
+    border-radius: 0.75rem !important;
+}
+
+
+/* Ensure first and last options have rounded corners */
+.react-datepicker__portal .react-datepicker__month-dropdown .react-datepicker__month-option:first-child,
+.react-datepicker__portal .react-datepicker__year-dropdown .react-datepicker__year-option:first-child {
+    border-top-left-radius: 0.5rem !important;
+    border-top-right-radius: 0.5rem !important;
+    margin-top: 0 !important;
+}
+
+.react-datepicker__portal .react-datepicker__month-dropdown .react-datepicker__month-option:last-child,
+.react-datepicker__portal .react-datepicker__year-dropdown .react-datepicker__year-option:last-child {
+    border-bottom-left-radius: 0.5rem !important;
+    border-bottom-right-radius: 0.5rem !important;
+    margin-bottom: 0 !important;
+}
+
+@keyframes dropdownSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.react-datepicker__portal .react-datepicker__month-select,
+.react-datepicker__portal .react-datepicker__year-select {
+    padding: 0.625rem 2.5rem 0.625rem 1rem !important;
+    border-radius: 0.75rem !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    outline: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%230096FF' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    background-size: 1.25rem !important;
+    margin: 0 0.25rem !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    min-width: 120px;
+    text-align: left;
+}
+
+/* Remove native select arrow and styling completely */
+.react-datepicker__portal .react-datepicker__month-select::-ms-expand,
+.react-datepicker__portal .react-datepicker__year-select::-ms-expand {
+    display: none !important;
+}
+
+.react-datepicker__portal .react-datepicker__month-select::-webkit-appearance,
+.react-datepicker__portal .react-datepicker__year-select::-webkit-appearance {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+}
+
+.react-datepicker__portal .react-datepicker__month-select:hover,
+.react-datepicker__portal .react-datepicker__year-select:hover {
+    border-color: #0096FF;
+    background-color: rgba(0, 150, 255, 0.05);
+    box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.1), 0 2px 8px rgba(0, 150, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.react-datepicker__portal .react-datepicker__month-select:focus,
+.react-datepicker__portal .react-datepicker__year-select:focus {
+    border-color: #0096FF;
+    background-color: rgba(0, 150, 255, 0.05);
+    box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.15), 0 0 12px rgba(0, 150, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+/* Style for select dropdown when open */
+.react-datepicker__portal .react-datepicker__month-select:active,
+.react-datepicker__portal .react-datepicker__year-select:active {
+    border-color: #0096FF;
+    background-color: rgba(0, 150, 255, 0.08);
+}
+
+.react-datepicker__portal .react-datepicker__month-option,
+.react-datepicker__portal .react-datepicker__year-option {
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.5rem !important;
+    margin: 0.125rem 0.25rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    color: #1e293b !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    position: relative !important;
+    display: block !important;
+    width: calc(100% - 0.5rem) !important;
+    text-align: left !important;
+    border: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-sizing: border-box !important;
+    /* Remove all browser default styles */
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    outline: none !important;
+}
+
+.react-datepicker__portal .react-datepicker__month-option:hover,
+.react-datepicker__portal .react-datepicker__year-option:hover {
+    background: rgba(59, 130, 246, 0.1) !important;
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    color: #1e293b !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.react-datepicker__portal .react-datepicker__month-option--selected,
+.react-datepicker__portal .react-datepicker__year-option--selected {
+    background: #3b82f6 !important;
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+}
+
+.react-datepicker__portal .react-datepicker__month-option--selected:hover,
+.react-datepicker__portal .react-datepicker__year-option--selected:hover {
+    background: #2563eb !important;
+    background-color: #2563eb !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Ensure all option elements are properly styled - Remove browser defaults */
+.react-datepicker__portal .react-datepicker__month-dropdown option,
+.react-datepicker__portal .react-datepicker__year-dropdown option {
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.5rem !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #1e293b !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    /* Remove browser default styles */
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    border: none !important;
+    outline: none !important;
+}
+
+.react-datepicker__portal .react-datepicker__month-dropdown option:hover,
+.react-datepicker__portal .react-datepicker__year-dropdown option:hover {
+    background: rgba(59, 130, 246, 0.1) !important;
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    color: #1e293b !important;
+}
+
+.react-datepicker__portal .react-datepicker__month-dropdown option:checked,
+.react-datepicker__portal .react-datepicker__year-dropdown option:checked {
+    background: #3b82f6 !important;
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+/* Scrollbar styling for dropdowns - Rounded and smooth */
+.react-datepicker__portal .react-datepicker__month-dropdown::-webkit-scrollbar,
+.react-datepicker__portal .react-datepicker__year-dropdown::-webkit-scrollbar {
+    width: 6px !important;
+    border-radius: 0.5rem !important;
+}
+
+.react-datepicker__portal .react-datepicker__month-dropdown::-webkit-scrollbar-track,
+.react-datepicker__portal .react-datepicker__year-dropdown::-webkit-scrollbar-track {
+    background: #f1f5f9 !important;
+    border-radius: 0.5rem !important;
+    margin: 0.25rem 0 !important;
+}
+
+.react-datepicker__portal .react-datepicker__month-dropdown::-webkit-scrollbar-thumb,
+.react-datepicker__portal .react-datepicker__year-dropdown::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 0.5rem !important;
+    transition: background 0.2s ease !important;
+}
+
+.react-datepicker__portal .react-datepicker__month-dropdown::-webkit-scrollbar-thumb:hover,
+.react-datepicker__portal .react-datepicker__year-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
+}
+
+/* Firefox scrollbar */
+.react-datepicker__portal .react-datepicker__month-dropdown,
+.react-datepicker__portal .react-datepicker__year-dropdown {
+    scrollbar-width: thin !important;
+    scrollbar-color: #cbd5e1 #f1f5f9 !important;
+}
+
+.candidate-modal-form-error {
+    font-size: 0.75rem;
+    color: #EF4444;
+    margin-top: -0.25rem;
+}
+
+/* File Upload */
+.candidate-modal-file-upload {
+    border: 2px dashed #cbd5e1;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.candidate-modal-file-upload:hover {
+    border-color: #0096FF;
+    background: rgba(0, 150, 255, 0.02);
+}
+
+.candidate-modal-file-upload.drag-active {
+    border-color: #0096FF;
+    background: rgba(0, 150, 255, 0.05);
+}
+
+.candidate-modal-file-upload.has-file {
+    border-color: #10B981;
+    background: rgba(16, 185, 129, 0.02);
+}
+
+.candidate-modal-file-input {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.candidate-modal-file-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.candidate-modal-file-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    color: #0096FF;
+    flex-shrink: 0;
+}
+
+.candidate-modal-file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.candidate-modal-file-text {
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.candidate-modal-file-link {
+    font-size: 0.875rem;
+    color: #0096FF;
+    font-weight: 600;
+}
+
+.candidate-modal-file-name {
+    font-size: 0.875rem;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.candidate-modal-file-size {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+/* Form Actions */
+.candidate-modal-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.8);
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+}
+
+.candidate-modal-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    font-family: inherit;
+}
+
+.candidate-modal-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.candidate-modal-btn-cancel {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.candidate-modal-btn-cancel:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.candidate-modal-btn-submit {
+    background: #10B981;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.candidate-modal-btn-submit:hover:not(:disabled) {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .candidate-modal-box {
+        max-width: 100%;
+        max-height: 95vh;
+        border-radius: 1rem;
+    }
+
+    .candidate-modal-header {
+        padding: 1.25rem 1.5rem;
+    }
+
+    .candidate-modal-title {
+        font-size: 1.25rem;
+    }
+}
+
+/* Notes Section in Action Modal - Moved below Actions */
+.candidate-notes-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(226, 232, 240, 0.8);
+    width: 100%;
+}
+
+.candidate-notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.candidate-notes-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.candidate-notes-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 150, 255, 0.1);
+    border: 1.5px solid rgba(0, 150, 255, 0.3);
+    border-radius: 0.5rem;
+    color: #0096FF;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.candidate-notes-edit-btn:hover {
+    background: rgba(0, 150, 255, 0.15);
+    border-color: rgba(0, 150, 255, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 150, 255, 0.2);
+}
+
+.candidate-notes-edit-btn svg {
+    width: 1rem;
+    height: 1rem;
+    stroke: currentColor;
+}
+
+.candidate-notes-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.candidate-notes-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: #1e293b;
+    background: #ffffff;
+    resize: none;
+    min-height: 120px;
+    max-height: 200px;
+    height: 120px;
+    transition: all 0.2s ease;
+    overflow-y: auto;
+}
+
+.candidate-notes-textarea:focus {
+    outline: none;
+    border-color: #0096FF;
+    box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.1);
+}
+
+.candidate-notes-textarea::placeholder {
+    color: #94a3b8;
+}
+
+.candidate-notes-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.candidate-notes-save-btn,
+.candidate-notes-cancel-btn {
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.candidate-notes-save-btn {
+    background: linear-gradient(135deg, #0096FF 0%, #0077CC 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 150, 255, 0.3);
+}
+
+.candidate-notes-save-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 150, 255, 0.4);
+}
+
+.candidate-notes-save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.candidate-notes-cancel-btn {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.candidate-notes-cancel-btn:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.candidate-notes-cancel-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.candidate-notes-display {
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    min-height: 60px;
+}
+
+.candidate-notes-text {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #1e293b;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.candidate-notes-empty {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* ============================================
+   Action Modal - Candidate Actions
+   ============================================ */
+
+/* Action Modal Overlay */
+.candidate-action-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1.5rem;
+    animation: actionModalOverlayFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes actionModalOverlayFadeIn {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
+    }
+
+    to {
+        opacity: 1;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+}
+
+/* Action Modal Box */
+.candidate-action-modal-box {
+    background: #ffffff;
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    width: 1400px;
+    max-width: 95vw;
+    max-height: 95vh;
+    min-height: 85vh;
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Manager Select Modal Box - Larger and Centered */
+.candidate-manager-select-modal-box {
+    background: #ffffff;
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    width: 600px;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    animation: actionModalZoomInFade 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: center center;
+    position: relative;
+    overflow: visible !important;
+    z-index: 1001;
+}
+
+@keyframes actionModalZoomInFade {
+    from {
+        transform: scale(0.85) translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Action Modal Header */
+.candidate-action-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.75rem 2rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    background: #ffffff;
+}
+
+.candidate-action-modal-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.candidate-action-modal-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* Candidate Code Tag */
+.candidate-code-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    letter-spacing: 0.025em;
+}
+
+.candidate-action-modal-close {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.candidate-action-modal-close:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+    transform: rotate(90deg);
+}
+
+.candidate-action-modal-close svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Action Modal Content */
+.candidate-action-modal-content {
+    display: grid;
+    grid-template-columns: 1.5fr 1px 1fr;
+    gap: 0;
+    padding: 2rem;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Manager Select Modal Content - Centered */
+.candidate-manager-select-modal-content {
+    padding: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    overflow: visible !important;
+    position: relative;
+    z-index: 1002;
+}
+
+.candidate-manager-select-inner {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: visible !important;
+    z-index: 1003;
+}
+
+.candidate-manager-select-description {
+    margin-bottom: 2rem;
+    color: #64748b;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.candidate-manager-select-description strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.candidate-interview-form-fields {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow: visible !important;
+    position: relative;
+    z-index: 1;
+}
+
+.candidate-manager-select-field {
+    width: 100%;
+    text-align: left;
+    position: relative;
+    z-index: 1;
+    overflow: visible !important;
+}
+
+/* Increase z-index when dropdown in this field is open - using :has() selector */
+.candidate-manager-select-field:has(.custom-dropdown-wrapper.open) {
+    z-index: 10051 !important;
+    position: relative;
+}
+
+/* Fallback for browsers that don't support :has() - apply z-index directly to open wrapper */
+.candidate-manager-select-field .custom-dropdown-wrapper.open {
+    z-index: 10052 !important;
+    position: relative !important;
+}
+
+/* Ensure dropdown menu has highest z-index */
+.candidate-manager-select-field .custom-dropdown-wrapper.open .custom-dropdown-menu {
+    z-index: 10053 !important;
+    position: absolute !important;
+}
+
+/* Custom Date Input Wrapper - Beautiful rounded styling */
+.custom-date-input-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.875rem;
+    background: #ffffff;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.custom-date-input-wrapper:hover {
+    border-color: #cbd5e1;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.custom-date-input-wrapper:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    outline: none;
+}
+
+.custom-date-input-wrapper.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1), inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.custom-date-input-wrapper.error:focus-within {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15), inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.custom-date-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    padding-right: 3rem;
+    border: none;
+    background: transparent;
+    font-size: 0.9375rem;
+    color: #1e293b;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.custom-date-input::-webkit-calendar-picker-indicator {
+    position: absolute;
+    right: 0.5rem;
+    cursor: pointer;
+    opacity: 0;
+    width: 2.5rem;
+    height: 100%;
+    z-index: 1;
+}
+
+.custom-date-input-icon {
+    position: absolute;
+    right: 1rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #64748b;
+    pointer-events: none;
+    transition: color 0.2s;
+    z-index: 0;
+}
+
+.custom-date-input-wrapper:hover .custom-date-input-icon {
+    color: #3b82f6;
+}
+
+.custom-date-input-wrapper:focus-within .custom-date-input-icon {
+    color: #3b82f6;
+}
+
+.custom-date-input-wrapper.error .custom-date-input-icon {
+    color: #ef4444;
+}
+
+/* Custom Time Input Wrapper - Beautiful rounded styling */
+.custom-time-input-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.875rem;
+    background: #ffffff;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.custom-time-input-wrapper:hover {
+    border-color: #cbd5e1;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.custom-time-input-wrapper:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    outline: none;
+}
+
+.custom-time-input-wrapper.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1), inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.custom-time-input-wrapper.error:focus-within {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15), inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.custom-time-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    padding-right: 3rem;
+    border: none;
+    background: transparent;
+    font-size: 0.9375rem;
+    color: #1e293b;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.custom-time-input::-webkit-calendar-picker-indicator {
+    position: absolute;
+    right: 0.5rem;
+    cursor: pointer;
+    opacity: 0;
+    width: 2.5rem;
+    height: 100%;
+    z-index: 1;
+}
+
+.custom-time-input-icon {
+    position: absolute;
+    right: 1rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #64748b;
+    pointer-events: none;
+    transition: color 0.2s;
+    z-index: 0;
+}
+
+.custom-time-input-wrapper:hover .custom-time-input-icon {
+    color: #3b82f6;
+}
+
+.custom-time-input-wrapper:focus-within .custom-time-input-icon {
+    color: #3b82f6;
+}
+
+.custom-time-input-wrapper.error .custom-time-input-icon {
+    color: #ef4444;
+}
+
+
+.candidate-manager-select-label {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.95rem;
+}
+
+.candidate-manager-select-label .required {
+    color: #EF4444;
+}
+
+.candidate-manager-select-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+/* Vertical Divider between columns */
+.candidate-action-modal-divider {
+    width: 1px;
+    background: linear-gradient(to bottom,
+            transparent 0%,
+            rgba(226, 232, 240, 0.6) 5%,
+            rgba(226, 232, 240, 0.6) 95%,
+            transparent 100%);
+    margin: 0;
+    align-self: stretch;
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+/* Left Column - Candidate Info */
+.candidate-action-modal-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-right: 2rem;
+    position: relative;
+    z-index: 0;
+}
+
+.candidate-action-modal-section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(0, 150, 255, 0.2);
+}
+
+.candidate-info-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.candidate-info-card {
+    /* Nền Gradient Tinh tế: Xanh Dương Pastel Rất Nhạt hoặc Xám Rất Nhạt */
+    background: linear-gradient(180deg,
+            rgba(241, 245, 249, 0.98) 0%,
+            rgba(255, 255, 255, 1) 100%);
+    /* Gradient mờ chuyển từ màu nhạt sang trắng từ trên xuống dưới */
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    border-radius: 0.875rem;
+    padding: 1.125rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Inner Shadow (Ánh sáng Chìm): Electric Blue ở góc trên bên trái */
+.candidate-info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0.875rem;
+    background: radial-gradient(circle at top left,
+            rgba(59, 130, 246, 0.08) 0%,
+            rgba(59, 130, 246, 0.04) 30%,
+            transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Đảm bảo nội dung hiển thị trên inner shadow */
+.candidate-info-card>* {
+    position: relative;
+    z-index: 1;
+}
+
+.candidate-info-card:hover {
+    /* Mini-Card "Lift" nhẹ lên */
+    transform: translateY(-4px);
+    /* Viền ngoài có Soft Glow Electric Blue mờ */
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow:
+        0 8px 24px rgba(59, 130, 246, 0.2),
+        0 4px 12px rgba(59, 130, 246, 0.15),
+        0 2px 6px rgba(59, 130, 246, 0.1),
+        0 0 0 1px rgba(59, 130, 246, 0.1);
+    /* Gradient mờ hơn khi hover */
+    background: linear-gradient(180deg,
+            rgba(239, 246, 255, 0.98) 0%,
+            rgba(255, 255, 255, 1) 100%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Inner shadow rõ hơn khi hover */
+.candidate-info-card:hover::before {
+    background: radial-gradient(circle at top left,
+            rgba(59, 130, 246, 0.12) 0%,
+            rgba(59, 130, 246, 0.06) 30%,
+            transparent 60%);
+}
+
+.candidate-info-label {
+    /* Tên Trường: Xám Trung tính (Grey 500), font nhỏ */
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    /* Grey 500 */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.candidate-info-value {
+    /* Giá trị Dữ liệu mặc định: Đen/Xám Đậm in đậm */
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    /* Grey 800 - Đen/Xám Đậm */
+    line-height: 1.4;
+}
+
+/* Giá trị Dữ liệu quan trọng: Electric Blue Đậm cho Mã ứng viên, Họ tên, Vị trí ứng tuyển */
+.candidate-info-value--highlight {
+    color: #1e40af;
+    /* Electric Blue Đậm (Blue 800) */
+    font-weight: 700;
+}
+
+/* Status Tag in Action Modal - with Soft Glow */
+.candidate-action-modal-info .candidate-status-tag {
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.candidate-action-modal-info .candidate-status-tag::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border-radius: 0.625rem;
+    opacity: 0.6;
+    z-index: -1;
+    filter: blur(6px);
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.candidate-action-modal-info .candidate-status-tag[style*="255, 107, 53"]::before {
+    background: rgba(255, 107, 53, 0.5);
+    box-shadow: 0 0 16px rgba(255, 107, 53, 0.4), 0 0 32px rgba(255, 107, 53, 0.2);
+}
+
+/* Đã Đậu trong Modal - Xanh Lá Tươi Sáng với Soft Glow mạnh hơn */
+.candidate-action-modal-info .candidate-status-tag[style*="16, 185, 129"] {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(74, 222, 128, 0.15) 100%) !important;
+    color: #16a34a !important;
+    /* Vibrant Green (Green 600) - Xanh Lá Tươi Sáng */
+    border-color: rgba(34, 197, 94, 0.4) !important;
+    font-weight: 700 !important;
+}
+
+.candidate-action-modal-info .candidate-status-tag[style*="16, 185, 129"]::before {
+    background: rgba(34, 197, 94, 0.6);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.5), 0 0 40px rgba(74, 222, 128, 0.35), 0 0 60px rgba(34, 197, 94, 0.2);
+    opacity: 1;
+    /* Luôn hiển thị glow cho tag "Đã Đậu" */
+}
+
+.candidate-action-modal-info .candidate-status-tag[style*="239, 68, 68"]::before {
+    background: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.4), 0 0 32px rgba(239, 68, 68, 0.2);
+}
+
+/* Right Column - Actions */
+.candidate-action-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-left: 2rem;
+    position: relative;
+    z-index: 0;
+    width: 100%;
+}
+
+/* Waiting notification for PENDING_MANAGER status */
+.candidate-waiting-notification {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+    border: 2px solid #fb923c;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(251, 146, 60, 0.2);
+}
+
+.candidate-warning-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #ea580c;
+    flex-shrink: 0;
+}
+
+.candidate-warning-icon.blinking {
+    animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(0.95);
+    }
+}
+
+.candidate-waiting-message {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #ea580c;
+}
+
+/* Evaluation Status Cards */
+.candidate-evaluation-status-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.candidate-evaluation-status-card {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 1rem 1.25rem;
+    border-radius: 0.75rem;
+    border: 2px solid;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.candidate-evaluation-status-card.pending {
+    background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+    border-color: #fb923c;
+    box-shadow: 0 4px 12px rgba(251, 146, 60, 0.2);
+}
+
+.candidate-evaluation-status-card.evaluated {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border-color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.candidate-evaluation-status-card.completed {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.candidate-evaluation-status-icon {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.candidate-evaluation-status-card.pending .candidate-evaluation-status-icon {
+    color: #ea580c;
+}
+
+.candidate-evaluation-status-card.evaluated .candidate-evaluation-status-icon {
+    color: #059669;
+}
+
+.candidate-evaluation-status-card.completed .candidate-evaluation-status-icon {
+    color: #2563eb;
+}
+
+.candidate-evaluation-status-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.candidate-evaluation-status-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.candidate-evaluation-status-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.125rem;
+}
+
+.candidate-evaluation-status-value {
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+.candidate-evaluation-status-card.pending .candidate-evaluation-status-value {
+    color: #ea580c;
+}
+
+.candidate-evaluation-status-card.evaluated .candidate-evaluation-status-value {
+    color: #059669;
+}
+
+.candidate-evaluation-status-card.completed .candidate-evaluation-status-value {
+    color: #2563eb;
+}
+
+.candidate-action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Evaluation Detail Modal */
+.candidate-evaluation-detail-modal {
+    max-width: 1200px;
+    max-height: 90vh;
+}
+
+.candidate-evaluation-detail-content {
+    padding: 1.5rem;
+    max-height: calc(90vh - 180px);
+    overflow-y: auto;
+}
+
+.candidate-evaluation-detail-managers {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-radius: 0.75rem;
+    border: 2px solid #3b82f6;
+}
+
+.candidate-evaluation-detail-manager-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.candidate-evaluation-detail-manager-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.candidate-evaluation-detail-manager-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.candidate-evaluation-detail-table-wrapper {
+    margin-bottom: 2rem;
+    overflow-x: auto;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.candidate-evaluation-detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+}
+
+.candidate-evaluation-detail-table thead {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+}
+
+.candidate-evaluation-detail-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-bottom: 2px solid #1e40af;
+    white-space: nowrap;
+}
+
+.candidate-evaluation-detail-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+    transition: background 0.2s ease;
+}
+
+.candidate-evaluation-detail-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.candidate-evaluation-detail-table tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+.candidate-evaluation-detail-table tbody tr:nth-child(even):hover {
+    background: #f3f4f6;
+}
+
+.candidate-evaluation-detail-table td {
+    padding: 1rem;
+    font-size: 0.875rem;
+    color: #1e293b;
+}
+
+.candidate-evaluation-detail-criterion-name {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.candidate-evaluation-detail-score {
+    text-align: center;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #3b82f6;
+}
+
+.candidate-evaluation-detail-score--average {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+    color: #2563eb;
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.candidate-evaluation-detail-comment {
+    font-size: 0.8125rem;
+    color: #64748b;
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.candidate-evaluation-detail-comments-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e5e7eb;
+}
+
+.candidate-evaluation-detail-comments-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+}
+
+.candidate-evaluation-detail-comments-group {
+    margin-bottom: 2rem;
+    padding: 1.25rem;
+    background: #f9fafb;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+}
+
+.candidate-evaluation-detail-comments-group-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2563eb;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #3b82f6;
+}
+
+.candidate-evaluation-detail-comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.candidate-evaluation-detail-comment-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.candidate-evaluation-detail-comment-item strong {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.candidate-evaluation-detail-comment-item p {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.6;
+    padding: 0.75rem;
+    background: #ffffff;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+/* Conclusion Styling */
+.candidate-evaluation-detail-conclusion {
+    font-weight: 600 !important;
+}
+
+.candidate-evaluation-detail-conclusion--pass {
+    color: #15803d !important;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+    border-color: #10b981 !important;
+}
+
+.candidate-evaluation-detail-conclusion--fail {
+    color: #b91c1c !important;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
+    border-color: #ef4444 !important;
+}
+
+.candidate-evaluation-detail-conclusion--hold {
+    color: #1e40af !important;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+    border-color: #3b82f6 !important;
+}
+
+.candidate-action-modal-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ============================================
+   JOB OFFER MODAL - Cấu Trúc Tổng Thể
+   ============================================ */
+
+/* Overlay - Nền xám nhạt nhẹ nhàng */
+.job-offer-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Container - Thẻ Form trắng lớn */
+.job-offer-modal-container {
+    background: #ffffff;
+    border-radius: 1.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 1100px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+    .job-offer-modal-container {
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    .job-offer-modal-overlay {
+        padding: 0;
+    }
+}
+
+/* ============================================
+   JOB OFFER MODAL - PHẦN HEADER
+   ============================================ */
+
+/* Modal Header - Nền xám nhẹ với đường viền mỏng */
+.job-offer-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+    /* bg-gray-50 - Màu xám nhẹ */
+    border-top-left-radius: 1.5rem;
+    border-top-right-radius: 1.5rem;
+    flex-shrink: 0;
+}
+
+/* Header Content - Icon và Title */
+.job-offer-modal-header-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+/* Icon - Màu Teal-600 */
+.job-offer-modal-title-icon {
+    width: 2rem;
+    height: 2rem;
+    color: #0d9488;
+    /* Teal-600 */
+    flex-shrink: 0;
+}
+
+/* Tiêu đề Chính - text-2xl, đậm */
+.job-offer-modal-title {
+    font-size: 1.5rem;
+    /* text-2xl equivalent */
+    font-weight: 700;
+    /* đậm - font-extrabold */
+    color: #1e293b;
+    /* text-slate-800 */
+    margin: 0;
+    line-height: 1.3;
+}
+
+.job-offer-modal-close {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.job-offer-modal-close:hover {
+    background: #f3f4f6;
+    color: #ef4444;
+}
+
+.job-offer-modal-close svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Modal Content - Nền xám nhạt nhẹ nhàng */
+.job-offer-modal-content {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    background: #f9fafb;
+    min-height: 0;
+}
+
+/* Custom Scrollbar for Modal Content */
+.job-offer-modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.job-offer-modal-content::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.job-offer-modal-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.job-offer-modal-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ============================================
+   JOB OFFER MODAL - NỘI DUNG FORM (Form Sections)
+   ============================================ */
+
+/* Form Container */
+.job-offer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Form Section */
+.job-offer-form-section {
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Section Title - Màu Teal-700 */
+.job-offer-section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f766e;
+    /* Teal-700 */
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #0f766e;
+}
+
+/* Form Grid Layout - Responsive */
+.job-offer-form-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+/* Grid 2 Columns (Desktop) */
+.job-offer-form-grid--2-cols {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* Grid 3 Columns (Desktop) */
+.job-offer-form-grid--3-cols {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* Responsive - Mobile: 1 column */
+@media (max-width: 768px) {
+
+    .job-offer-form-grid--2-cols,
+    .job-offer-form-grid--3-cols {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Form Group */
+.job-offer-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Full Width Form Group */
+.job-offer-form-group--full-width {
+    grid-column: 1 / -1;
+}
+
+/* Form Label */
+.job-offer-form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.job-offer-form-label .required {
+    color: #ef4444;
+    font-weight: 700;
+}
+
+/* Form Input */
+.job-offer-form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    /* Tiêu chuẩn - xám */
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #1e293b;
+    background: #ffffff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+/* Focus State - Teal-600 với bóng đổ nhẹ */
+.job-offer-form-input:focus {
+    border-color: #0d9488;
+    /* Teal-600 */
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1),
+        0 2px 4px rgba(13, 148, 136, 0.08);
+    outline: none;
+}
+
+.job-offer-form-input:hover:not(:disabled):not(:focus) {
+    border-color: #9ca3af;
+}
+
+.job-offer-form-input::placeholder {
+    color: #9ca3af;
+}
+
+.job-offer-form-input:disabled,
+.job-offer-form-input[readonly] {
+    background: #f9fafb;
+    color: #4b5563;
+    cursor: not-allowed;
+    border-color: #e5e7eb;
+}
+
+.job-offer-form-input[readonly]:focus {
+    border-color: #e5e7eb;
+    box-shadow: none;
+}
+
+/* Form Textarea */
+.job-offer-form-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    /* Tiêu chuẩn - xám */
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #1e293b;
+    background: #ffffff;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    line-height: 1.6;
+    outline: none;
+}
+
+/* Focus State - Teal-600 với bóng đổ nhẹ */
+.job-offer-form-textarea:focus {
+    border-color: #0d9488;
+    /* Teal-600 */
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1),
+        0 2px 4px rgba(13, 148, 136, 0.08);
+    outline: none;
+}
+
+.job-offer-form-textarea:hover:not(:disabled):not(:focus) {
+    border-color: #9ca3af;
+}
+
+.job-offer-form-textarea::placeholder {
+    color: #9ca3af;
+}
+
+/* Job Duties Note */
+.job-offer-job-duties-note {
+    background: rgba(16, 185, 129, 0.05);
+    border-left: 3px solid #10b981;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.job-offer-job-duties-note p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #047857;
+    line-height: 1.6;
+}
+
+/* Job Duties Section */
+.job-offer-job-duties {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.job-offer-job-duty-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Add Duty Button - Teal-600 */
+.job-offer-add-duty-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.25rem;
+    border: 2px dashed #0d9488;
+    /* Teal-600 */
+    border-radius: 0.75rem;
+    background: rgba(13, 148, 136, 0.05);
+    color: #0d9488;
+    /* Teal-600 */
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 0.5rem;
+}
+
+.job-offer-add-duty-btn:hover {
+    background: rgba(13, 148, 136, 0.1);
+    border-color: #0f766e;
+    /* Teal-700 */
+    color: #0f766e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+}
+
+.job-offer-add-duty-btn:active {
+    transform: translateY(0);
+}
+
+.job-offer-add-duty-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Date Input Wrapper with Icon */
+.job-offer-date-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.job-offer-date-input-wrapper .job-offer-form-input {
+    padding-right: 2.5rem;
+}
+
+.job-offer-date-icon {
+    position: absolute;
+    right: 0.75rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #6b7280;
+    pointer-events: none;
+}
+
+.job-offer-date-input-wrapper:focus-within .job-offer-date-icon {
+    color: #0d9488;
+}
+
+/* ============================================
+   JOB OFFER MODAL - VÙNG HÀNH ĐỘNG & XEM TRƯỚC
+   ============================================ */
+
+/* Action Area */
+.job-offer-action-area {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Primary Action Button - Emerald Gradient */
+.job-offer-primary-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    /* Emerald-500 to Emerald-700 */
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.job-offer-primary-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.job-offer-primary-btn:hover::before {
+    left: 100%;
+}
+
+.job-offer-primary-btn:hover {
+    transform: translateY(-2px);
+    /* Nhấc lên */
+    box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3),
+        0 4px 8px rgba(4, 120, 87, 0.4);
+    /* Bóng đổ sâu */
+}
+
+.job-offer-primary-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+.job-offer-primary-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.job-offer-primary-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    pointer-events: none;
+}
+
+/* Preview Area */
+.job-offer-preview-area {
+    background: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.job-offer-preview-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.job-offer-preview-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #0f766e;
+    /* Teal-700 - đồng bộ với section titles */
+    margin: 0;
+}
+
+/* Preview Content */
+.job-offer-preview-content {
+    padding: 1.5rem;
+    background: #ffffff;
+}
+
+.job-offer-letter-content {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    /* Viền xám */
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    font-size: 0.875rem;
+    line-height: 1.8;
+    color: #1e293b;
+    white-space: pre-wrap;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.job-offer-letter-line {
+    margin-bottom: 0.5rem;
+    min-height: 1.5em;
+}
+
+.job-offer-letter-line:last-child {
+    margin-bottom: 0;
+}
+
+/* Bold lines (headers/titles) */
+.job-offer-letter-bold {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    margin-bottom: 0.75rem;
+}
+
+/* Numbered lines */
+.job-offer-letter-numbered {
+    padding-left: 0.5rem;
+}
+
+.job-offer-letter-numbered strong {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* Currency values - Red color */
+.currency-value {
+    color: #ef4444;
+    /* Red-500 */
+    font-weight: 600;
+}
+
+/* Preview Actions */
+.job-offer-preview-actions {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* Copy Button - Same gradient as primary button */
+.job-offer-copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.625rem;
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    /* Emerald-500 to Emerald-700 */
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.job-offer-copy-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.job-offer-copy-btn:hover::before {
+    left: 100%;
+}
+
+.job-offer-copy-btn:hover {
+    transform: translateY(-2px);
+    /* Nhấc lên */
+    box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3),
+        0 3px 6px rgba(4, 120, 87, 0.4);
+    /* Bóng đổ sâu */
+}
+
+.job-offer-copy-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.job-offer-copy-btn svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+/* Ripple Effect */
+.candidate-action-modal-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+    pointer-events: none;
+}
+
+.candidate-action-modal-btn:active::after {
+    width: 300px;
+    height: 300px;
+    transition: width 0s, height 0s;
+}
+
+.candidate-action-modal-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+}
+
+.candidate-action-modal-btn span {
+    flex: 1;
+}
+
+/* Primary Button - Electric Blue Gradient hoặc Bright Green (Chuyển Phỏng vấn) */
+.candidate-action-modal-primary {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35), 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.candidate-action-modal-primary:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.45), 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.candidate-action-modal-primary:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35), 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.candidate-action-modal-primary::after {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Reject Button - Very Light Pastel Red (Từ chối) */
+.candidate-action-modal-reject {
+    background: rgba(255, 182, 193, 0.25);
+    color: #DC2626;
+    border: 1.5px solid rgba(220, 38, 38, 0.25);
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.15);
+}
+
+.candidate-action-modal-reject:hover {
+    background: rgba(255, 182, 193, 0.4);
+    border-color: rgba(220, 38, 38, 0.5);
+    color: #B91C1C;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(220, 38, 38, 0.3), 0 2px 8px rgba(220, 38, 38, 0.2);
+}
+
+.candidate-action-modal-reject:active {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 12px rgba(220, 38, 38, 0.25);
+}
+
+.candidate-action-modal-reject::after {
+    background: rgba(220, 38, 38, 0.2);
+}
+
+/* View CV Button - Nền Trắng Sáng, viền mảnh (Secondary) */
+.candidate-action-modal-view-cv {
+    background: #ffffff;
+    color: #1e293b;
+    border: 1.5px solid rgba(0, 150, 255, 0.3);
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.05);
+}
+
+.candidate-action-modal-view-cv svg {
+    color: #0096FF;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.candidate-action-modal-view-cv:hover {
+    background: #f8fafc;
+    border-color: rgba(0, 150, 255, 0.5);
+    color: #0096FF;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 150, 255, 0.2), 0 2px 8px rgba(0, 150, 255, 0.15);
+}
+
+.candidate-action-modal-view-cv:hover svg {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 4px rgba(0, 150, 255, 0.4));
+}
+
+.candidate-action-modal-view-cv:active {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 150, 255, 0.15);
+}
+
+.candidate-action-modal-view-cv::after {
+    background: rgba(0, 150, 255, 0.2);
+}
+
+/* Delete Button - Very Light Pastel Red (Xóa Hồ sơ) */
+.candidate-action-modal-delete {
+    background: rgba(255, 182, 193, 0.2);
+    color: #DC2626;
+    border: 1.5px solid rgba(220, 38, 38, 0.2);
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.12);
+}
+
+.candidate-action-modal-delete:hover {
+    background: rgba(255, 182, 193, 0.35);
+    border-color: rgba(220, 38, 38, 0.4);
+    color: #B91C1C;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(220, 38, 38, 0.25), 0 2px 8px rgba(220, 38, 38, 0.15);
+}
+
+.candidate-action-modal-delete:active {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 12px rgba(220, 38, 38, 0.2);
+}
+
+.candidate-action-modal-delete::after {
+    background: rgba(220, 38, 38, 0.2);
+}
+
+/* Edit Button - Very Light Blue (Chỉnh sửa hồ sơ) */
+.candidate-action-modal-edit {
+    background: rgba(219, 234, 254, 0.5);
+    color: #1e40af;
+    border: 1.5px solid rgba(59, 130, 246, 0.3);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.12);
+}
+
+.candidate-action-modal-edit svg {
+    color: #3b82f6;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.candidate-action-modal-edit:hover {
+    background: rgba(219, 234, 254, 0.7);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #1e40af;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.candidate-action-modal-edit:hover svg {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
+}
+
+.candidate-action-modal-edit:active {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 12px rgba(59, 130, 246, 0.2);
+}
+
+.candidate-action-modal-edit::after {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+/* Responsive for Action Modal */
+@media (max-width: 768px) {
+    .candidate-action-modal-content {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .candidate-action-modal-divider {
+        display: none;
+    }
+
+    .candidate-info-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .candidate-action-modal-box {
+        width: 95vw;
+        max-height: 95vh;
+    }
+}
+
+/* ============================================
+   RECRUITMENT REQUESTS MODAL - HR VIEW
+   ============================================ */
+
+/* Separator between filter tabs and recruitment requests button */
+.candidate-management-filters-separator {
+    width: 1px;
+    height: 1.75rem;
+    background: rgba(226, 232, 240, 0.8);
+    margin: 0 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Recruitment Requests Button - Separate but on same row */
+.candidate-management-recruitment-requests-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.625rem;
+    border: 2px solid #10b981;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    margin-left: 0.5rem;
+}
+
+.candidate-management-recruitment-requests-btn:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    border-color: #047857;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.candidate-management-recruitment-requests-btn svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+}
+
+.candidate-management-recruitment-requests-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.4rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    margin-left: 0.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Recruitment Requests List Modal */
+.recruitment-requests-list-modal-box {
+    background: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    width: 100%;
+    max-width: 1000px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.recruitment-requests-list-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #dbeafe 0%, #ecfdf5 50%, #e0e7ff 100%);
+    flex-shrink: 0;
+}
+
+.recruitment-requests-list-modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.recruitment-requests-list-modal-close-btn {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.recruitment-requests-list-modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+    color: #1f2937;
+}
+
+.recruitment-requests-list-modal-close-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.recruitment-requests-list-modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 2rem;
+    min-height: 0;
+}
+
+.recruitment-requests-list-loading,
+.recruitment-requests-list-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    gap: 1rem;
+    color: #6b7280;
+}
+
+.recruitment-requests-list-loading svg,
+.recruitment-requests-list-empty svg {
+    width: 3rem;
+    height: 3rem;
+    color: #d1d5db;
+}
+
+/* Recruitment Request Card */
+.recruitment-requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.recruitment-request-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.recruitment-request-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+}
+
+.recruitment-request-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.recruitment-request-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.recruitment-request-card-title h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    flex: 1;
+}
+
+.recruitment-request-status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.recruitment-request-card-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.recruitment-request-card-meta strong {
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.recruitment-request-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.recruitment-request-card-info {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.recruitment-request-card-info strong {
+    color: #1f2937;
+    font-weight: 600;
+}
+
+/* Recruitment Request Detail Modal */
+.recruitment-request-detail-modal-box {
+    background: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    width: 100%;
+    max-width: 1200px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.recruitment-request-detail-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #dbeafe 0%, #ecfdf5 50%, #e0e7ff 100%);
+    flex-shrink: 0;
+}
+
+.recruitment-request-detail-modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.recruitment-request-detail-modal-close-btn {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.recruitment-request-detail-modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+    color: #1f2937;
+}
+
+.recruitment-request-detail-modal-close-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.recruitment-request-detail-modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    min-height: 0;
+}
+
+/* Recruitment Request Detail View - Reuse styles from InterviewApprovals */
+.recruitment-request-detail-view {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Form Value - Read-only display */
+.recruitment-request-form-value {
+    padding: 0.625rem 0.875rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    color: #0096FF;
+    font-style: italic;
+    font-weight: 300;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+}

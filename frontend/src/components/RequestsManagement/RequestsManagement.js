@@ -1,14 +1,86 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { requestsAPI } from '../../services/api';
 import './RequestsManagement.css';
 
+// Custom Dropdown Component
+const CustomDropdown = ({ id, value, onChange, options, placeholder, error, className = '' }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    const selectedOption = options.find(opt => opt.value === value) || null;
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
+
+    const handleSelect = (option) => {
+        if (option.value === '') return; // Prevent selecting placeholder
+        onChange({ target: { value: option.value } });
+        setIsOpen(false);
+    };
+
+    // Filter out placeholder option (empty value) from display
+    const displayOptions = options.filter(opt => opt.value !== '');
+
+    return (
+        <div className={`custom-dropdown-wrapper ${className} ${error ? 'error' : ''}`} ref={dropdownRef}>
+            <button
+                type="button"
+                className={`custom-dropdown-trigger ${isOpen ? 'open' : ''} ${error ? 'error' : ''}`}
+                onClick={() => setIsOpen(!isOpen)}
+                onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+            >
+                <span className="custom-dropdown-value">
+                    {selectedOption && selectedOption.value !== '' ? selectedOption.label : placeholder}
+                </span>
+                <svg className="custom-dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            {isOpen && (
+                <div className="custom-dropdown-menu">
+                    {displayOptions.map((option) => (
+                        <button
+                            key={option.value}
+                            type="button"
+                            className={`custom-dropdown-option ${value === option.value ? 'selected' : ''}`}
+                            onClick={() => handleSelect(option)}
+                        >
+                            {option.label}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
-  const [requests, setRequests] = useState([]);
   const [allRequests, setAllRequests] = useState([]); // Store all requests for stats calculation
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all', 'pending', 'approved', 'in_progress', 'completed'
+  const [searchQuery, setSearchQuery] = useState(''); // Search query
+  const [requestTypeFilter, setRequestTypeFilter] = useState('all'); // Filter by request type
+  const [dateFilter, setDateFilter] = useState('all'); // Filter by date
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [updatingItems, setUpdatingItems] = useState({}); // Track which items are being updated
+  const showToastRef = useRef(showToast);
+
+  useEffect(() => {
+    showToastRef.current = showToast;
+  }, [showToast]);
 
   // HR có thể xem tất cả requests, nhưng hr_admin chỉ xem requests gửi đến phòng HR
   // ADMIN xem tất cả, các phòng ban khác chỉ xem requests của mình
@@ -27,55 +99,6 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
     targetDepartment = currentUser?.role; // IT, ACCOUNTING chỉ xem của mình
   }
 
-  const applyFilter = useCallback((requestsToFilter = null) => {
-    const dataToFilter = requestsToFilter || allRequests;
-    if (!dataToFilter || dataToFilter.length === 0) {
-      setRequests([]);
-      return;
-    }
-
-    const groupedByEmployee = dataToFilter.reduce((acc, request) => {
-      const employeeId = request.employee_id || 'unknown';
-      if (!acc[employeeId]) {
-        acc[employeeId] = [];
-      }
-      acc[employeeId].push(request);
-      return acc;
-    }, {});
-
-    const filteredEmployeeGroups = Object.entries(groupedByEmployee).filter(([, employeeRequests]) => {
-      if (filter === 'completed') {
-        return employeeRequests.some(r => isRequestFullyCompleted(r));
-      }
-      if (filter === 'all') {
-        return employeeRequests.some(r => !isRequestFullyCompleted(r));
-      }
-      const statusMap = {
-        pending: 'PENDING',
-        approved: 'APPROVED',
-        in_progress: 'IN_PROGRESS',
-      };
-      return employeeRequests.some(r => r.status === statusMap[filter]);
-    });
-
-    const filteredData = filteredEmployeeGroups.flatMap(([, employeeRequests]) => {
-      if (filter === 'completed') {
-        return employeeRequests.filter(r => isRequestFullyCompleted(r));
-      }
-      if (filter === 'all') {
-        return employeeRequests;
-      }
-      const statusMap = {
-        pending: 'PENDING',
-        approved: 'APPROVED',
-        in_progress: 'IN_PROGRESS',
-      };
-      return employeeRequests.filter(r => r.status === statusMap[filter]);
-    });
-
-    setRequests(filteredData);
-  }, [allRequests, filter]);
-
   const fetchAllRequests = useCallback(async () => {
     try {
       setLoading(true);
@@ -88,27 +111,20 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
       const res = await requestsAPI.getAll(params);
       if (res.data.success) {
         setAllRequests(res.data.data);
-        applyFilter(res.data.data);
       }
     } catch (error) {
       console.error('Error fetching requests:', error);
-      if (showToast) {
-        showToast('Lỗi khi tải danh sách yêu cầu', 'error');
+      if (showToastRef.current) {
+        showToastRef.current('Lỗi khi tải danh sách yêu cầu', 'error');
       }
     } finally {
       setLoading(false);
     }
-  }, [applyFilter, showToast, targetDepartment]);
+  }, [targetDepartment]);
 
   useEffect(() => {
     fetchAllRequests();
   }, [fetchAllRequests]);
-
-  useEffect(() => {
-    if (allRequests.length > 0 || filter === 'all') {
-      applyFilter();
-    }
-  }, [allRequests, filter, applyFilter]);
 
   // Check if a request is fully completed (all items are COMPLETED)
   const isRequestFullyCompleted = (request) => {
@@ -204,10 +220,30 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
 
     const config = statusConfig[status] || { label: status, class: 'default' };
     return (
-      <span className={`status-badge ${config.class}`}>
+      <span className={`status-tag ${config.class}`}>
         {config.label}
       </span>
     );
+  };
+
+  // Get request type from items or department
+  const getRequestType = (request) => {
+    // Simple logic: check if has equipment in items or target department
+    if (request.items_detail && request.items_detail.length > 0) {
+      const itemNames = request.items_detail.map(item => (item.item_name || '').toLowerCase()).join(' ');
+      if (itemNames.includes('máy') || itemNames.includes('thiết bị') || itemNames.includes('laptop') || itemNames.includes('computer')) {
+        return 'Trang thiết bị';
+      }
+      if (itemNames.includes('vật liệu') || itemNames.includes('vật dụng')) {
+        return 'Vật liệu';
+      }
+    }
+    return 'Khác';
+  };
+
+  // Format request ID
+  const formatRequestId = (id) => {
+    return `YC${String(id).padStart(6, '0')}`;
   };
 
   const getPriorityBadge = (priority) => {
@@ -375,38 +411,115 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
     );
   };
 
-  // Group requests by employee
-  // For completed filter: only show fully completed requests
-  // For other filters: show all requests for employees that match the filter
-  const groupedByEmployee = requests.reduce((acc, request) => {
-    const employeeId = request.employee_id || 'unknown';
-    if (!acc[employeeId]) {
-      acc[employeeId] = {
-        employee_id: request.employee_id,
-        employee_name: request.employee_name,
-        employee_email: request.employee_email,
-        ma_nhan_vien: request.ma_nhan_vien,
-        requests: []
-      };
-    }
-    // For completed filter, only add fully completed requests
-    // For other filters, add all requests that passed the filter
-    if (filter === 'completed') {
-      if (isRequestFullyCompleted(request)) {
-        acc[employeeId].requests.push(request);
-      }
-    } else {
-      acc[employeeId].requests.push(request);
-    }
-    return acc;
-  }, {});
+  const filteredRequests = useMemo(() => {
+    if (!allRequests || allRequests.length === 0) return [];
 
-  // Sort employee groups by name
-  const employeeGroups = Object.values(groupedByEmployee).sort((a, b) => {
-    const nameA = (a.employee_name || '').toLowerCase();
-    const nameB = (b.employee_name || '').toLowerCase();
-    return nameA.localeCompare(nameB);
-  });
+    // Filter by status first
+    const grouped = allRequests.reduce((acc, request) => {
+      const employeeId = request.employee_id || 'unknown';
+      if (!acc[employeeId]) {
+        acc[employeeId] = [];
+      }
+      acc[employeeId].push(request);
+      return acc;
+    }, {});
+
+    const statusMap = {
+      pending: 'PENDING',
+      approved: 'APPROVED',
+      in_progress: 'IN_PROGRESS',
+    };
+
+    const filteredGroups = Object.entries(grouped).filter(([, employeeRequests]) => {
+      if (filter === 'completed') {
+        return employeeRequests.some(r => isRequestFullyCompleted(r));
+      }
+      if (filter === 'all') {
+        return employeeRequests.length > 0;
+      }
+      return employeeRequests.some(r => r.status === statusMap[filter]);
+    });
+
+    let flattened = filteredGroups.flatMap(([, employeeRequests]) => {
+      if (filter === 'completed') {
+        return employeeRequests.filter(r => isRequestFullyCompleted(r));
+      }
+      if (filter === 'all') {
+        return employeeRequests;
+      }
+      return employeeRequests.filter(r => r.status === statusMap[filter]);
+    });
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      flattened = flattened.filter(request => {
+        const employeeName = (request.employee_name || '').toLowerCase();
+        const maNhanVien = (request.ma_nhan_vien || '').toLowerCase();
+        const employeeEmail = (request.employee_email || '').toLowerCase();
+        return employeeName.includes(query) || maNhanVien.includes(query) || employeeEmail.includes(query);
+      });
+    }
+
+    // Apply date filter
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      flattened = flattened.filter(request => {
+        const requestDate = new Date(request.created_at);
+        
+        switch (dateFilter) {
+          case 'today':
+            return requestDate >= today;
+          case 'week':
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return requestDate >= weekAgo;
+          case 'month':
+            const monthAgo = new Date(today);
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            return requestDate >= monthAgo;
+          case 'quarter':
+            const quarterAgo = new Date(today);
+            quarterAgo.setMonth(quarterAgo.getMonth() - 3);
+            return requestDate >= quarterAgo;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply request type filter (if needed in future)
+    // For now, we don't have request type field, so skip this filter
+
+    return flattened;
+  }, [allRequests, filter, searchQuery, dateFilter]);
+
+  const groupedByEmployee = useMemo(() => {
+    return filteredRequests.reduce((acc, request) => {
+      const employeeId = request.employee_id || 'unknown';
+      if (!acc[employeeId]) {
+        acc[employeeId] = {
+          employee_id: request.employee_id,
+          employee_name: request.employee_name,
+          employee_email: request.employee_email,
+          ma_nhan_vien: request.ma_nhan_vien,
+          requests: [],
+        };
+      }
+      acc[employeeId].requests.push(request);
+      return acc;
+    }, {});
+  }, [filteredRequests]);
+
+  const employeeGroups = useMemo(() => {
+    return Object.values(groupedByEmployee).sort((a, b) => {
+      const nameA = (a.employee_name || '').toLowerCase();
+      const nameB = (b.employee_name || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  }, [groupedByEmployee]);
 
   // Calculate stats from allRequests (not filtered requests)
   // For completed, count only fully completed requests
@@ -421,212 +534,196 @@ const RequestsManagement = ({ currentUser, showToast, showConfirm }) => {
 
   return (
     <div className="requests-management">
+      {/* Header với Gradient Calm Integrity */}
       <div className="requests-header">
-        <div>
-          <h1 className="requests-title">
-            {targetDepartment
-              ? `Quản lý yêu cầu - ${getDepartmentLabel(targetDepartment)}`
-              : 'Quản lý yêu cầu - Tất cả phòng ban'}
-          </h1>
-          <p className="requests-subtitle">
-            {targetDepartment
-              ? 'Xem và xử lý các yêu cầu từ HR'
-              : 'Xem và theo dõi tất cả các yêu cầu từ HR đến các phòng ban'}
-          </p>
-        </div>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="requests-stats">
-        <div className="stat-card">
-          <div className="stat-value">{stats.total}</div>
-          <div className="stat-label">Tổng yêu cầu</div>
-        </div>
-        <div className="stat-card pending">
-          <div className="stat-value">{stats.pending}</div>
-          <div className="stat-label">Chờ xử lý</div>
-        </div>
-        <div className="stat-card approved">
-          <div className="stat-value">{stats.approved}</div>
-          <div className="stat-label">Đã phê duyệt</div>
-        </div>
-        <div className="stat-card in-progress">
-          <div className="stat-value">{stats.inProgress}</div>
-          <div className="stat-label">Đang xử lý</div>
-        </div>
-        <div className="stat-card completed">
-          <div className="stat-value">{stats.completed}</div>
-          <div className="stat-label">Hoàn thành</div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="requests-filters">
-        <button
-          className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-          onClick={() => setFilter('all')}
-        >
-          Tất cả ({stats.total})
-        </button>
-        <button
-          className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
-          onClick={() => setFilter('pending')}
-        >
-          Chờ xử lý ({stats.pending})
-        </button>
-        <button
-          className={`filter-btn ${filter === 'approved' ? 'active' : ''}`}
-          onClick={() => setFilter('approved')}
-        >
-          Đã phê duyệt ({stats.approved})
-        </button>
-        <button
-          className={`filter-btn ${filter === 'in_progress' ? 'active' : ''}`}
-          onClick={() => setFilter('in_progress')}
-        >
-          Đang xử lý ({stats.inProgress})
-        </button>
-        <button
-          className={`filter-btn ${filter === 'completed' ? 'active' : ''}`}
-          onClick={() => setFilter('completed')}
-        >
-          Hoàn thành ({stats.completed})
-        </button>
-      </div>
-
-      {/* Employee Requests List - Grouped by Employee */}
-      <div className="requests-list">
-        {loading ? (
-          <div className="requests-loading">Đang tải...</div>
-        ) : employeeGroups.length === 0 ? (
-          <div className="requests-empty">
-            <p>Không có yêu cầu nào</p>
+        <div className="requests-header-content">
+          <div className="requests-icon-wrapper">
+            <svg className="requests-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Icon Clipboard/Giấy tờ */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
           </div>
-        ) : (
-          employeeGroups.map((employeeGroup) => (
-            <div key={employeeGroup.employee_id} className="employee-request-card">
-              {/* Employee Header */}
-              <div className="employee-card-header">
-                <div className="employee-header-info">
-                  <h3 className="employee-name">
-                    {employeeGroup.employee_name || 'N/A'}
-                    {employeeGroup.ma_nhan_vien && (
-                      <span className="employee-code"> ({employeeGroup.ma_nhan_vien})</span>
-                    )}
-                  </h3>
-                  <div className="employee-email">{employeeGroup.employee_email || 'N/A'}</div>
-                </div>
-                <div className="employee-requests-count">
-                  {employeeGroup.requests.length} yêu cầu
-                </div>
-              </div>
+          <div>
+            <h1 className="requests-title">Theo dõi yêu cầu</h1>
+            <p className="requests-subtitle">Quản lý và theo dõi tất cả các yêu cầu của nhân viên</p>
+          </div>
+        </div>
+      </div>
 
-              {/* Departments Requests Grid */}
-              <div className="employee-departments-grid">
-                {employeeGroup.requests.map((request) => (
-                  <div key={request.id} className="department-request-section">
-                    <div className="department-request-header">
-                      <h4 className="department-name">
-                        {getDepartmentLabel(request.target_department)}
-                      </h4>
-                      <div className="department-request-meta">
-                        {getStatusBadge(request.status)}
-                        {getPriorityBadge(request.priority)}
-                        <span className="department-request-date">
-                          {formatDate(request.created_at)}
-                        </span>
-                      </div>
-                    </div>
+      {/* Nội dung chính */}
+      <div className="requests-content">
+        {/* Status Tabs/Filters */}
+        <div className="requests-status-tabs">
+          <button
+            className={`status-tab ${filter === 'all' ? 'active' : ''}`}
+            onClick={() => setFilter('all')}
+          >
+            <span className="status-tab-label">Tất cả</span>
+            <span className="status-tab-count">{stats.total}</span>
+          </button>
+          <button
+            className={`status-tab pending ${filter === 'pending' ? 'active' : ''}`}
+            onClick={() => setFilter('pending')}
+          >
+            <span className="status-tab-label">Chờ xử lý</span>
+            <span className="status-tab-count">{stats.pending}</span>
+          </button>
+          <button
+            className={`status-tab approved ${filter === 'approved' ? 'active' : ''}`}
+            onClick={() => setFilter('approved')}
+          >
+            <span className="status-tab-label">Đã phê duyệt</span>
+            <span className="status-tab-count">{stats.approved}</span>
+          </button>
+          <button
+            className={`status-tab in-progress ${filter === 'in_progress' ? 'active' : ''}`}
+            onClick={() => setFilter('in_progress')}
+          >
+            <span className="status-tab-label">Đang xử lý</span>
+            <span className="status-tab-count">{stats.inProgress}</span>
+          </button>
+          <button
+            className={`status-tab completed ${filter === 'completed' ? 'active' : ''}`}
+            onClick={() => setFilter('completed')}
+          >
+            <span className="status-tab-label">Hoàn thành</span>
+            <span className="status-tab-count">{stats.completed}</span>
+          </button>
+        </div>
 
-                    <div className="department-request-body">
-                      {/* Items Detail with Tracking */}
-                      {request.items_detail && Array.isArray(request.items_detail) && request.items_detail.length > 0 ? (
-                        <div className="department-items-list">
-                          {request.items_detail.map((item) => (
-                            <div key={item.id} className="department-item-card">
-                              <div className="department-item-header">
-                                <strong className="department-item-name">{item.item_name}</strong>
-                                {getItemStatusBadge(item.status, item.quantity_provided, item.quantity)}
-                              </div>
-                              <div className="department-item-quantity">
-                                Yêu cầu: {item.quantity} | Đã cung cấp: {item.quantity_provided || 0}
-                              </div>
-
-                              {/* Actions for department */}
-                              {(request.status === 'APPROVED' || request.status === 'IN_PROGRESS') &&
-                                targetDepartment &&
-                                request.target_department === targetDepartment && (
-                                  <button
-                                    className="btn-update-item-small"
-                                    onClick={() => handleItemQuantityUpdate(request.id, item.id, item.quantity_provided, item.quantity)}
-                                    disabled={updatingItems[item.id]}
-                                  >
-                                    {updatingItems[item.id] ? 'Đang cập nhật...' : 'Cập nhật'}
-                                  </button>
-                                )}
-
-                              {/* Tracking info for HR */}
-                              {(!targetDepartment || request.target_department !== targetDepartment) && (
-                                <div className="item-tracking-info-small">
-                                  {item.quantity_provided > 0 && item.provided_by_name && (
-                                    <div className="provided-by-info-small">
-                                      Cung cấp bởi: {item.provided_by_name}
-                                    </div>
-                                  )}
-                                  {item.provided_at && (
-                                    <div className="provided-at-info-small">
-                                      Lúc: {formatDate(item.provided_at)}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                              {item.quantity_provided > 0 && (
-                                <div className="item-progress-small">
-                                  <div className="item-progress-bar-small">
-                                    <div
-                                      className="item-progress-fill-small"
-                                      style={{
-                                        width: `${Math.min(100, (item.quantity_provided / item.quantity) * 100)}%`,
-                                      }}
-                                    />
-                                  </div>
-                                  <span className="item-progress-text-small">
-                                    {Math.round((item.quantity_provided / item.quantity) * 100)}%
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      ) : request.items && parseItems(request.items).length > 0 ? (
-                        <ul className="department-items-list-simple">
-                          {parseItems(request.items).map((item, idx) => (
-                            <li key={idx}>
-                              {typeof item === 'string' ? item : item.name || item.tenVatDung || JSON.stringify(item)}
-                              {item.quantity && ` (x${item.quantity})`}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <div className="department-no-items">
-                          Chưa có vật dụng nào được yêu cầu
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Action buttons for department request */}
-                    {targetDepartment && request.target_department === targetDepartment && (
-                      <div className="department-request-footer">
-                        {getActionButtons(request)}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+        {/* Filter & Search Bar */}
+        <div className="requests-filter-search-bar">
+          {/* Filter Dropdowns */}
+          <div className="requests-filter-group">
+            {/* Filter by Request Type */}
+            <div className="filter-dropdown-wrapper">
+              <label htmlFor="request-type-filter" className="filter-label">
+                Loại yêu cầu
+              </label>
+              <CustomDropdown
+                id="request-type-filter"
+                value={requestTypeFilter}
+                onChange={(e) => setRequestTypeFilter(e.target.value)}
+                options={[
+                  { value: 'all', label: 'Tất cả' },
+                  { value: 'equipment', label: 'Trang thiết bị' },
+                  { value: 'material', label: 'Vật liệu' },
+                  { value: 'other', label: 'Khác' }
+                ]}
+                placeholder="Chọn loại yêu cầu"
+                className="filter-dropdown-custom"
+              />
             </div>
-          ))
-        )}
+
+            {/* Filter by Date */}
+            <div className="filter-dropdown-wrapper">
+              <label htmlFor="date-filter" className="filter-label">
+                Thời gian
+              </label>
+              <CustomDropdown
+                id="date-filter"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                options={[
+                  { value: 'all', label: 'Tất cả' },
+                  { value: 'today', label: 'Hôm nay' },
+                  { value: 'week', label: 'Tuần này' },
+                  { value: 'month', label: 'Tháng này' },
+                  { value: 'quarter', label: 'Quý này' }
+                ]}
+                placeholder="Chọn thời gian"
+                className="filter-dropdown-custom"
+              />
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="requests-search-wrapper">
+            <div className="requests-search-input-wrapper">
+              <svg className="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <input
+                type="text"
+                className="requests-search-input"
+                placeholder="Tìm kiếm theo tên nhân viên, mã nhân viên..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  className="search-clear-btn"
+                  onClick={() => setSearchQuery('')}
+                  title="Xóa tìm kiếm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Request Table */}
+        <div className="requests-table-container">
+          {loading ? (
+            <div className="requests-loading">
+              <div className="loading-spinner"></div>
+              <p>Đang tải dữ liệu...</p>
+            </div>
+          ) : filteredRequests.length === 0 ? (
+            <div className="requests-empty">
+              <svg className="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <p>Không có yêu cầu nào</p>
+            </div>
+          ) : (
+            <table className="requests-table">
+              <thead>
+                <tr>
+                  <th>Mã yêu cầu</th>
+                  <th>Loại yêu cầu</th>
+                  <th>Người liên quan</th>
+                  <th>Ngày tạo</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRequests.map((request) => (
+                  <tr key={request.id} className="request-row">
+                    <td className="request-id-cell">
+                      <span className="request-id">{formatRequestId(request.id)}</span>
+                    </td>
+                    <td className="request-type-cell">
+                      <span className="request-type">{getRequestType(request)}</span>
+                    </td>
+                    <td className="request-people-cell">
+                      <div className="request-people-info">
+                        <div className="request-sender">
+                          <strong>Người gửi:</strong> {request.employee_name || 'N/A'}
+                          {request.ma_nhan_vien && <span className="employee-code"> ({request.ma_nhan_vien})</span>}
+                        </div>
+                        {request.target_department && (
+                          <div className="request-target">
+                            <strong>Phòng ban:</strong> {getDepartmentLabel(request.target_department)}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="request-date-cell">
+                      <span className="request-date">{formatDate(request.created_at)}</span>
+                    </td>
+                    <td className="request-status-cell">
+                      {getStatusBadge(request.status)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );

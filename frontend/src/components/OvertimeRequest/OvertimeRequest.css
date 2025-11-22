@@ -1,0 +1,646 @@
+/* Overtime Request - Thiết kế lại hoàn toàn */
+
+/* I. MÀU NỀN CHỦ ĐẠO: Very Subtle Gradient (Gradient Rất Nhạt) - Calm Integrity */
+/* Container */
+.overtime-request-container {
+    width: 100%;
+    height: 100vh;
+    padding: 1.5rem;
+    box-sizing: border-box;
+    /* Calm Integrity Gradient: Sky Blue 50 → White (60%) → Indigo 50 */
+    background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 60%, #f5f6ff 100%);
+    /* Optional: Ambient Blur - Làm mờ môi trường để tăng chiều sâu */
+    backdrop-filter: blur(1px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+}
+
+/* Custom Scrollbar cho module */
+.overtime-request-container::-webkit-scrollbar {
+    width: 10px;
+}
+
+.overtime-request-container::-webkit-scrollbar-track {
+    background: rgba(240, 249, 255, 0.3);
+    backdrop-filter: blur(5px);
+    border-radius: 10px;
+}
+
+.overtime-request-container::-webkit-scrollbar-thumb {
+    background: rgba(14, 165, 233, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    transition: background 0.2s ease;
+}
+
+.overtime-request-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(14, 165, 233, 0.6);
+}
+
+/* Ensure no scrolling on main container */
+.overtime-request-container * {
+    box-sizing: border-box;
+}
+
+/* II. HEADER FORM (Phần Đầu Form) */
+.overtime-request-header {
+    margin-bottom: 1.5rem;
+    flex-shrink: 0;
+}
+
+/* Khối bao quanh Header - Calm Integrity Gradient đậm hơn Nền Ngoại vi */
+.overtime-request-header-content {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    /* Calm Integrity Gradient đậm hơn: Sky Blue 100 → Emerald 50 → Indigo 100 */
+    /* (Nền Ngoại vi: Sky Blue 50 → White → Indigo 50) */
+    background: linear-gradient(135deg, #dbeafe 0%, #ecfdf5 50%, #e0e7ff 100%);
+    padding: 1.25rem 1.75rem;
+    border-radius: 1rem; /* Bo tròn 4 góc */
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.overtime-request-header-content:hover {
+    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.12);
+}
+
+/* Icon Banner Block - Light Glass Block */
+.overtime-request-icon-wrapper {
+    width: 4rem;
+    height: 4rem;
+    background: rgba(255, 255, 255, 0.9); /* bg-white/90 */
+    padding: 1rem; /* p-4 */
+    border-radius: 0.75rem; /* rounded-xl */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.overtime-request-icon-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.12), 0 3px 5px -1px rgba(0, 0, 0, 0.08);
+}
+
+/* Icon (Sét) - Xanh Dương Sáng */
+.overtime-request-icon {
+    width: 2rem;
+    height: 2rem;
+    color: #3b82f6; /* text-blue-500 hoặc #3b82f6 */
+    stroke-width: 2;
+}
+
+/* Tiêu đề - Xám Đậm */
+.overtime-request-title {
+    font-size: 1.5rem;
+    /* text-2xl */
+    font-weight: 700;
+    /* font-bold */
+    color: #000000; /* Màu đen */
+    margin: 0 0 0.375rem 0;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+/* Mô tả - Màu đen */
+.overtime-request-subtitle {
+    font-size: 0.875rem;
+    /* text-sm */
+    color: #000000; /* Màu đen */
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* I. THẺ FORM CONTAINER (Form Card Container) - Glass Card */
+.overtime-request-form-wrapper {
+    background: rgba(255, 255, 255, 0.85); /* bg-white/85 */
+    backdrop-filter: blur(24px); /* backdrop-blur-2xl */
+    border-radius: 1.5rem; /* rounded-3xl */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(59, 130, 246, 0.05); /* shadow-2xl shadow-blue-100/50 */
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.overtime-request-form {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 1rem;
+}
+
+/* Custom scrollbar for form */
+.overtime-request-form::-webkit-scrollbar {
+    width: 6px;
+}
+
+.overtime-request-form::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.overtime-request-form::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.overtime-request-form::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Error Message */
+.overtime-request-error {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 0.75rem;
+    color: #dc2626;
+    font-size: 0.875rem;
+}
+
+.error-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+}
+
+/* Form Fields */
+.overtime-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    flex: 1;
+    min-height: 0;
+    justify-content: flex-start;
+    padding-bottom: 1rem;
+    margin-bottom: 0;
+}
+
+.overtime-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.overtime-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* III. TRƯỜNG NHẬP DỮ LIỆU (INPUT FIELDS) */
+/* Tiêu đề Field (Label) - Màu đen, gạch chân màu xanh đậm */
+.overtime-form-label {
+    font-size: 0.875rem;
+    font-weight: 600; /* font-semibold */
+    color: #000000; /* Màu đen */
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    padding-bottom: 0.25rem;
+    cursor: default;
+    width: fit-content;
+}
+
+/* Animated Underline Indicator for Labels - Chạy khi mở module */
+.overtime-form-label::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, #3b82f6, #2563eb);
+    border-radius: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: overtimeLabelUnderlineSlide 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Delay animation cho từng label để tạo hiệu ứng tuần tự */
+.overtime-form-group:nth-child(1) .overtime-form-label::after {
+    animation-delay: 0.1s;
+}
+
+.overtime-form-group:nth-child(2) .overtime-form-label::after {
+    animation-delay: 0.2s;
+}
+
+.overtime-form-group:nth-child(3) .overtime-form-label::after {
+    animation-delay: 0.3s;
+}
+
+.overtime-form-group:nth-child(4) .overtime-form-label::after {
+    animation-delay: 0.4s;
+}
+
+.overtime-form-group:nth-child(5) .overtime-form-label::after {
+    animation-delay: 0.5s;
+}
+
+.overtime-form-group:nth-child(6) .overtime-form-label::after {
+    animation-delay: 0.6s;
+}
+
+.overtime-form-group:nth-child(7) .overtime-form-label::after {
+    animation-delay: 0.7s;
+}
+
+@keyframes overtimeLabelUnderlineSlide {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+.overtime-label-icon {
+    width: 1rem;
+    height: 1rem;
+    color: #3b82f6;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+/* Highlighted Date Label */
+.overtime-date-label-highlight {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: #1e40af !important;
+}
+
+.overtime-date-group-highlight .overtime-label-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #3b82f6;
+    filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
+}
+
+/* Date Picker Wrapper - Highlighted */
+.overtime-date-picker-wrapper {
+    position: relative;
+}
+
+/* Icon Lịch/Đồng hồ - Xám/Xanh nhạt */
+.overtime-date-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #93c5fd; /* text-blue-300 hoặc text-gray-400 */
+    pointer-events: none;
+    z-index: 1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.overtime-date-picker-wrapper:focus-within .overtime-date-icon {
+    color: #2563eb;
+    transform: translateY(-50%) scale(0.95);
+}
+
+.overtime-form-datepicker {
+    width: 100%;
+    padding: 0.9375rem 3.5rem 0.9375rem 1rem;
+    border: 1px solid #e5e7eb; /* border-gray-200 */
+    border-radius: 0.5rem; /* rounded-lg */
+    background: #ffffff; /* bg-white */
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e40af;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    /* Shadow Inner */
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* shadow-inner */
+}
+
+.overtime-form-datepicker:hover {
+    border-color: #e5e7eb;
+}
+
+/* Datepicker Focus - Fluent Blue Accent */
+.overtime-form-datepicker:focus {
+    border-color: #3b82f6; /* focus:border-blue-500 */
+    box-shadow: 
+        0 0 0 2px rgba(147, 197, 253, 0.5), /* focus:ring-2 focus:ring-blue-200 */
+        inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* shadow-inner */
+    background: #ffffff;
+    outline: none;
+}
+
+/* Time Picker Wrapper */
+.overtime-time-picker-wrapper {
+    position: relative;
+}
+
+.overtime-time-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.35rem;
+    height: 1.35rem;
+    color: #93c5fd; /* text-blue-300 hoặc text-gray-400 */
+    pointer-events: none;
+    z-index: 1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.overtime-time-picker-wrapper:focus-within .overtime-time-icon {
+    color: #2563eb;
+    transform: translateY(-50%) scale(0.95);
+}
+
+.overtime-form-timepicker {
+    width: 100%;
+    padding: 0.75rem 3rem 0.75rem 1rem;
+    border: 1px solid #e5e7eb; /* border-gray-200 */
+    border-radius: 0.5rem; /* rounded-lg */
+    background: #ffffff; /* bg-white */
+    font-size: 0.9375rem;
+    color: #1f2937;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    cursor: pointer;
+    /* Shadow Inner */
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* shadow-inner */
+}
+
+.overtime-form-timepicker:hover {
+    border-color: #e5e7eb;
+}
+
+/* Timepicker Focus - Fluent Blue Accent */
+.overtime-form-timepicker:focus {
+    border-color: #3b82f6; /* focus:border-blue-500 */
+    box-shadow: 
+        0 0 0 2px rgba(147, 197, 253, 0.5), /* focus:ring-2 focus:ring-blue-200 */
+        inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* shadow-inner */
+    outline: none;
+}
+
+/* Make time picker dropdown open on click */
+.overtime-form-timepicker::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    opacity: 0;
+    z-index: 2;
+}
+
+/* Estimated Hours Input with Tag */
+.overtime-hours-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.overtime-hours-input {
+    width: 100%;
+    padding: 0.75rem 4rem 0.75rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: #f3f4f6;
+    font-size: 0.95rem;
+    color: #1f2937;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    cursor: not-allowed;
+}
+
+.overtime-hours-tag {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0.25rem 0.75rem;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 0.375rem;
+    pointer-events: none;
+}
+
+/* Input/Textarea Nền - Trắng Tinh Khiết */
+.overtime-form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e7eb; /* border-gray-200 */
+    border-radius: 0.5rem; /* rounded-lg */
+    background: #ffffff; /* bg-white */
+    font-size: 0.9375rem;
+    color: #1f2937;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    /* Shadow Inner */
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* shadow-inner */
+}
+
+/* Input Focus - Fluent Blue Accent */
+.overtime-form-input:focus {
+    border-color: #3b82f6; /* focus:border-blue-500 */
+    box-shadow: 
+        0 0 0 2px rgba(147, 197, 253, 0.5), /* focus:ring-2 focus:ring-blue-200 */
+        inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* shadow-inner */
+    outline: none;
+}
+
+/* Read-only Manager Fields */
+.overtime-form-input-readonly {
+    background: #f3f4f6 !important;
+    color: #3b82f6 !important;
+    font-weight: 600;
+    cursor: not-allowed;
+    border: 1px solid #f3f4f6 !important;
+}
+
+.overtime-form-input-readonly:focus {
+    border-color: #f3f4f6 !important;
+    box-shadow: none !important;
+}
+
+/* Textarea */
+.overtime-form-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #f3f4f6;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    font-size: 0.9375rem;
+    color: #1f2937;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    min-height: 80px;
+    max-height: 100px;
+    box-shadow: none;
+}
+
+.overtime-form-textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), 0 0 0 1px #3b82f6, 0 0 12px rgba(59, 130, 246, 0.12);
+}
+
+/* Large Textarea for Reason */
+.overtime-form-textarea-large {
+    min-height: 120px;
+    max-height: 160px;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 0;
+}
+
+.overtime-form-textarea-large:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), 0 0 0 1px #3b82f6, 0 0 12px rgba(59, 130, 246, 0.12);
+}
+
+.overtime-form-textarea::placeholder {
+    color: #9ca3af;
+}
+
+/* IV. NÚT HÀNH ĐỘNG CHÍNH (SUBMIT BUTTON) */
+/* Nền Nút - Xanh Dương Gradient */
+.overtime-submit-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 0.75rem;
+    /* bg-gradient-to-r from-blue-500 to-blue-700 */
+    background: linear-gradient(to right, #3b82f6, #1d4ed8);
+    /* Chữ & Icon - Trắng Tinh Khiết */
+    color: #ffffff; /* text-white */
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    /* Shadow - Đổ bóng rực rỡ (Glow) */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(96, 165, 250, 0.5); /* shadow-xl shadow-blue-400/50 */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    flex-shrink: 0;
+    margin-top: auto;
+    will-change: transform, box-shadow;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.overtime-submit-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.overtime-submit-button:hover:not(:disabled)::before {
+    left: 100%;
+}
+
+/* Hiệu ứng Hover - Fluent Lift */
+.overtime-submit-button:hover:not(:disabled) {
+    transform: translateY(-2px); /* hover:translate-y-[-2px] */
+    /* hover:shadow-2xl */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(96, 165, 250, 0.6);
+    background: linear-gradient(to right, #2563eb, #1e40af);
+}
+
+.overtime-submit-button:active:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.overtime-submit-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.overtime-submit-button svg,
+.overtime-submit-icon {
+    width: 1.375rem;
+    height: 1.375rem;
+    color: #ffffff;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+    flex-shrink: 0;
+}
+
+.overtime-button-spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .overtime-request-container {
+        padding: 1rem;
+    }
+
+    .overtime-request-form {
+        padding: 1.5rem;
+    }
+
+    .overtime-request-title {
+        font-size: 1.5rem;
+    }
+
+    .overtime-request-icon-wrapper {
+        width: 4.5rem;
+        height: 4.5rem;
+    }
+
+    .overtime-request-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+}
+

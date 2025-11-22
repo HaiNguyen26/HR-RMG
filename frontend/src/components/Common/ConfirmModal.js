@@ -10,9 +10,15 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
             setInputValue(input.defaultValue || '');
         }
         if (isOpen && notesInput) {
-            setNotesValue('');
+            setNotesValue(notesInput.defaultValue || '');
         }
     }, [isOpen, input, notesInput]);
+
+    const isConfirmDisabled = () => {
+        if (input && input.required && !inputValue) return true;
+        if (notesInput && notesInput.required && !notesValue.trim()) return true;
+        return false;
+    };
 
     if (!isOpen) return null;
 
@@ -58,7 +64,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
                     {getIcon()}
                     <h3 className="confirm-modal-title">{title || 'Xác nhận'}</h3>
                     <p className="confirm-modal-message">{message}</p>
-                    
+
                     {input && (
                         <div className="confirm-modal-input-group">
                             <label className="confirm-modal-input-label">
@@ -80,7 +86,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
                             )}
                         </div>
                     )}
-                    
+
                     {notesInput && (
                         <div className="confirm-modal-input-group">
                             <label className="confirm-modal-input-label">
@@ -95,7 +101,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
                             />
                         </div>
                     )}
-                    
+
                     <div className="confirm-modal-actions">
                         <button
                             className="confirm-modal-btn confirm-modal-btn-cancel"
@@ -106,10 +112,13 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
                         <button
                             className={`confirm-modal-btn confirm-modal-btn-confirm confirm-modal-btn-${type}`}
                             onClick={() => {
-                                onConfirm(input ? { value: inputValue, notes: notesValue } : { notes: notesValue });
+                                const payload = input
+                                    ? { value: inputValue, notes: notesValue }
+                                    : { notes: notesValue };
+                                onConfirm(payload);
                                 onClose();
                             }}
-                            disabled={input && input.required && !inputValue}
+                            disabled={isConfirmDisabled()}
                         >
                             {confirmText}
                         </button>

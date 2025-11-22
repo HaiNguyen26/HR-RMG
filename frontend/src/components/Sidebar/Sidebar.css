@@ -1,7 +1,7 @@
 .sidebar {
   width: 16rem;
-  background: rgba(255, 255, 255, 0.88);
-  border-right: 1px solid rgba(209, 213, 219, 0.6);
+  background: #ffffff;
+  border-right: 1px solid rgba(209, 213, 219, 0.5);
   backdrop-filter: blur(20px);
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
   display: flex;
@@ -81,6 +81,27 @@
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: thin;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.12);
+  border-radius: 999px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.4);
+  border-radius: 999px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.55);
 }
 
 .nav-list {
@@ -88,10 +109,21 @@
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-list li {
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
 .nav-section-label {
   margin-top: 1.2rem;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
 .nav-section-label p {
@@ -101,6 +133,27 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(107, 114, 128, 0.8);
+}
+
+/* Divider - Dấu gạch ngang tách biệt nhóm module */
+.nav-divider {
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.nav-divider-line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, 
+    transparent 0%, 
+    rgba(148, 163, 184, 0.3) 20%, 
+    rgba(148, 163, 184, 0.4) 50%, 
+    rgba(148, 163, 184, 0.3) 80%, 
+    transparent 100%
+  );
+  border-radius: 999px;
 }
 
 .nav-item {
@@ -117,6 +170,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.18s, box-shadow 0.25s, border-color 0.25s, color 0.25s;
+  text-align: left;
+  vertical-align: middle;
 }
 
 .nav-item::before {
@@ -135,6 +190,8 @@
 .nav-icon-wrapper {
   width: 2.2rem;
   height: 2.2rem;
+  min-width: 2.2rem;
+  min-height: 2.2rem;
   border-radius: 0.75rem;
   background: rgba(15, 23, 42, 0.06);
   display: flex;
@@ -142,6 +199,7 @@
   justify-content: center;
   color: rgba(75, 85, 99, 0.85);
   transition: inherit;
+  flex-shrink: 0;
 }
 
 .nav-icon-wrapper svg {
@@ -153,6 +211,10 @@
   font-size: 0.92rem;
   color: var(--color-text-main);
   transition: inherit;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  flex: 1;
 }
 
 .nav-item:hover {
@@ -172,20 +234,22 @@
 }
 
 .nav-item.active {
-  border-color: rgba(0, 123, 255, 0.4);
-  background: rgba(0, 123, 255, 0.12);
-  color: var(--color-primary);
-  box-shadow: 0 14px 30px -22px rgba(0, 123, 255, 0.35);
+  border-color: transparent;
+  background: rgba(0, 150, 255, 0.08);
+  color: #0096FF;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .nav-item.active::before {
-  background: rgba(0, 123, 255, 0.85);
-  box-shadow: 0 0 18px rgba(0, 123, 255, 0.6);
+  background: transparent;
+  box-shadow: none;
 }
 
 .nav-item.active .nav-icon-wrapper,
 .nav-item.active .nav-label {
-  color: var(--color-primary);
+  color: #0096FF;
+  font-weight: 600;
 }
 
 .nav-item.disabled {
@@ -197,6 +261,59 @@
   transform: none;
   box-shadow: none;
   border-color: transparent;
+}
+
+/* Màu chủ đạo cho nhóm module duyệt và lịch sử đơn từ - Blue/Indigo Gradient */
+.nav-item-approval {
+  background: rgba(239, 246, 255, 0.6) !important; /* bg-blue-50/60 */
+  border-color: rgba(99, 102, 241, 0.15) !important; /* border-indigo-500/15 */
+}
+
+.nav-item-approval .nav-icon-wrapper {
+  background: rgba(99, 102, 241, 0.1) !important; /* bg-indigo-500/10 */
+  color: rgba(99, 102, 241, 0.85) !important; /* text-indigo-600 */
+}
+
+.nav-item-approval .nav-label {
+  color: rgba(67, 56, 202, 0.9) !important; /* text-indigo-700 */
+  font-weight: 600;
+}
+
+.nav-item-approval:hover {
+  background: rgba(224, 231, 255, 0.7) !important; /* bg-indigo-50/70 */
+  border-color: rgba(99, 102, 241, 0.25) !important; /* border-indigo-500/25 */
+  box-shadow: 0 12px 28px -20px rgba(99, 102, 241, 0.3) !important;
+}
+
+.nav-item-approval:hover::before {
+  background: rgba(99, 102, 241, 0.45) !important; /* indigo-500/45 */
+  box-shadow: 0 0 14px rgba(99, 102, 241, 0.45) !important;
+}
+
+.nav-item-approval:hover .nav-icon-wrapper {
+  background: rgba(99, 102, 241, 0.18) !important; /* bg-indigo-500/18 */
+  color: rgba(79, 70, 229, 1) !important; /* text-indigo-600 */
+}
+
+.nav-item-approval.active {
+  background: rgba(99, 102, 241, 0.12) !important; /* bg-indigo-500/12 */
+  border-color: rgba(99, 102, 241, 0.25) !important; /* border-indigo-500/25 */
+  color: rgba(67, 56, 202, 1) !important; /* text-indigo-700 */
+}
+
+.nav-item-approval.active::before {
+  background: rgba(99, 102, 241, 0.6) !important; /* indigo-500/60 */
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4) !important;
+}
+
+.nav-item-approval.active .nav-icon-wrapper,
+.nav-item-approval.active .nav-label {
+  color: rgba(67, 56, 202, 1) !important; /* text-indigo-700 */
+  font-weight: 700;
+}
+
+.nav-item-approval.active .nav-icon-wrapper {
+  background: rgba(99, 102, 241, 0.2) !important; /* bg-indigo-500/20 */
 }
 
 .quick-stats-card {
@@ -444,6 +561,7 @@
 
 .sidebar-logout {
   margin: 1rem 1rem 1.5rem;
+  flex-shrink: 0;
 }
 
 .sidebar-logout-btn {

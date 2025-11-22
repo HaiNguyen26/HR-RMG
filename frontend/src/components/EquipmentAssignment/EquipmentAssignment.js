@@ -175,7 +175,6 @@ const EquipmentAssignment = ({ employee, onComplete, onCancel, currentUser, show
       // Kiểm tra cả snake_case và camelCase để đảm bảo tương thích
       const employeeStatus = employee.trang_thai || employee.trangThai || employee.status;
       const isImportedEmployee = !!(employee.id && employeeStatus === 'PENDING');
-      const isNewEmployee = !employee.id;
 
       let hasDirectAssignment = false;
 
@@ -249,7 +248,6 @@ const EquipmentAssignment = ({ employee, onComplete, onCancel, currentUser, show
 
       // Hiển thị thông báo tổng kết
       if (showToast) {
-        const directCount = Object.values(departmentModes).filter(m => m === 'direct').length;
         const requestCount = Object.values(departmentModes).filter(m => m === 'request').length;
 
         if (hasDirectAssignment && requestCount > 0) {

@@ -1,3 +1,6 @@
+
+Dashboar tổng
+
 1. Tone Màu & Nền (Global Changes)
 Nền Tổng thể (Main Background): Trắng Sáng (Clean White) hoặc Xám Rất Nhạt (Off-White) (ví dụ: #F5F5F5 hoặc #FAFAFA).
 
@@ -30,7 +33,6 @@ Thiết kế: Rất Flat và sạch sẽ.
 Màu nền: Trắng hoặc Xám Rất Nhạt đồng nhất với Sidebar.
 
 
-
 4. Main Content (Khu vực Nội dung Chính)
 A. Các Thẻ Tổng Quan (KPI Cards)
 Nền thẻ: Vẫn sử dụng các màu tươi sáng (Xanh dương, Xanh lá, Cam, Tím) cho các thẻ KPI, nhưng màu phải đủ đậm để chữ trắng/sáng trên đó dễ đọc (ví dụ: #007BFF thay vì màu nhạt).
@@ -59,7 +61,7 @@ Các nút hành động (Ví dụ: "Thêm nhân viên") có nền màu Electric 
 Các Icon (Edit, Xóa) màu Xám Đậm. Khi Hover, Icon sẽ có hiệu ứng Phát Sáng (Glow Effect) bằng màu Electric Blue xung quanh.
 --------------------------------------------------------------------------------------------------------
 
-Satic card + KPI card 
+Satic card + KPI card dashboar tổng
 
 1. Cấu trúc và Nền (Base Structure)Nền Thẻ: Trắng Sáng (Clean White) hoặc Xám Rất Nhạt (ví dụ: #F5F5F5).Chiều sâu: Sử dụng bóng đổ mềm (Soft Shadow) theo nguyên tắc Material Design (ví dụ: box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08)). Bóng đổ phải nhẹ nhàng, không gây nặng nề trên nền sáng.Bo góc: Bo tròn góc tinh tế ($8px - 12px$).
 
@@ -71,28 +73,22 @@ Satic card + KPI card
 
 ---------------------
 
-2. Banner Chào mừng ("Chào mừng, Lê Phú Nhân")
-Đây là điểm nhấn màu sắc chính của trang. Thay vì khối màu đậm:
-•	Nền Banner: Sử dụng một Gradient Rất Nhạt HOẶC giữ nguyên gradient Xanh/Tím nhưng áp dụng hiệu ứng trong suốt (Glassmorphism):
-o	Nền banner: Màu Xanh/Tím hiện có nhưng trong suốt (opacity 80%) và có Background Blur nhẹ.
-o	Bóng đổ: Bóng đổ mềm mại dưới banner.
-•	Chữ "Chào mừng": Màu Trắng Sáng (vì nền vẫn là gradient màu).
+Dashboard nhân viên
+1. Thông tin nhân viên
+Giảm độ đậm của màu Xanh Navy:
 
+Hiện tại: Màu xanh hiện tại có vẻ rất bão hòa và đậm.
 
-3. Thẻ Thông tin Cá nhân ("Thông tin cá nhân") 
-Thẻ này hiện đang là màu đậm, cần chuyển sang Trắng Sạch với sự phân cấp rõ ràng.
-Thành phần	Thiết kế mới (Light Mode)	Ghi chú
-Nền Thẻ (Card Background)	Trắng Sáng (Clean White)	Dùng bóng đổ mềm mại (Soft Shadow) để nổi lên trên nền #F5F5F5.
-Header Thẻ (Thông tin cá nhân)	Màu Electric Blue cho chữ và icon, nền header Trắng Sáng (hoặc Xám Rất Nhạt).	Tránh dùng khối màu đậm.
-Trường Dữ liệu (Input Fields)	Nền Trắng cho các ô, viền mảnh 1px màu Xám Rất Nhạt (#E8E8E8).	Rất Flat và Sạch sẽ.
-Hiệu ứng Focus	Khi click vào ô nhập liệu, viền ô sẽ chuyển sang màu Electric Blue và có Subtle Glow (Glow nhẹ) cùng màu.	Áp dụng nguyên tắc Fluent.
-Dữ liệu Tĩnh (Mã NV, Chi nhánh)	Label (Mã NV): Chữ Xám Trung tính. Value (RMG00003): Chữ Đen, in đậm.	Phân cấp bằng màu sắc và độ đậm.
+Chỉnh sửa: Hãy thử giảm độ bão hòa (Saturation) và tăng độ sáng (Brightness) của màu xanh Navy một chút. Điều này sẽ làm cho nó trở nên mềm mại hơn và ít "nuốt" ánh sáng của nền Light Mode xung quanh.
 
+Áp dụng Hiệu ứng Trong suốt (Translucency):
 
-4. Các Thẻ Nội dung Cụ thể (Thao tác nhanh, Thống kê của tôi)
-Các thẻ này giữ nguyên tắc Trắng Sạch và được tổ chức bằng Icon/Màu Accent nhẹ.
-Thẻ	Chi tiết Thiết kế
-Thẻ Nền (Cards Base)	Nền Trắng Sáng, Soft Shadow nhẹ.
-Thẻ Thao tác nhanh (Quick Actions)	Các nút "Xin nghỉ phép", "Xin nghỉ việc" có nền Trắng Sáng, viền mảnh màu Electric Blue. Icon Electric Blue. Khi Hover, toàn bộ thẻ có hiệu ứng Glow nhẹ màu Electric Blue.
-Thẻ Thống kê (Statistics)	Các chỉ số "Đơn đã gửi," "Đã duyệt" nên được phân tách bằng đường kẻ mảnh 1px màu Xám Rất Nhạt (Divider). Icon bên cạnh (Đồng hồ, Lịch) nên là màu Electric Blue hoặc màu Status (Xanh lá/Cam).
+Đối với cả Thẻ "Thông tin nhân viên" và thân bảng Danh sách nhân viên, hãy áp dụng độ trong suốt (opacity) khoảng 90-95%.
 
+Lợi ích: Khi đó, bạn sẽ thấy lớp nền Xám Rất Nhạt (Off-White) phía sau xuyên qua một chút, tạo cảm giác thẻ là một tấm Acrylic màu xanh trong mờ thay vì một khối màu đặc. Điều này làm cho nền tối "nhẹ" và "thoáng" hơn rất nhiều.
+
+Tăng cường Ánh sáng Viền (Edge Highlight):
+
+Thêm một đường viền mảnh (1px) màu Electric Blue hoặc Trắng Sáng (Light White) xung quanh các thẻ nền tối.
+
+Lợi ích: Điều này mô phỏng cách ánh sáng chiếu vào cạnh thẻ, khiến thẻ trông như đang hấp thụ ánh sáng từ môi trường Light Mode, làm giảm cảm giác nặng nề.

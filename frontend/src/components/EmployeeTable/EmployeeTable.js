@@ -1,7 +1,74 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { employeesAPI, requestsAPI, equipmentAPI } from '../../services/api';
 import './EmployeeTable.css';
+
+// Custom Dropdown Component
+const CustomDropdown = ({ id, value, onChange, options, placeholder, error, className = '' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const selectedOption = options.find(opt => opt.value === value) || null;
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (option) => {
+    if (option.value === '') return; // Prevent selecting placeholder
+    onChange({ target: { value: option.value } });
+    setIsOpen(false);
+  };
+
+  // Filter out placeholder option (empty value) from display
+  const displayOptions = options.filter(opt => opt.value !== '');
+
+  return (
+    <div className={`custom-dropdown-wrapper ${className} ${error ? 'error' : ''}`} ref={dropdownRef}>
+      <button
+        id={id}
+        type="button"
+        className={`custom-dropdown-trigger ${isOpen ? 'open' : ''} ${error ? 'error' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+        onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+        aria-labelledby={id ? `${id}-label` : undefined}
+      >
+        <span className="custom-dropdown-value">
+          {selectedOption && selectedOption.value !== '' ? selectedOption.label : placeholder}
+        </span>
+        <svg className="custom-dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+      {isOpen && (
+        <div className="custom-dropdown-menu">
+          {displayOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={`custom-dropdown-option ${value === option.value ? 'selected' : ''}`}
+              onClick={() => handleSelect(option)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const EmployeeTable = ({ employees, onRefresh, currentUser, showToast, showConfirm, onUpdateEquipment, branchFilter }) => {
   const [loading, setLoading] = useState(false);
@@ -429,9 +496,20 @@ const EmployeeTable = ({ employees, onRefresh, currentUser, showToast, showConfi
           <div className="detail-modal-overlay" onClick={closeModal}>
             <div className="detail-modal-container" onClick={(e) => e.stopPropagation()}>
               <div className="detail-modal-header">
-                <h2 className="detail-modal-title">
-                  {detailModal.mode === 'view' ? 'Thông tin nhân viên' : 'Chỉnh sửa thông tin nhân viên'}
-                </h2>
+                <div className="detail-modal-title-wrapper">
+                  {detailModal.mode === 'edit' && (
+                    <div className="detail-modal-icon-edit">
+                      <svg className="detail-modal-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </div>
+                  )}
+                  <h2 className="detail-modal-title">
+                    {detailModal.mode === 'view' 
+                      ? 'Thông tin nhân viên' 
+                      : `Chỉnh sửa Hồ sơ ${detailModal.employee?.ho_ten || detailModal.employee?.hoTen || 'Nhân viên'}`}
+                  </h2>
+                </div>
                 <button className="detail-modal-close" onClick={closeModal}>
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -441,104 +519,138 @@ const EmployeeTable = ({ employees, onRefresh, currentUser, showToast, showConfi
               <div className="detail-modal-body">
                 {detailModal.mode === 'edit' ? (
                   <form onSubmit={handleEditSubmit} className="detail-form">
-                    <div className="form-group">
-                      <label htmlFor="hoTen">Họ và tên *</label>
-                      <input
-                        type="text"
-                        id="hoTen"
-                        name="hoTen"
-                        value={editForm.hoTen}
-                        onChange={handleEditChange}
-                        required
-                      />
+                    {/* Section 01: Thông tin cá nhân */}
+                    <div className="detail-form-section">
+                      <div className="detail-section-header">
+                        <span className="detail-section-badge">01</span>
+                        <h3 className="detail-section-title">Thông tin cá nhân</h3>
+                      </div>
+                      <div className="detail-form-grid">
+                        <div className="form-group">
+                          <label htmlFor="hoTen">Họ và tên *</label>
+                          <input
+                            type="text"
+                            id="hoTen"
+                            name="hoTen"
+                            value={editForm.hoTen}
+                            onChange={handleEditChange}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label htmlFor="chiNhanh">Chi nhánh</label>
+                          <input
+                            type="text"
+                            id="chiNhanh"
+                            name="chiNhanh"
+                            value={editForm.chiNhanh}
+                            onChange={handleEditChange}
+                            placeholder="VD: Hà Nội, Hồ Chí Minh..."
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label htmlFor="ngayGiaNhap">Ngày nhận việc *</label>
+                          <input
+                            type="date"
+                            id="ngayGiaNhap"
+                            name="ngayGiaNhap"
+                            value={editForm.ngayGiaNhap}
+                            onChange={handleEditChange}
+                            required
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="form-group">
-                      <label htmlFor="chiNhanh">Chi nhánh</label>
-                      <input
-                        type="text"
-                        id="chiNhanh"
-                        name="chiNhanh"
-                        value={editForm.chiNhanh}
-                        onChange={handleEditChange}
-                        placeholder="VD: Hà Nội, Hồ Chí Minh..."
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="chucDanh">Chức danh *</label>
-                      <input
-                        type="text"
-                        id="chucDanh"
-                        name="chucDanh"
-                        value={editForm.chucDanh}
-                        onChange={handleEditChange}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="phongBan">Phòng ban *</label>
-                      <select
-                        id="phongBan"
-                        name="phongBan"
-                        value={editForm.phongBan}
-                        onChange={handleEditChange}
-                        required
-                      >
-                        <option value="">Chọn phòng ban</option>
-                        <option value="IT">Phòng IT</option>
-                        <option value="HR">Hành chính nhân sự</option>
-                        <option value="ACCOUNTING">Kế toán</option>
-                        <option value="OTHER">Phòng ban khác</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="boPhan">Bộ phận *</label>
-                      <input
-                        type="text"
-                        id="boPhan"
-                        name="boPhan"
-                        value={editForm.boPhan}
-                        onChange={handleEditChange}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="ngayGiaNhap">Ngày nhận việc *</label>
-                      <input
-                        type="date"
-                        id="ngayGiaNhap"
-                        name="ngayGiaNhap"
-                        value={editForm.ngayGiaNhap}
-                        onChange={handleEditChange}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="quanLyTrucTiep">Quản lý trực tiếp</label>
-                      <input
-                        type="text"
-                        id="quanLyTrucTiep"
-                        name="quanLyTrucTiep"
-                        value={editForm.quanLyTrucTiep}
-                        onChange={handleEditChange}
-                        placeholder="Ví dụ: Nguyễn Văn A"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="quanLyGianTiep">Quản lý gián tiếp</label>
-                      <input
-                        type="text"
-                        id="quanLyGianTiep"
-                        name="quanLyGianTiep"
-                        value={editForm.quanLyGianTiep}
-                        onChange={handleEditChange}
-                        placeholder="Ví dụ: Trần Thị B"
-                      />
+
+                    {/* Section 02: Công việc & Tổ chức */}
+                    <div className="detail-form-section">
+                      <div className="detail-section-header">
+                        <span className="detail-section-badge">02</span>
+                        <h3 className="detail-section-title">Công việc & Tổ chức</h3>
+                      </div>
+                      <div className="detail-form-grid">
+                        <div className="form-group">
+                          <label htmlFor="chucDanh">Chức danh *</label>
+                          <input
+                            type="text"
+                            id="chucDanh"
+                            name="chucDanh"
+                            value={editForm.chucDanh}
+                            onChange={handleEditChange}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label htmlFor="phongBan">Phòng ban *</label>
+                          <CustomDropdown
+                            id="phongBan"
+                            value={editForm.phongBan}
+                            onChange={handleEditChange}
+                            options={[
+                              { value: '', label: 'Chọn phòng ban' },
+                              { value: 'IT', label: 'Phòng IT' },
+                              { value: 'HR', label: 'Hành chính nhân sự' },
+                              { value: 'ACCOUNTING', label: 'Kế toán' },
+                              { value: 'OTHER', label: 'Phòng ban khác' }
+                            ]}
+                            placeholder="Chọn phòng ban"
+                            className="detail-form-custom-dropdown"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label htmlFor="boPhan">Bộ phận *</label>
+                          <input
+                            type="text"
+                            id="boPhan"
+                            name="boPhan"
+                            value={editForm.boPhan}
+                            onChange={handleEditChange}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label htmlFor="quanLyTrucTiep">Quản lý trực tiếp</label>
+                          <input
+                            type="text"
+                            id="quanLyTrucTiep"
+                            name="quanLyTrucTiep"
+                            value={editForm.quanLyTrucTiep}
+                            onChange={handleEditChange}
+                            placeholder="Ví dụ: Nguyễn Văn A"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label htmlFor="quanLyGianTiep">Quản lý gián tiếp</label>
+                          <input
+                            type="text"
+                            id="quanLyGianTiep"
+                            name="quanLyGianTiep"
+                            value={editForm.quanLyGianTiep}
+                            onChange={handleEditChange}
+                            placeholder="Ví dụ: Trần Thị B"
+                          />
+                        </div>
+                      </div>
                     </div>
                     {formError && <p className="form-error">{formError}</p>}
                     {canManage && (
                       <div className="detail-modal-actions">
                         <button type="submit" className="action-btn save-btn" disabled={loading}>
-                          {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                          {loading ? (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              <span>Đang lưu...</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>Lưu thay đổi</span>
+                            </>
+                          )}
                         </button>
                         <button type="button" onClick={handleCancelEdit} className="action-btn cancel-btn">
                           Hủy
