@@ -2836,7 +2836,7 @@ router.post('/recruitment-requests', async (req, res) => {
                 ly_do_tuyen, ly_do_khac_ghi_chu,
                 tieu_chuan_tuyen_chon,
                 status
-            ) VALUES ($1, $2, $3, $4, $5, NULL, $6, $7, $8, $9, $10, 'PENDING')
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'PENDING')
             RETURNING *
         `;
 
@@ -2846,6 +2846,7 @@ router.post('/recruitment-requests', async (req, res) => {
             chucDanhCanTuyen,
             parseInt(soLuongYeuCau, 10),
             phongBan,
+            null, // nguoi_quan_ly_truc_tiep - đã xóa khỏi form
             moTaCongViec || null,
             loaiLaoDong || null,
             lyDoTuyen ? JSON.stringify(lyDoTuyen) : null,
