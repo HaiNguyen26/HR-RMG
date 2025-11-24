@@ -4258,7 +4258,7 @@ const RecruitmentRequestDetailView = ({ request }) => {
                 </div>
 
                 <div className="recruitment-request-form-content">
-                    {/* Display all fields from PHẦN I */}
+                    {/* Display all fields from PHẦN I - Layout 2 cột */}
                     <div className="recruitment-request-form-row recruitment-request-form-row-2cols">
                         <div className="recruitment-request-form-field">
                             <label className="recruitment-request-form-label">Chức danh cần tuyển</label>
@@ -4270,26 +4270,28 @@ const RecruitmentRequestDetailView = ({ request }) => {
                         </div>
                     </div>
 
-                    <div className="recruitment-request-form-field">
-                        <label className="recruitment-request-form-label">Phòng ban</label>
-                        <div className="recruitment-request-form-value">{request.phong_ban || request.phongBan || '-'}</div>
+                    <div className="recruitment-request-form-row recruitment-request-form-row-2cols">
+                        <div className="recruitment-request-form-field">
+                            <label className="recruitment-request-form-label">Phòng ban</label>
+                            <div className="recruitment-request-form-value">{request.phong_ban || request.phongBan || '-'}</div>
+                        </div>
+                        <div className="recruitment-request-form-field">
+                            <label className="recruitment-request-form-label">Người quản lý trực tiếp</label>
+                            <div className="recruitment-request-form-value">{request.nguoi_quan_ly_truc_tiep || request.nguoiQuanLyTrucTiep || '-'}</div>
+                        </div>
                     </div>
 
-                    <div className="recruitment-request-form-field">
-                        <label className="recruitment-request-form-label">Người quản lý trực tiếp</label>
-                        <div className="recruitment-request-form-value">{request.nguoi_quan_ly_truc_tiep || request.nguoiQuanLyTrucTiep || '-'}</div>
-                    </div>
-
-                    <div className="recruitment-request-form-field">
-                        <label className="recruitment-request-form-label">Mô tả công việc</label>
-                        <div className="recruitment-request-form-value">{request.mo_ta_cong_viec === 'co' || request.moTaCongViec === 'co' ? 'Có' : request.mo_ta_cong_viec === 'chua_co' || request.moTaCongViec === 'chua_co' ? 'Chưa có' : '-'}</div>
-                    </div>
-
-                    <div className="recruitment-request-form-field">
-                        <label className="recruitment-request-form-label">Loại lao động</label>
-                        <div className="recruitment-request-form-value">
-                            {request.loai_lao_dong === 'thoi_vu' || request.loaiLaoDong === 'thoi_vu' ? 'Thời vụ' : 
-                             request.loai_lao_dong === 'toan_thoi_gian' || request.loaiLaoDong === 'toan_thoi_gian' ? 'Toàn thời gian' : '-'}
+                    <div className="recruitment-request-form-row recruitment-request-form-row-2cols">
+                        <div className="recruitment-request-form-field">
+                            <label className="recruitment-request-form-label">Mô tả công việc</label>
+                            <div className="recruitment-request-form-value">{request.mo_ta_cong_viec === 'co' || request.moTaCongViec === 'co' ? 'Có' : request.mo_ta_cong_viec === 'chua_co' || request.moTaCongViec === 'chua_co' ? 'Chưa có' : '-'}</div>
+                        </div>
+                        <div className="recruitment-request-form-field">
+                            <label className="recruitment-request-form-label">Loại lao động</label>
+                            <div className="recruitment-request-form-value">
+                                {request.loai_lao_dong === 'thoi_vu' || request.loaiLaoDong === 'thoi_vu' ? 'Thời vụ' : 
+                                 request.loai_lao_dong === 'toan_thoi_gian' || request.loaiLaoDong === 'toan_thoi_gian' ? 'Toàn thời gian' : '-'}
+                            </div>
                         </div>
                     </div>
 
@@ -4362,88 +4364,96 @@ const RecruitmentRequestDetailView = ({ request }) => {
                             </div>
                         )}
 
-                        {/* Kinh nghiệm */}
-                        {tieuChuanTuyenChon.kinhNghiem && (
-                            <div className="recruitment-request-form-field">
-                                <label className="recruitment-request-form-label">Kinh nghiệm</label>
-                                <div className="recruitment-request-form-value">
-                                    {tieuChuanTuyenChon.kinhNghiem.khong ? 'Không' :
-                                     tieuChuanTuyenChon.kinhNghiem.soNamKinhNghiem && tieuChuanTuyenChon.kinhNghiem.soNam ? 
-                                     `Số năm kinh nghiệm: ${tieuChuanTuyenChon.kinhNghiem.soNam}` : '-'}
-                                </div>
+                        {/* Kinh nghiệm và Kiến thức - 2 cột */}
+                        {(tieuChuanTuyenChon.kinhNghiem || tieuChuanTuyenChon.kienThuc) && (
+                            <div className="recruitment-request-form-row recruitment-request-form-row-2cols">
+                                {tieuChuanTuyenChon.kinhNghiem && (
+                                    <div className="recruitment-request-form-field">
+                                        <label className="recruitment-request-form-label">Kinh nghiệm</label>
+                                        <div className="recruitment-request-form-value">
+                                            {tieuChuanTuyenChon.kinhNghiem.khong ? 'Không' :
+                                             tieuChuanTuyenChon.kinhNghiem.soNamKinhNghiem && tieuChuanTuyenChon.kinhNghiem.soNam ? 
+                                             `Số năm kinh nghiệm: ${tieuChuanTuyenChon.kinhNghiem.soNam}` : '-'}
+                                        </div>
+                                    </div>
+                                )}
+                                {tieuChuanTuyenChon.kienThuc && (
+                                    <div className="recruitment-request-form-field">
+                                        <label className="recruitment-request-form-label">Kiến thức</label>
+                                        <div className="recruitment-request-form-value">
+                                            {tieuChuanTuyenChon.kienThuc.khong ? 'Không' :
+                                             tieuChuanTuyenChon.kienThuc.nganhNghe && tieuChuanTuyenChon.kienThuc.nganhNgheValue ? 
+                                             `Ngành nghề: ${tieuChuanTuyenChon.kienThuc.nganhNgheValue}` : '-'}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                        {/* Kiến thức */}
-                        {tieuChuanTuyenChon.kienThuc && (
-                            <div className="recruitment-request-form-field">
-                                <label className="recruitment-request-form-label">Kiến thức</label>
-                                <div className="recruitment-request-form-value">
-                                    {tieuChuanTuyenChon.kienThuc.khong ? 'Không' :
-                                     tieuChuanTuyenChon.kienThuc.nganhNghe && tieuChuanTuyenChon.kienThuc.nganhNgheValue ? 
-                                     `Ngành nghề: ${tieuChuanTuyenChon.kienThuc.nganhNgheValue}` : '-'}
-                                </div>
+                        {/* Ngoại ngữ và Vi tính - 2 cột */}
+                        {(tieuChuanTuyenChon.ngoaiNgu || tieuChuanTuyenChon.viTinh) && (
+                            <div className="recruitment-request-form-row recruitment-request-form-row-2cols">
+                                {tieuChuanTuyenChon.ngoaiNgu && (
+                                    <div className="recruitment-request-form-field">
+                                        <label className="recruitment-request-form-label">Ngoại ngữ</label>
+                                        <div className="recruitment-request-form-value">
+                                            {[
+                                                tieuChuanTuyenChon.ngoaiNgu.tiengAnh && `Tiếng Anh${tieuChuanTuyenChon.ngoaiNgu.trinhDoTiengAnh ? ` (${tieuChuanTuyenChon.ngoaiNgu.trinhDoTiengAnh})` : ''}`,
+                                                tieuChuanTuyenChon.ngoaiNgu.ngoaiNguKhac && tieuChuanTuyenChon.ngoaiNgu.tenNgoaiNguKhac && 
+                                                `${tieuChuanTuyenChon.ngoaiNgu.tenNgoaiNguKhac}${tieuChuanTuyenChon.ngoaiNgu.trinhDoNgoaiNguKhac ? ` (${tieuChuanTuyenChon.ngoaiNgu.trinhDoNgoaiNguKhac})` : ''}`
+                                            ].filter(Boolean).join(', ') || '-'}
+                                        </div>
+                                    </div>
+                                )}
+                                {tieuChuanTuyenChon.viTinh && (
+                                    <div className="recruitment-request-form-field">
+                                        <label className="recruitment-request-form-label">Vi tính</label>
+                                        <div className="recruitment-request-form-value">
+                                            {tieuChuanTuyenChon.viTinh.khong ? 'Không' :
+                                             [
+                                                 tieuChuanTuyenChon.viTinh.msOffice && 'MS Office (Word / Excel / Access)',
+                                                 tieuChuanTuyenChon.viTinh.khac && tieuChuanTuyenChon.viTinh.khacValue && 
+                                                 `Khác: ${tieuChuanTuyenChon.viTinh.khacValue}`
+                                             ].filter(Boolean).join(', ') || '-'}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                        {/* Ngoại ngữ */}
-                        {tieuChuanTuyenChon.ngoaiNgu && (
-                            <div className="recruitment-request-form-field">
-                                <label className="recruitment-request-form-label">Ngoại ngữ</label>
-                                <div className="recruitment-request-form-value">
-                                    {[
-                                        tieuChuanTuyenChon.ngoaiNgu.tiengAnh && `Tiếng Anh${tieuChuanTuyenChon.ngoaiNgu.trinhDoTiengAnh ? ` (${tieuChuanTuyenChon.ngoaiNgu.trinhDoTiengAnh})` : ''}`,
-                                        tieuChuanTuyenChon.ngoaiNgu.ngoaiNguKhac && tieuChuanTuyenChon.ngoaiNgu.tenNgoaiNguKhac && 
-                                        `${tieuChuanTuyenChon.ngoaiNgu.tenNgoaiNguKhac}${tieuChuanTuyenChon.ngoaiNgu.trinhDoNgoaiNguKhac ? ` (${tieuChuanTuyenChon.ngoaiNgu.trinhDoNgoaiNguKhac})` : ''}`
-                                    ].filter(Boolean).join(', ') || '-'}
-                                </div>
+                        {/* Kỹ năng và Khả năng - 2 cột */}
+                        {(tieuChuanTuyenChon.kyNang || tieuChuanTuyenChon.khaNang) && (
+                            <div className="recruitment-request-form-row recruitment-request-form-row-2cols">
+                                {tieuChuanTuyenChon.kyNang && (
+                                    <div className="recruitment-request-form-field">
+                                        <label className="recruitment-request-form-label">Kỹ năng</label>
+                                        <div className="recruitment-request-form-value">{tieuChuanTuyenChon.kyNang || '-'}</div>
+                                    </div>
+                                )}
+                                {tieuChuanTuyenChon.khaNang && (
+                                    <div className="recruitment-request-form-field">
+                                        <label className="recruitment-request-form-label">Khả năng</label>
+                                        <div className="recruitment-request-form-value">{tieuChuanTuyenChon.khaNang || '-'}</div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                        {/* Vi tính */}
-                        {tieuChuanTuyenChon.viTinh && (
-                            <div className="recruitment-request-form-field">
-                                <label className="recruitment-request-form-label">Vi tính</label>
-                                <div className="recruitment-request-form-value">
-                                    {tieuChuanTuyenChon.viTinh.khong ? 'Không' :
-                                     [
-                                         tieuChuanTuyenChon.viTinh.msOffice && 'MS Office (Word / Excel / Access)',
-                                         tieuChuanTuyenChon.viTinh.khac && tieuChuanTuyenChon.viTinh.khacValue && 
-                                         `Khác: ${tieuChuanTuyenChon.viTinh.khacValue}`
-                                     ].filter(Boolean).join(', ') || '-'}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Kỹ năng */}
-                        {tieuChuanTuyenChon.kyNang && (
-                            <div className="recruitment-request-form-field">
-                                <label className="recruitment-request-form-label">Kỹ năng</label>
-                                <div className="recruitment-request-form-value">{tieuChuanTuyenChon.kyNang || '-'}</div>
-                            </div>
-                        )}
-
-                        {/* Khả năng */}
-                        {tieuChuanTuyenChon.khaNang && (
-                            <div className="recruitment-request-form-field">
-                                <label className="recruitment-request-form-label">Khả năng</label>
-                                <div className="recruitment-request-form-value">{tieuChuanTuyenChon.khaNang || '-'}</div>
-                            </div>
-                        )}
-
-                        {/* Ngoại hình */}
-                        {tieuChuanTuyenChon.ngoaiHinh && (
-                            <div className="recruitment-request-form-field">
-                                <label className="recruitment-request-form-label">Ngoại hình</label>
-                                <div className="recruitment-request-form-value">{tieuChuanTuyenChon.ngoaiHinh || '-'}</div>
-                            </div>
-                        )}
-
-                        {/* Tính cách */}
-                        {tieuChuanTuyenChon.tinhCach && (
-                            <div className="recruitment-request-form-field">
-                                <label className="recruitment-request-form-label">Tính cách</label>
-                                <div className="recruitment-request-form-value">{tieuChuanTuyenChon.tinhCach || '-'}</div>
+                        {/* Ngoại hình và Tính cách - 2 cột */}
+                        {(tieuChuanTuyenChon.ngoaiHinh || tieuChuanTuyenChon.tinhCach) && (
+                            <div className="recruitment-request-form-row recruitment-request-form-row-2cols">
+                                {tieuChuanTuyenChon.ngoaiHinh && (
+                                    <div className="recruitment-request-form-field">
+                                        <label className="recruitment-request-form-label">Ngoại hình</label>
+                                        <div className="recruitment-request-form-value">{tieuChuanTuyenChon.ngoaiHinh || '-'}</div>
+                                    </div>
+                                )}
+                                {tieuChuanTuyenChon.tinhCach && (
+                                    <div className="recruitment-request-form-field">
+                                        <label className="recruitment-request-form-label">Tính cách</label>
+                                        <div className="recruitment-request-form-value">{tieuChuanTuyenChon.tinhCach || '-'}</div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
