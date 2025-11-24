@@ -3015,6 +3015,9 @@ router.put('/recruitment-requests/:id/status', async (req, res) => {
  */
 const seedDepartmentsAndPositions = async () => {
     try {
+        // Đảm bảo table tồn tại trước
+        await ensureCandidatesTable();
+        
         // Kiểm tra xem đã có dữ liệu chưa
         const checkDept = await pool.query(`
             SELECT COUNT(DISTINCT phong_ban) as count
@@ -3028,8 +3031,13 @@ const seedDepartmentsAndPositions = async () => {
             WHERE vi_tri_ung_tuyen IS NOT NULL AND vi_tri_ung_tuyen != ''
         `);
 
+        const deptCount = parseInt(checkDept.rows[0].count) || 0;
+        const posCount = parseInt(checkPos.rows[0].count) || 0;
+
+        console.log(`📊 Current counts - Departments: ${deptCount}, Positions: ${posCount}`);
+
         // Nếu chưa có dữ liệu, thêm vào
-        if (checkDept.rows[0].count === '0' || checkPos.rows[0].count === '0') {
+        if (deptCount === 0 || posCount === 0) {
             console.log('🌱 Seeding departments and positions...');
             
             // Danh sách phòng ban
@@ -3046,6 +3054,9 @@ const seedDepartmentsAndPositions = async () => {
                 'Dịch vụ Kỹ thuật', 'Kế toán nội bộ', 'Kế toán bán hàng'
             ];
 
+            let deptInserted = 0;
+            let posInserted = 0;
+
             // Thêm phòng ban (kiểm tra trước để tránh duplicate)
             for (const dept of departments) {
                 const existing = await pool.query(`
@@ -3054,11 +3065,14 @@ const seedDepartmentsAndPositions = async () => {
                     WHERE phong_ban = $1 AND ho_ten = $2
                 `, [dept, `[Placeholder - ${dept}]`]);
                 
-                if (existing.rows[0].count === '0') {
+                const exists = parseInt(existing.rows[0].count) || 0;
+                if (exists === 0) {
                     await pool.query(`
                         INSERT INTO candidates (ho_ten, phong_ban, vi_tri_ung_tuyen, status, notes, created_at)
                         VALUES ($1, $2, NULL, 'PENDING_INTERVIEW', 'Dữ liệu mẫu cho dropdown phòng ban', NOW())
                     `, [`[Placeholder - ${dept}]`, dept]);
+                    deptInserted++;
+                    console.log(`  ✅ Inserted department: ${dept}`);
                 }
             }
 
@@ -3070,18 +3084,24 @@ const seedDepartmentsAndPositions = async () => {
                     WHERE vi_tri_ung_tuyen = $1 AND ho_ten = $2
                 `, [pos, `[Placeholder - ${pos}]`]);
                 
-                if (existing.rows[0].count === '0') {
+                const exists = parseInt(existing.rows[0].count) || 0;
+                if (exists === 0) {
                     await pool.query(`
                         INSERT INTO candidates (ho_ten, phong_ban, vi_tri_ung_tuyen, status, notes, created_at)
                         VALUES ($1, NULL, $2, 'PENDING_INTERVIEW', 'Dữ liệu mẫu cho dropdown vị trí ứng tuyển', NOW())
                     `, [`[Placeholder - ${pos}]`, pos]);
+                    posInserted++;
+                    console.log(`  ✅ Inserted position: ${pos}`);
                 }
             }
             
-            console.log('✅ Departments and positions seeded successfully');
+            console.log(`✅ Seeding completed - Departments: ${deptInserted}, Positions: ${posInserted}`);
+        } else {
+            console.log('✅ Departments and positions already exist, skipping seed');
         }
     } catch (error) {
-        console.error('Error seeding departments and positions:', error);
+        console.error('❌ Error seeding departments and positions:', error);
+        throw error; // Re-throw để caller biết có lỗi
     }
 };
 
@@ -3092,7 +3112,7 @@ router.get('/departments', async (req, res) => {
     try {
         // Tự động seed nếu chưa có dữ liệu
         await seedDepartmentsAndPositions();
-        
+
         const query = `
             SELECT DISTINCT phong_ban as department
             FROM candidates
@@ -3120,7 +3140,7 @@ router.get('/positions', async (req, res) => {
     try {
         // Tự động seed nếu chưa có dữ liệu
         await seedDepartmentsAndPositions();
-        
+
         const query = `
             SELECT DISTINCT vi_tri_ung_tuyen as position
             FROM candidates
