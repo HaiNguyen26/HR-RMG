@@ -901,6 +901,10 @@ const InterviewApprovals = ({ currentUser, showToast, showConfirm }) => {
 
     const handleSubmitRecruitmentRequest = async (e) => {
         e.preventDefault();
+        console.log('handleSubmitRecruitmentRequest called', {
+            formData: recruitmentRequestForm,
+            submitting: submittingRecruitmentRequest
+        });
 
         // Validation
         const errors = {};
@@ -2471,6 +2475,20 @@ const InterviewApprovals = ({ currentUser, showToast, showConfirm }) => {
                                     type="submit"
                                     className="recruitment-request-modal-btn recruitment-request-modal-btn-primary"
                                     disabled={submittingRecruitmentRequest}
+                                    onClick={(e) => {
+                                        console.log('Submit button clicked', {
+                                            submitting: submittingRecruitmentRequest,
+                                            loading: loadingFormData,
+                                            formData: recruitmentRequestForm
+                                        });
+                                        if (!submittingRecruitmentRequest) {
+                                            // Let form submission proceed normally
+                                            console.log('Allowing form submission');
+                                        } else {
+                                            e.preventDefault();
+                                            console.log('Preventing submission - already submitting');
+                                        }
+                                    }}
                                 >
                                     {submittingRecruitmentRequest ? 'Đang gửi...' : 'Gửi yêu cầu'}
                                 </button>
