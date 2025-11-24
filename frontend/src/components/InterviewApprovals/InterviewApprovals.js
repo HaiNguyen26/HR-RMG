@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { candidatesAPI, employeesAPI } from '../../services/api';
+import { candidatesAPI } from '../../services/api';
 import { formatDateDisplay } from '../../utils/dateUtils';
 import './InterviewApprovals.css';
 
