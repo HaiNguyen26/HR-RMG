@@ -70,6 +70,9 @@ export const employeesAPI = {
     return api.delete(`/employees/${cleanedId}`);
   },
   bulkCreate: (employees) => api.post('/employees/bulk', { employees }),
+  getDepartments: () => api.get('/employees/departments'),
+  getJobTitles: () => api.get('/employees/job-titles'),
+  getManagers: () => api.get('/employees/managers'),
 };
 
 // Equipment API

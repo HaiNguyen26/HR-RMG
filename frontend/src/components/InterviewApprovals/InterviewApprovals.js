@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { candidatesAPI } from '../../services/api';
+import { candidatesAPI, employeesAPI } from '../../services/api';
 import { formatDateDisplay } from '../../utils/dateUtils';
 import './InterviewApprovals.css';
 
@@ -100,6 +100,10 @@ const InterviewApprovals = ({ currentUser, showToast, showConfirm }) => {
     });
     const [recruitmentRequestErrors, setRecruitmentRequestErrors] = useState({});
     const [submittingRecruitmentRequest, setSubmittingRecruitmentRequest] = useState(false);
+    const [departments, setDepartments] = useState([]);
+    const [jobTitles, setJobTitles] = useState([]);
+    const [managers, setManagers] = useState([]);
+    const [loadingFormData, setLoadingFormData] = useState(false);
 
     // Mapping vị trí ứng tuyển từ code sang tên đầy đủ
     const viTriMap = {
@@ -773,6 +777,41 @@ const InterviewApprovals = ({ currentUser, showToast, showConfirm }) => {
             }
         }));
     };
+
+    // Fetch form data (departments, job titles, managers) when recruitment request modal opens
+    useEffect(() => {
+        const fetchFormData = async () => {
+            if (!isRecruitmentRequestModalOpen) return;
+            
+            setLoadingFormData(true);
+            try {
+                const [departmentsRes, jobTitlesRes, managersRes] = await Promise.all([
+                    employeesAPI.getDepartments(),
+                    employeesAPI.getJobTitles(),
+                    employeesAPI.getManagers()
+                ]);
+
+                if (departmentsRes.data?.success) {
+                    setDepartments(departmentsRes.data.data || []);
+                }
+                if (jobTitlesRes.data?.success) {
+                    setJobTitles(jobTitlesRes.data.data || []);
+                }
+                if (managersRes.data?.success) {
+                    setManagers(managersRes.data.data || []);
+                }
+            } catch (error) {
+                console.error('Error fetching form data:', error);
+                if (showToast) {
+                    showToast('Lỗi khi tải dữ liệu form', 'error');
+                }
+            } finally {
+                setLoadingFormData(false);
+            }
+        };
+
+        fetchFormData();
+    }, [isRecruitmentRequestModalOpen, showToast]);
 
     const handleCloseRecruitmentRequestModal = () => {
         setIsRecruitmentRequestModalOpen(false);
@@ -1793,13 +1832,17 @@ const InterviewApprovals = ({ currentUser, showToast, showConfirm }) => {
                                             <label className="recruitment-request-form-label">
                                                 Chức danh cần tuyển <span className="required">*</span>
                                             </label>
-                                            <input
-                                                type="text"
-                                                className={`recruitment-request-form-input ${recruitmentRequestErrors.chucDanhCanTuyen ? 'error' : ''}`}
+                                            <select
+                                                className={`recruitment-request-form-input recruitment-request-form-select ${recruitmentRequestErrors.chucDanhCanTuyen ? 'error' : ''}`}
                                                 value={recruitmentRequestForm.chucDanhCanTuyen}
                                                 onChange={(e) => handleRecruitmentRequestChange('chucDanhCanTuyen', e.target.value)}
-                                                placeholder="Nhập chức danh cần tuyển"
-                                            />
+                                                disabled={loadingFormData}
+                                            >
+                                                <option value="">-- Chọn chức danh --</option>
+                                                {jobTitles.map((title, index) => (
+                                                    <option key={index} value={title}>{title}</option>
+                                                ))}
+                                            </select>
                                             {recruitmentRequestErrors.chucDanhCanTuyen && (
                                                 <span className="recruitment-request-error-text">{recruitmentRequestErrors.chucDanhCanTuyen}</span>
                                             )}
@@ -1843,13 +1886,17 @@ const InterviewApprovals = ({ currentUser, showToast, showConfirm }) => {
                                         <label className="recruitment-request-form-label">
                                             Phòng ban <span className="required">*</span>
                                         </label>
-                                        <input
-                                            type="text"
-                                            className={`recruitment-request-form-input ${recruitmentRequestErrors.phongBan ? 'error' : ''}`}
+                                        <select
+                                            className={`recruitment-request-form-input recruitment-request-form-select ${recruitmentRequestErrors.phongBan ? 'error' : ''}`}
                                             value={recruitmentRequestForm.phongBan}
                                             onChange={(e) => handleRecruitmentRequestChange('phongBan', e.target.value)}
-                                            placeholder="Nhập phòng ban"
-                                        />
+                                            disabled={loadingFormData}
+                                        >
+                                            <option value="">-- Chọn phòng ban --</option>
+                                            {departments.map((dept, index) => (
+                                                <option key={index} value={dept}>{dept}</option>
+                                            ))}
+                                        </select>
                                         {recruitmentRequestErrors.phongBan && (
                                             <span className="recruitment-request-error-text">{recruitmentRequestErrors.phongBan}</span>
                                         )}
@@ -1860,13 +1907,19 @@ const InterviewApprovals = ({ currentUser, showToast, showConfirm }) => {
                                         <label className="recruitment-request-form-label">
                                             Người quản lý trực tiếp <span className="required">*</span>
                                         </label>
-                                        <input
-                                            type="text"
-                                            className={`recruitment-request-form-input ${recruitmentRequestErrors.nguoiQuanLyTrucTiep ? 'error' : ''}`}
+                                        <select
+                                            className={`recruitment-request-form-input recruitment-request-form-select ${recruitmentRequestErrors.nguoiQuanLyTrucTiep ? 'error' : ''}`}
                                             value={recruitmentRequestForm.nguoiQuanLyTrucTiep}
                                             onChange={(e) => handleRecruitmentRequestChange('nguoiQuanLyTrucTiep', e.target.value)}
-                                            placeholder="Nhập tên người quản lý trực tiếp"
-                                        />
+                                            disabled={loadingFormData}
+                                        >
+                                            <option value="">-- Chọn người quản lý trực tiếp --</option>
+                                            {managers.map((manager) => (
+                                                <option key={manager.id} value={manager.ho_ten}>
+                                                    {manager.ho_ten} {manager.chuc_danh ? `(${manager.chuc_danh})` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
                                         {recruitmentRequestErrors.nguoiQuanLyTrucTiep && (
                                             <span className="recruitment-request-error-text">{recruitmentRequestErrors.nguoiQuanLyTrucTiep}</span>
                                         )}

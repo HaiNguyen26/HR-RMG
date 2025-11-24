@@ -836,6 +836,81 @@ router.put('/:id', async (req, res) => {
 });
 
 /**
+ * GET /api/employees/departments - Lấy danh sách phòng ban (DISTINCT)
+ */
+router.get('/departments', async (req, res) => {
+    try {
+        const query = `
+            SELECT DISTINCT phong_ban as department
+            FROM employees
+            WHERE phong_ban IS NOT NULL AND phong_ban != ''
+            ORDER BY phong_ban ASC
+        `;
+        const result = await pool.query(query);
+        res.json({
+            success: true,
+            data: result.rows.map(row => row.department)
+        });
+    } catch (error) {
+        console.error('Error fetching departments:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy danh sách phòng ban: ' + error.message
+        });
+    }
+});
+
+/**
+ * GET /api/employees/job-titles - Lấy danh sách chức danh (DISTINCT)
+ */
+router.get('/job-titles', async (req, res) => {
+    try {
+        const query = `
+            SELECT DISTINCT chuc_danh as job_title
+            FROM employees
+            WHERE chuc_danh IS NOT NULL AND chuc_danh != ''
+            ORDER BY chuc_danh ASC
+        `;
+        const result = await pool.query(query);
+        res.json({
+            success: true,
+            data: result.rows.map(row => row.job_title)
+        });
+    } catch (error) {
+        console.error('Error fetching job titles:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy danh sách chức danh: ' + error.message
+        });
+    }
+});
+
+/**
+ * GET /api/employees/managers - Lấy danh sách nhân viên có thể làm quản lý
+ */
+router.get('/managers', async (req, res) => {
+    try {
+        const query = `
+            SELECT id, ho_ten, chuc_danh, phong_ban, email
+            FROM employees
+            WHERE (trang_thai = 'ACTIVE' OR trang_thai = 'PENDING' OR trang_thai IS NULL)
+            ORDER BY ho_ten ASC
+        `;
+        const result = await pool.query(query);
+        res.json({
+            success: true,
+            data: result.rows
+        });
+    } catch (error) {
+        console.error('Error fetching managers:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy danh sách quản lý: ' + error.message
+        });
+    }
+});
+
+/**
  * DELETE /api/employees/:id - Xóa nhân viên (hard delete - xóa hoàn toàn khỏi database)
  */
 router.delete('/:id', async (req, res) => {
