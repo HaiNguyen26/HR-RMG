@@ -789,32 +789,56 @@ const InterviewApprovals = ({ currentUser, showToast, showConfirm }) => {
             
             setLoadingFormData(true);
             try {
-                const [departmentsRes, positionsRes, managersRes] = await Promise.all([
-                    candidatesAPI.getDepartments(), // Lấy từ candidates
-                    candidatesAPI.getPositions(), // Lấy từ candidates
-                    employeesAPI.getManagers() // Lấy từ employees
-                ]);
+                // Fetch từng API riêng để tránh một API fail làm ảnh hưởng đến các API khác
+                const fetchPromises = [
+                    candidatesAPI.getDepartments().catch(err => {
+                        console.error('❌ Error fetching departments:', err);
+                        return { data: { success: false, data: [] } };
+                    }),
+                    candidatesAPI.getPositions().catch(err => {
+                        console.error('❌ Error fetching positions:', err);
+                        return { data: { success: false, data: [] } };
+                    }),
+                    employeesAPI.getManagers().catch(err => {
+                        console.error('❌ Error fetching managers:', err);
+                        return { data: { success: false, data: [] } };
+                    })
+                ];
 
+                const [departmentsRes, positionsRes, managersRes] = await Promise.all(fetchPromises);
+
+                // Xử lý departments
                 if (departmentsRes.data?.success) {
                     const deptList = departmentsRes.data.data || [];
                     setDepartments(deptList);
                     console.log('✅ Departments loaded:', deptList);
                 } else {
                     console.error('❌ Failed to load departments:', departmentsRes.data);
+                    setDepartments([]);
                 }
+
+                // Xử lý positions
                 if (positionsRes.data?.success) {
                     const positionList = positionsRes.data.data || [];
-                    setJobTitles(positionList); // Sử dụng positions từ candidates làm job titles
+                    setJobTitles(positionList);
                     console.log('✅ Positions loaded:', positionList);
                 } else {
                     console.error('❌ Failed to load positions:', positionsRes.data);
+                    setJobTitles([]);
                 }
+
+                // Xử lý managers
                 if (managersRes.data?.success) {
                     const managerList = managersRes.data.data || [];
                     setManagers(managerList);
                     console.log('✅ Managers loaded:', managerList);
                 } else {
                     console.error('❌ Failed to load managers:', managersRes.data);
+                    setManagers([]);
+                    // Chỉ hiển thị toast nếu managers fail (vì đây là bắt buộc)
+                    if (showToast) {
+                        showToast('Không thể tải danh sách quản lý. Vui lòng thử lại.', 'warning');
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching form data:', error);
