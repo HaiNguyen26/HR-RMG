@@ -3011,10 +3011,88 @@ router.put('/recruitment-requests/:id/status', async (req, res) => {
 });
 
 /**
+ * Seed departments and positions if not exists
+ */
+const seedDepartmentsAndPositions = async () => {
+    try {
+        // Kiểm tra xem đã có dữ liệu chưa
+        const checkDept = await pool.query(`
+            SELECT COUNT(DISTINCT phong_ban) as count
+            FROM candidates
+            WHERE phong_ban IS NOT NULL AND phong_ban != ''
+        `);
+        
+        const checkPos = await pool.query(`
+            SELECT COUNT(DISTINCT vi_tri_ung_tuyen) as count
+            FROM candidates
+            WHERE vi_tri_ung_tuyen IS NOT NULL AND vi_tri_ung_tuyen != ''
+        `);
+
+        // Nếu chưa có dữ liệu, thêm vào
+        if (checkDept.rows[0].count === '0' || checkPos.rows[0].count === '0') {
+            console.log('🌱 Seeding departments and positions...');
+            
+            // Danh sách phòng ban
+            const departments = [
+                'Mua hàng', 'Hành chính', 'DVĐT', 'QA', 'Khảo sát thiết kế', 
+                'Tự động', 'CNC', 'Dịch vụ kỹ thuật', 'Kế toán'
+            ];
+            
+            // Danh sách vị trí ứng tuyển
+            const positions = [
+                'Mua hàng', 'Tạp vụ & nấu ăn', 'Hàn bo mạch', 'Chất lượng', 
+                'Khảo sát thiết kế', 'Admin dự án', 'Lắp ráp', 'Lắp ráp JIG, Pallet',
+                'Điện lập trình PLC', 'Thiết kế máy tự động', 'Vận hành máy CNC',
+                'Dịch vụ Kỹ thuật', 'Kế toán nội bộ', 'Kế toán bán hàng'
+            ];
+
+            // Thêm phòng ban (kiểm tra trước để tránh duplicate)
+            for (const dept of departments) {
+                const existing = await pool.query(`
+                    SELECT COUNT(*) as count
+                    FROM candidates
+                    WHERE phong_ban = $1 AND ho_ten = $2
+                `, [dept, `[Placeholder - ${dept}]`]);
+                
+                if (existing.rows[0].count === '0') {
+                    await pool.query(`
+                        INSERT INTO candidates (ho_ten, phong_ban, vi_tri_ung_tuyen, status, notes, created_at)
+                        VALUES ($1, $2, NULL, 'PENDING_INTERVIEW', 'Dữ liệu mẫu cho dropdown phòng ban', NOW())
+                    `, [`[Placeholder - ${dept}]`, dept]);
+                }
+            }
+
+            // Thêm vị trí ứng tuyển (kiểm tra trước để tránh duplicate)
+            for (const pos of positions) {
+                const existing = await pool.query(`
+                    SELECT COUNT(*) as count
+                    FROM candidates
+                    WHERE vi_tri_ung_tuyen = $1 AND ho_ten = $2
+                `, [pos, `[Placeholder - ${pos}]`]);
+                
+                if (existing.rows[0].count === '0') {
+                    await pool.query(`
+                        INSERT INTO candidates (ho_ten, phong_ban, vi_tri_ung_tuyen, status, notes, created_at)
+                        VALUES ($1, NULL, $2, 'PENDING_INTERVIEW', 'Dữ liệu mẫu cho dropdown vị trí ứng tuyển', NOW())
+                    `, [`[Placeholder - ${pos}]`, pos]);
+                }
+            }
+            
+            console.log('✅ Departments and positions seeded successfully');
+        }
+    } catch (error) {
+        console.error('Error seeding departments and positions:', error);
+    }
+};
+
+/**
  * GET /api/candidates/departments - Lấy danh sách phòng ban từ candidates (DISTINCT)
  */
 router.get('/departments', async (req, res) => {
     try {
+        // Tự động seed nếu chưa có dữ liệu
+        await seedDepartmentsAndPositions();
+        
         const query = `
             SELECT DISTINCT phong_ban as department
             FROM candidates
@@ -3040,6 +3118,9 @@ router.get('/departments', async (req, res) => {
  */
 router.get('/positions', async (req, res) => {
     try {
+        // Tự động seed nếu chưa có dữ liệu
+        await seedDepartmentsAndPositions();
+        
         const query = `
             SELECT DISTINCT vi_tri_ung_tuyen as position
             FROM candidates
