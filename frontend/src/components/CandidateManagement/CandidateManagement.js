@@ -2744,9 +2744,11 @@ const CandidateManagement = ({ currentUser, showToast, showConfirm, onNavigate }
                                                 showYearDropdown
                                                 showMonthDropdown
                                                 dropdownMode="select"
-                                                yearDropdownItemNumber={100}
+                                                yearDropdownItemNumber={150}
                                                 scrollableYearDropdown
+                                                useShortMonthInDropdown
                                                 minDate={new Date(1900, 0, 1)}
+                                                openToDate={formData.ngaySinh ? parseISODateString(formData.ngaySinh) : new Date(2000, 0, 1)}
                                             />
                                             {formErrors.ngaySinh && (
                                                 <span className="candidate-modal-form-error">{formErrors.ngaySinh}</span>
@@ -2977,9 +2979,11 @@ const CandidateManagement = ({ currentUser, showToast, showConfirm, onNavigate }
                                                 showYearDropdown
                                                 showMonthDropdown
                                                 dropdownMode="select"
-                                                yearDropdownItemNumber={100}
+                                                yearDropdownItemNumber={150}
                                                 scrollableYearDropdown
+                                                useShortMonthInDropdown
                                                 minDate={new Date(1900, 0, 1)}
+                                                openToDate={formData.ngayCapCCCD ? parseISODateString(formData.ngayCapCCCD) : new Date(2000, 0, 1)}
                                             />
                                             {formErrors.ngayCapCCCD && (
                                                 <span className="candidate-modal-form-error">{formErrors.ngayCapCCCD}</span>
