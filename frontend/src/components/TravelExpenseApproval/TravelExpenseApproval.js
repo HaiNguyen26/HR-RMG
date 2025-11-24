@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './TravelExpenseApproval.css';
+import { travelExpensesAPI } from '../../services/api';
 
 const TravelExpenseApproval = ({ currentUser, showToast, showConfirm }) => {
   const [loading, setLoading] = useState(false);
@@ -10,66 +11,48 @@ const TravelExpenseApproval = ({ currentUser, showToast, showConfirm }) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    // TODO: Fetch travel expense requests pending approval
-    // fetchPendingRequests();
+    const fetchPendingRequests = async () => {
+      setLoading(true);
+      try {
+        // Fetch requests pending approval (status PENDING_LEVEL_1 or PENDING_LEVEL_2)
+        const response = await travelExpensesAPI.getAll({ 
+          status: 'PENDING_LEVEL_1,PENDING_LEVEL_2' 
+        });
+        
+        if (response.data && response.data.success) {
+          const formattedRequests = response.data.data.map(req => {
+            const startDate = req.start_time ? new Date(req.start_time) : null;
+            const endDate = req.end_time ? new Date(req.end_time) : null;
+            
+            return {
+              id: req.id,
+              code: `CTX-${req.id}`,
+              employeeName: req.employee_name || 'N/A',
+              branch: req.employee_branch || 'N/A',
+              scope: req.location_type === 'INTERNATIONAL' ? 'NN' : 'NĐ',
+              purpose: req.purpose || '',
+              destination: req.location || '',
+              startDate: startDate ? startDate.toLocaleDateString('vi-VN') : '',
+              startTime: startDate ? startDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+              endDate: endDate ? endDate.toLocaleDateString('vi-VN') : '',
+              endTime: endDate ? endDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+              status: req.status || '',
+              employee_id: req.employee_id,
+              location_type: req.location_type
+            };
+          });
+          setRequests(formattedRequests);
+        }
+      } catch (error) {
+        console.error('Error fetching pending travel expense requests:', error);
+        showToast?.('Lỗi khi tải danh sách yêu cầu chờ duyệt', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Mock data for now
-    const mockRequests = [
-      {
-        id: 1,
-        code: 'CTX-20240901',
-        employeeName: 'Lê Thanh Tùng',
-        branch: 'Hà Nội',
-        scope: 'NN',
-        purpose: 'Đàm phán hợp đồng đối tác chiến lược mở rộng thị trường Châu Á. Gặp gỡ đối tác tại Singapore để thảo luận hợp đồng xuất khẩu sản phẩm công nghệ cao.',
-        destination: 'Singapore',
-        startDate: '19/11/2025',
-        startTime: '17:15',
-        endDate: '31/11/2025',
-        endTime: '16:15'
-      },
-      {
-        id: 2,
-        code: 'CTX-20240902',
-        employeeName: 'Nguyễn Văn Hùng',
-        branch: 'TP. HCM',
-        scope: 'NĐ',
-        purpose: 'Hội thảo công nghệ về trí tuệ nhân tạo và ứng dụng trong doanh nghiệp. Tham gia hội thảo tại TP.HCM để cập nhật kiến thức và kỹ năng mới.',
-        destination: 'TP. Hồ Chí Minh',
-        startDate: '20/11/2025',
-        startTime: '08:00',
-        endDate: '22/11/2025',
-        endTime: '17:00'
-      },
-      {
-        id: 3,
-        code: 'CTX-20240903',
-        employeeName: 'Phạm Thị Mai',
-        branch: 'Đà Nẵng',
-        scope: 'NĐ',
-        purpose: 'Đào tạo chuyên môn về quản lý dự án và phương pháp làm việc nhóm hiệu quả. Tham gia khóa đào tạo tại Đà Nẵng để nâng cao năng lực quản lý.',
-        destination: 'Đà Nẵng',
-        startDate: '25/11/2025',
-        startTime: '09:00',
-        endDate: '27/11/2025',
-        endTime: '16:00'
-      },
-      {
-        id: 4,
-        code: 'CTX-20240904',
-        employeeName: 'Trần Văn Kiên',
-        branch: 'Hà Nội',
-        scope: 'NN',
-        purpose: 'Triển lãm công nghệ quốc tế tại Mỹ. Tham gia triển lãm để giới thiệu sản phẩm mới và tìm kiếm đối tác tiềm năng.',
-        destination: 'Mỹ',
-        startDate: '01/12/2025',
-        startTime: '10:00',
-        endDate: '05/12/2025',
-        endTime: '18:00'
-      },
-    ];
-    setRequests(mockRequests);
-  }, [currentUser]);
+    fetchPendingRequests();
+  }, [currentUser, showToast]);
 
   const filteredRequests = requests.filter(request =>
     request.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -107,7 +90,12 @@ const TravelExpenseApproval = ({ currentUser, showToast, showConfirm }) => {
 
               {/* Danh sách Items */}
               <div className="travel-expense-approval-list-items">
-                {filteredRequests.map((request) => (
+                {loading ? (
+                  <div className="travel-expense-approval-loading">Đang tải...</div>
+                ) : filteredRequests.length === 0 ? (
+                  <div className="travel-expense-approval-empty">Không có yêu cầu chờ duyệt</div>
+                ) : (
+                  filteredRequests.map((request) => (
                   <div
                     key={request.id}
                     className={`travel-expense-approval-list-item ${selectedRequestId === request.id ? 'active' : ''}`}
@@ -137,7 +125,8 @@ const TravelExpenseApproval = ({ currentUser, showToast, showConfirm }) => {
                       </div>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -250,19 +239,61 @@ const TravelExpenseApproval = ({ currentUser, showToast, showConfirm }) => {
                       <button
                         type="button"
                         className="travel-expense-approval-btn-approve"
-                        onClick={() => {
+                        onClick={async () => {
                           if (!approvalNote.trim()) {
                             showToast && showToast('Vui lòng nhập ghi chú trước khi duyệt.', 'warning');
                             return;
                           }
+                          if (!selectedRequestId) {
+                            showToast && showToast('Vui lòng chọn yêu cầu cần duyệt.', 'warning');
+                            return;
+                          }
+                          
                           setIsProcessing(true);
-                          // TODO: API call
-                          setTimeout(() => {
-                            setIsProcessing(false);
+                          try {
+                            await travelExpensesAPI.decide(selectedRequestId, {
+                              decision: 'APPROVE',
+                              notes: approvalNote
+                            });
+                            
                             showToast && showToast('Yêu cầu đã được duyệt thành công!', 'success');
                             setSelectedRequestId(null);
                             setApprovalNote('');
-                          }, 800);
+                            
+                            // Refresh requests list
+                            const response = await travelExpensesAPI.getAll({ 
+                              status: 'PENDING_LEVEL_1,PENDING_LEVEL_2' 
+                            });
+                            if (response.data && response.data.success) {
+                              const formattedRequests = response.data.data.map(req => {
+                                const startDate = req.start_time ? new Date(req.start_time) : null;
+                                const endDate = req.end_time ? new Date(req.end_time) : null;
+                                
+                                return {
+                                  id: req.id,
+                                  code: `CTX-${req.id}`,
+                                  employeeName: req.employee_name || 'N/A',
+                                  branch: req.employee_branch || 'N/A',
+                                  scope: req.location_type === 'INTERNATIONAL' ? 'NN' : 'NĐ',
+                                  purpose: req.purpose || '',
+                                  destination: req.location || '',
+                                  startDate: startDate ? startDate.toLocaleDateString('vi-VN') : '',
+                                  startTime: startDate ? startDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+                                  endDate: endDate ? endDate.toLocaleDateString('vi-VN') : '',
+                                  endTime: endDate ? endDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+                                  status: req.status || '',
+                                  employee_id: req.employee_id,
+                                  location_type: req.location_type
+                                };
+                              });
+                              setRequests(formattedRequests);
+                            }
+                          } catch (error) {
+                            console.error('Error approving request:', error);
+                            showToast && showToast('Lỗi khi duyệt yêu cầu: ' + (error.response?.data?.message || error.message), 'error');
+                          } finally {
+                            setIsProcessing(false);
+                          }
                         }}
                         disabled={isProcessing}
                       >
@@ -272,19 +303,61 @@ const TravelExpenseApproval = ({ currentUser, showToast, showConfirm }) => {
                       <button
                         type="button"
                         className="travel-expense-approval-btn-reject"
-                        onClick={() => {
+                        onClick={async () => {
                           if (!approvalNote.trim()) {
                             showToast && showToast('Vui lòng nhập ghi chú lý do từ chối.', 'warning');
                             return;
                           }
+                          if (!selectedRequestId) {
+                            showToast && showToast('Vui lòng chọn yêu cầu cần từ chối.', 'warning');
+                            return;
+                          }
+                          
                           setIsProcessing(true);
-                          // TODO: API call
-                          setTimeout(() => {
-                            setIsProcessing(false);
+                          try {
+                            await travelExpensesAPI.decide(selectedRequestId, {
+                              decision: 'REJECT',
+                              notes: approvalNote
+                            });
+                            
                             showToast && showToast('Yêu cầu đã bị từ chối.', 'info');
                             setSelectedRequestId(null);
                             setApprovalNote('');
-                          }, 800);
+                            
+                            // Refresh requests list
+                            const response = await travelExpensesAPI.getAll({ 
+                              status: 'PENDING_LEVEL_1,PENDING_LEVEL_2' 
+                            });
+                            if (response.data && response.data.success) {
+                              const formattedRequests = response.data.data.map(req => {
+                                const startDate = req.start_time ? new Date(req.start_time) : null;
+                                const endDate = req.end_time ? new Date(req.end_time) : null;
+                                
+                                return {
+                                  id: req.id,
+                                  code: `CTX-${req.id}`,
+                                  employeeName: req.employee_name || 'N/A',
+                                  branch: req.employee_branch || 'N/A',
+                                  scope: req.location_type === 'INTERNATIONAL' ? 'NN' : 'NĐ',
+                                  purpose: req.purpose || '',
+                                  destination: req.location || '',
+                                  startDate: startDate ? startDate.toLocaleDateString('vi-VN') : '',
+                                  startTime: startDate ? startDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+                                  endDate: endDate ? endDate.toLocaleDateString('vi-VN') : '',
+                                  endTime: endDate ? endDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '',
+                                  status: req.status || '',
+                                  employee_id: req.employee_id,
+                                  location_type: req.location_type
+                                };
+                              });
+                              setRequests(formattedRequests);
+                            }
+                          } catch (error) {
+                            console.error('Error rejecting request:', error);
+                            showToast && showToast('Lỗi khi từ chối yêu cầu: ' + (error.response?.data?.message || error.message), 'error');
+                          } finally {
+                            setIsProcessing(false);
+                          }
                         }}
                         disabled={isProcessing}
                       >

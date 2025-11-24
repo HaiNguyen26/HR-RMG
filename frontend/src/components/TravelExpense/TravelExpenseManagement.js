@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './TravelExpenseManagement.css';
+import { travelExpensesAPI } from '../../services/api';
 
 const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRequestId, setSelectedRequestId] = useState(null);
     const [activeTab, setActiveTab] = useState('A'); // 'A' hoặc 'B'
-    
+    const [requests, setRequests] = useState([]);
+    const [loading, setLoading] = useState(false);
+
     // State cho Tab A: Cấp Ngân Sách Tối Đa
     const [tabAForm, setTabAForm] = useState({
         budgetAmount: '',
@@ -23,7 +26,7 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
         bankAccount: '',            // Tài khoản Ngân hàng nhận (readonly - từ hồ sơ nhân viên)
         transferNotes: ''           // Ghi chú (Nội dung Chuyển khoản)
     });
-    
+
     // Tự động set tỷ giá khi chọn loại tiền
     const handleCurrencyChange = (currency) => {
         if (currency === 'VND') {
@@ -32,7 +35,7 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
             setTabAForm({ ...tabAForm, currencyType: currency, exchangeRate: tabAForm.exchangeRate || '' });
         }
     };
-    
+
     // Tính toán quy đổi tự động
     const getConvertedAmount = () => {
         if (!tabAForm.budgetAmount || !tabAForm.exchangeRate) return 0;
@@ -41,48 +44,78 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
         if (isNaN(amount) || isNaN(rate)) return 0;
         return amount * rate;
     };
-    
-    // Mock data - sẽ được thay thế bằng API call sau
-    const pendingRequests = [
-        { id: 1, code: 'CTX-20240901', employeeName: 'Lê Thanh Tùng', location: 'Singapore', isDomestic: false },
-        { id: 2, code: 'CTX-20240902', employeeName: 'Nguyễn Văn Hùng', location: 'Hà Nội', isDomestic: true },
-        { id: 3, code: 'CTX-20240903', employeeName: 'Phạm Thị Mai', location: 'TP. Hồ Chí Minh', isDomestic: true },
-        { id: 4, code: 'CTX-20240904', employeeName: 'Trần Văn Kiên', location: 'Mỹ', isDomestic: false },
-    ];
 
-    const filteredRequests = pendingRequests.filter(request =>
+    // Fetch travel expense requests from API
+    useEffect(() => {
+        const fetchRequests = async () => {
+            setLoading(true);
+            try {
+                // Fetch requests with status PENDING_LEVEL_1 or PENDING_LEVEL_2 (approved by manager/CEO, waiting for budget allocation)
+                const response = await travelExpensesAPI.getAll({
+                    status: 'PENDING_LEVEL_1,PENDING_LEVEL_2'
+                });
+
+                if (response.data && response.data.success) {
+                    const formattedRequests = response.data.data.map(req => ({
+                        id: req.id,
+                        code: `CTX-${req.id}`,
+                        employeeName: req.employee_name || 'N/A',
+                        location: req.location || '',
+                        isDomestic: req.location_type === 'DOMESTIC',
+                        purpose: req.purpose || '',
+                        startDate: req.start_time ? new Date(req.start_time).toLocaleDateString('vi-VN') : '',
+                        endDate: req.end_time ? new Date(req.end_time).toLocaleDateString('vi-VN') : '',
+                        status: req.status || '',
+                        employee_id: req.employee_id
+                    }));
+                    setRequests(formattedRequests);
+                }
+            } catch (error) {
+                console.error('Error fetching travel expense requests:', error);
+                showToast?.('Lỗi khi tải danh sách yêu cầu', 'error');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchRequests();
+    }, [showToast]);
+
+    const filteredRequests = requests.filter(request =>
         request.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         request.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         request.location.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const selectedRequest = pendingRequests.find(req => req.id === selectedRequestId) || null;
-    
+    const selectedRequest = requests.find(req => req.id === selectedRequestId) || null;
+
     // Thêm thông tin đầy đủ cho selectedRequest để hiển thị trong tab content
     const selectedRequestFull = selectedRequest ? {
         ...selectedRequest,
-        purpose: selectedRequest.id === 1 ? 'Đàm phán hợp đồng đối tác chiến lược' : 
-                 selectedRequest.id === 2 ? 'Hội thảo công nghệ' : 
-                 selectedRequest.id === 3 ? 'Đào tạo chuyên môn' : 'Đàm phán hợp đồng',
-        startDate: '15/11/2025',
-        endDate: selectedRequest.id === 1 ? '18/11/2025' : 
-                 selectedRequest.id === 2 ? '22/11/2025' : 
-                 selectedRequest.id === 3 ? '27/11/2025' : '20/11/2025',
-        status: 'Chờ cấp ngân sách',
         locationFull: selectedRequest.isDomestic ? `${selectedRequest.location} (Trong nước)` : `${selectedRequest.location} (Nước ngoài)`,
-        // Mock bank account from employee profile
-        bankAccount: '970422 - 1234567890 - ' + selectedRequest.employeeName
+        bankAccount: '' // TODO: Fetch from employee profile using employee_id
     } : null;
 
-    // Auto-fill bank account when request is selected
+    // Fetch employee bank account when request is selected
     useEffect(() => {
-        if (selectedRequestFull && selectedRequestFull.bankAccount) {
-            setTabBForm(prev => ({
-                ...prev,
-                bankAccount: selectedRequestFull.bankAccount
-            }));
-        }
-    }, [selectedRequestFull]);
+        const fetchEmployeeBankAccount = async () => {
+            if (selectedRequest?.employee_id) {
+                try {
+                    // TODO: Add API endpoint to fetch employee bank account
+                    // For now, using placeholder
+                    const bankAccount = `970422 - 1234567890 - ${selectedRequest.employeeName}`;
+                    setTabBForm(prev => ({
+                        ...prev,
+                        bankAccount: bankAccount
+                    }));
+                } catch (error) {
+                    console.error('Error fetching employee bank account:', error);
+                }
+            }
+        };
+        fetchEmployeeBankAccount();
+    }, [selectedRequest]);
+
 
     // Format currency input
     const handleAmountChange = (e) => {
@@ -101,14 +134,14 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
         if (!tabBForm.actualAmount) return 'Vui lòng nhập số tiền thực tạm ứng.';
         if (!tabBForm.advanceMethod) return 'Vui lòng chọn hình thức tạm ứng.';
         if (!tabBForm.transferNotes.trim()) return 'Vui lòng nhập ghi chú (nội dung chuyển khoản).';
-        
+
         const amount = parseInt(tabBForm.actualAmount);
         if (isNaN(amount) || amount <= 0) return 'Số tiền phải lớn hơn 0.';
-        
+
         if (approvedBudget && amount > approvedBudget.amount) {
             return `Số tiền không được vượt quá ngân sách tối đa đã được cấp (${approvedBudget.amount.toLocaleString('vi-VN')} VND).`;
         }
-        
+
         return null;
     };
 
@@ -134,7 +167,7 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
                             />
                         </svg>
                     </div>
-                    
+
                     {/* Title & Subtitle */}
                     <div className="travel-expense-management-header-text">
                         <h2 className="travel-expense-management-title">
@@ -173,37 +206,43 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
 
                             {/* Danh sách Items */}
                             <div className="travel-expense-list-items">
-                                {filteredRequests.map((request) => (
-                                    <div
-                                        key={request.id}
-                                        className={`travel-expense-list-item ${selectedRequestId === request.id ? 'active' : ''}`}
-                                        onClick={() => setSelectedRequestId(request.id)}
-                                    >
-                                        {/* Cột trái: ID và Tên */}
-                                        <div className="travel-expense-item-left">
-                                            {/* Mã Yêu cầu: text-sm font-bold text-blue-600 - Ở trên cùng bên trái */}
-                                            <div className="travel-expense-request-code">
-                                                {request.code}
+                                {loading ? (
+                                    <div className="travel-expense-loading">Đang tải...</div>
+                                ) : filteredRequests.length === 0 ? (
+                                    <div className="travel-expense-empty">Không có yêu cầu nào</div>
+                                ) : (
+                                    filteredRequests.map((request) => (
+                                        <div
+                                            key={request.id}
+                                            className={`travel-expense-list-item ${selectedRequestId === request.id ? 'active' : ''}`}
+                                            onClick={() => setSelectedRequestId(request.id)}
+                                        >
+                                            {/* Cột trái: ID và Tên */}
+                                            <div className="travel-expense-item-left">
+                                                {/* Mã Yêu cầu: text-sm font-bold text-blue-600 - Ở trên cùng bên trái */}
+                                                <div className="travel-expense-request-code">
+                                                    {request.code}
+                                                </div>
+                                                {/* Tên nhân viên: Ở dưới ID, bên trái */}
+                                                <div className="travel-expense-request-employee">
+                                                    {request.employeeName}
+                                                </div>
                                             </div>
-                                            {/* Tên nhân viên: Ở dưới ID, bên trái */}
-                                            <div className="travel-expense-request-employee">
-                                                {request.employeeName}
+
+                                            {/* Cột phải: Địa điểm và Trạng thái */}
+                                            <div className="travel-expense-item-right">
+                                                {/* Địa điểm: Ở trên cùng bên phải */}
+                                                <div className="travel-expense-request-location">
+                                                    {request.location}
+                                                </div>
+                                                {/* Trạng thái: Ở dưới Location, bên phải */}
+                                                <div className={`travel-expense-request-status ${request.isDomestic ? 'domestic' : 'foreign'}`}>
+                                                    {request.isDomestic ? 'Trong nước' : 'Nước ngoài'}
+                                                </div>
                                             </div>
                                         </div>
-                                        
-                                        {/* Cột phải: Địa điểm và Trạng thái */}
-                                        <div className="travel-expense-item-right">
-                                            {/* Địa điểm: Ở trên cùng bên phải */}
-                                            <div className="travel-expense-request-location">
-                                                {request.location}
-                                            </div>
-                                            {/* Trạng thái: Ở dưới Location, bên phải */}
-                                            <div className={`travel-expense-request-status ${request.isDomestic ? 'domestic' : 'foreign'}`}>
-                                                {request.isDomestic ? 'Trong nước' : 'Nước ngoài'}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
@@ -215,14 +254,14 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
                             {selectedRequestFull ? (
                                 <>
                                     {/* A. Tóm Tắt & Tab Menu */}
-                                    
+
                                     {/* A.1. Thông tin Tóm tắt: Light blue card với layout 2 cột */}
                                     <div className="travel-expense-summary-block">
                                         {/* Tiêu đề: Bold blue text */}
                                         <h3 className="travel-expense-summary-title">
                                             Thông tin Yêu Cầu - {selectedRequestFull.code}
                                         </h3>
-                                        
+
                                         {/* Layout 2 cột */}
                                         <div className="travel-expense-summary-content">
                                             {/* Cột trái: Nhân viên, Địa điểm */}
@@ -236,7 +275,7 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
                                                     <span className="travel-expense-summary-value">{selectedRequestFull.locationFull}</span>
                                                 </div>
                                             </div>
-                                            
+
                                             {/* Cột phải: Mục đích, Trạng thái */}
                                             <div className="travel-expense-summary-right">
                                                 <div className="travel-expense-summary-item">
@@ -278,7 +317,7 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
                                                 <h3 className="travel-expense-form-title">
                                                     Cấp Ngân Sách Tối Đa
                                                 </h3>
-                                                
+
                                                 <div className="travel-expense-form-group">
                                                     {/* Label: text-sm font-semibold text-gray-700 - Label rõ ràng */}
                                                     <label className="travel-expense-form-label">
@@ -294,7 +333,7 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
                                                         required
                                                     />
                                                 </div>
-                                                
+
                                                 <div className="travel-expense-form-group">
                                                     <label className="travel-expense-form-label">
                                                         Loại Tiền
@@ -311,7 +350,7 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
                                                         <option value="CNY">CNY (Nhân dân tệ Trung Quốc)</option>
                                                     </select>
                                                 </div>
-                                                
+
                                                 <div className="travel-expense-form-group">
                                                     <label className="travel-expense-form-label">
                                                         Tỷ Giá Áp Dụng (1 {tabAForm.currencyType} = VND)
@@ -326,12 +365,12 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
                                                         required
                                                     />
                                                 </div>
-                                                
+
                                                 {/* TOTAL Ngân Sách: Khối Cảnh báo/Kết quả - bg-teal-50, border-l-4 border-teal-400 */}
                                                 {/* Dùng màu Teal để nhấn mạnh đây là KẾT QUẢ TÀI CHÍNH (tính năng hoàn tất) */}
                                                 <div className="travel-expense-total-budget-block">
                                                     <div className="travel-expense-total-budget-label">
-                                                        {tabAForm.currencyType === 'VND' 
+                                                        {tabAForm.currencyType === 'VND'
                                                             ? 'Tổng Ngân Sách (VND)'
                                                             : `Tổng Ngân Sách Quy Đổi (VND) - Tự động tính từ ${tabAForm.budgetAmount || '0'} ${tabAForm.currencyType}`
                                                         }
@@ -341,7 +380,7 @@ const TravelExpenseManagement = ({ currentUser, showToast, showConfirm }) => {
                                                         {getConvertedAmount().toLocaleString('vi-VN')} VND
                                                     </div>
                                                 </div>
-                                                
+
                                                 {/* Nút Hành động */}
                                                 <div className="travel-expense-form-actions">
                                                     {/* Nút Chính (Xác Nhận): Fluent Lift Button - bg-blue-600 gradient, text-white */}
