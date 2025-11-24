@@ -4303,10 +4303,6 @@ const RecruitmentRequestDetailView = ({ request }) => {
                             <label className="recruitment-request-form-label">Phòng ban</label>
                             <div className="recruitment-request-form-value">{request.phong_ban || request.phongBan || '-'}</div>
                         </div>
-                        <div className="recruitment-request-form-field">
-                            <label className="recruitment-request-form-label">Người quản lý trực tiếp</label>
-                            <div className="recruitment-request-form-value">{request.nguoi_quan_ly_truc_tiep || request.nguoiQuanLyTrucTiep || '-'}</div>
-                        </div>
                     </div>
 
                     <div className="recruitment-request-form-row recruitment-request-form-row-2cols">
