@@ -59,11 +59,12 @@
 
 ## Trạng thái Mock Data
 
-### ✅ Đã xóa Mock Data
-- `frontend/src/components/CandidateManagement/CandidateManagement.js` - Đã xóa MOCK_CANDIDATES và useMockData
+### ✅ Đã xóa toàn bộ Mock Data
+- ✅ `frontend/src/components/CandidateManagement/CandidateManagement.js` - Đã xóa MOCK_CANDIDATES và useMockData
+- ✅ `frontend/src/components/TravelExpense/TravelExpenseManagement.js` - Đã thay mock data bằng `travelExpensesAPI.getAll()`
+- ✅ `frontend/src/components/TravelExpenseApproval/TravelExpenseApproval.js` - Đã thay mock data bằng `travelExpensesAPI.getAll()` và `travelExpensesAPI.decide()`
 
-### ⚠️ Còn Mock Data (cần thay thế)
-- `frontend/src/components/TravelExpense/TravelExpenseManagement.js` - Còn mock data cho pendingRequests (cần thay bằng API call)
+**Kết luận:** Toàn bộ dự án đã không còn sử dụng mock data, tất cả đều kết nối với database thông qua API.
 
 ## Ghi chú
 
